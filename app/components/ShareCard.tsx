@@ -1,0 +1,163 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { toPng } from "html-to-image";
+import { fmtVolume, type Unit } from "@/lib/ui";
+
+export default function ShareCard({
+  name,
+  planName,
+  adherence,
+  setAdherence,
+  repQuality,
+  streak,
+  volume,
+  prs,
+  completedWorkouts,
+  unit,
+}: {
+  name: string;
+  planName: string;
+  adherence: number;
+  setAdherence: number;
+  repQuality: number;
+  streak: number;
+  volume: number;
+  prs: number;
+  completedWorkouts: number;
+  unit: Unit;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  const download = async () => {
+    if (!ref.current) return;
+    setBusy(true);
+    try {
+      const url = await toPng(ref.current, { pixelRatio: 2, cacheBust: true });
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "fitplan-progress.png";
+      a.click();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const share = async () => {
+    const text = `My ${planName} progress: ${adherence}% adherence, ${completedWorkouts} workouts, ${streak}-day streak 💪 #FitPlan`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "FitPlan progress", text });
+      } catch {}
+    } else {
+      await navigator.clipboard?.writeText(text);
+    }
+  };
+
+  const stats = [
+    { k: "Sets", v: `${setAdherence}%`, c: "#2fe6a8" },
+    { k: "Rep quality", v: `${repQuality}%`, c: "#7c8cff" },
+    { k: "Streak", v: `${streak}d`, c: "#18a9ff" },
+    { k: "PRs", v: `${prs}`, c: "#ff5b8a" },
+  ];
+
+  return (
+    <div>
+      {/* The capturable card */}
+      <div className="overflow-hidden rounded-2xl">
+        <div
+          ref={ref}
+          style={{
+            background:
+              "linear-gradient(135deg, #14101a 0%, #1a1320 55%, #241018 100%)",
+            padding: "28px",
+            color: "#f4f6fb",
+            fontFamily: "Inter, system-ui, sans-serif",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ fontWeight: 800, letterSpacing: "-0.5px" }}>
+              Fit<span style={{ color: "#2f6bff" }}>Plan</span>
+            </div>
+            <div style={{ fontSize: 12, color: "#99a1b3" }}>{planName}</div>
+          </div>
+
+          <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 20 }}>
+            <div
+              style={{
+                width: 110,
+                height: 110,
+                borderRadius: "50%",
+                background: `conic-gradient(#2f6bff ${adherence * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: 86,
+                  height: 86,
+                  borderRadius: "50%",
+                  background: "#14101a",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <div style={{ fontSize: 30, fontWeight: 800 }}>{adherence}%</div>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: "#99a1b3" }}>{name}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.1 }}>
+                {completedWorkouts} workouts done
+              </div>
+              <div style={{ fontSize: 13, color: "#18a9ff", marginTop: 4 }}>
+                {fmtVolume(volume, unit)} {unit} total volume lifted
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+            {stats.map((s) => (
+              <div
+                key={s.k}
+                style={{
+                  flex: 1,
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 12,
+                  padding: "12px 8px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: 20, fontWeight: 800, color: s.c }}>
+                  {s.v}
+                </div>
+                <div style={{ fontSize: 10, color: "#99a1b3", marginTop: 2 }}>
+                  {s.k}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-3">
+        <button className="btn-primary !py-2" onClick={download} disabled={busy}>
+          {busy ? "Rendering…" : "⬇ Download image"}
+        </button>
+        <button className="btn-ghost !py-2" onClick={share}>
+          Share
+        </button>
+      </div>
+    </div>
+  );
+}

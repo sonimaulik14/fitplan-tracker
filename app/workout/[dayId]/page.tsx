@@ -1,0 +1,159 @@
+import Link from "next/link";
+import { redirect, notFound } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { getLastTimeByExercise, getSwaps } from "@/lib/metrics";
+import { termInfo, muscleStyle, type Unit } from "@/lib/ui";
+import { getPhoto } from "@/lib/unsplash";
+import NavBar from "@/app/components/NavBar";
+import InfoTip from "@/app/components/InfoTip";
+import { FocusGlyph } from "@/app/components/icons";
+import WorkoutLogger, { type LoggerExercise } from "@/app/components/WorkoutLogger";
+
+export default async function WorkoutPage({
+  params,
+}: {
+  params: Promise<{ dayId: string }>;
+}) {
+  const { dayId } = await params;
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const day = await prisma.workoutDay.findUnique({
+    where: { id: dayId },
+    include: {
+      week: true,
+      exercises: { orderBy: { orderIndex: "asc" } },
+    },
+  });
+  if (!day) notFound();
+
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { userId: user.id, planId: day.week.planId },
+  });
+  if (!enrollment) redirect("/dashboard");
+
+  const session = await prisma.workoutSession.findUnique({
+    where: {
+      enrollmentId_workoutDayId: {
+        enrollmentId: enrollment.id,
+        workoutDayId: day.id,
+      },
+    },
+    include: { setEntries: true },
+  });
+
+  const [lastTime, swaps] = await Promise.all([
+    getLastTimeByExercise(user.id, day.week.planId, day.id),
+    getSwaps(user.id, day.week.planId),
+  ]);
+
+  const entryMap = new Map(
+    (session?.setEntries ?? []).map((e) => [`${e.planExerciseId}:${e.setNumber}`, e])
+  );
+
+  const exercises: LoggerExercise[] = day.exercises.map((ex) => {
+    const total = ex.isCardio ? 1 : ex.warmupSets + ex.workingSets || 1;
+    const rows = Array.from({ length: total }, (_, i) => {
+      const setNumber = i + 1;
+      const setType = ex.isCardio
+        ? "cardio"
+        : setNumber <= ex.warmupSets
+          ? "warmup"
+          : "work";
+      const existing = entryMap.get(`${ex.id}:${setNumber}`);
+      return {
+        planExerciseId: ex.id,
+        setNumber,
+        setType,
+        weight: existing?.weight ?? null,
+        reps: existing?.reps ?? null,
+        rpe: existing?.rpe ?? null,
+        done: existing?.done ?? false,
+      };
+    });
+    const effectiveName = swaps.get(ex.id) ?? ex.name;
+    const prev = lastTime[effectiveName];
+    return {
+      id: ex.id,
+      name: effectiveName,
+      originalName: ex.name,
+      swapped: effectiveName !== ex.name,
+      muscle: ex.muscle,
+      groupLabel: ex.groupLabel,
+      repTarget: ex.repTarget,
+      isCardio: ex.isCardio,
+      warmupSets: ex.warmupSets,
+      workingSets: ex.workingSets,
+      lastTime: prev ? { weight: prev.weight, reps: prev.reps } : null,
+      rows,
+    };
+  });
+
+  // Resolve a live photo per muscle group (cached) and attach to each exercise.
+  const muscleKeys = [...new Set(exercises.map((e) => muscleStyle(e.muscle).key))];
+  const photoByKey = new Map<string, string>();
+  await Promise.all(
+    muscleKeys.map(async (k) => {
+      const p = await getPhoto(`hero:${k}`);
+      photoByKey.set(k, p.url);
+    })
+  );
+  for (const e of exercises) e.photoUrl = photoByKey.get(muscleStyle(e.muscle).key);
+
+  return (
+    <>
+      <NavBar user={user} />
+      <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28">
+        <Link
+          href="/dashboard"
+          className="text-sm text-muted hover:text-foreground transition-colors"
+        >
+          ← Back to dashboard
+        </Link>
+        <div className="mt-3 mb-6 flex items-center gap-4 animate-fade-up">
+          <span className="grid place-items-center w-14 h-14 rounded-2xl bg-surface-2 border border-border">
+            <FocusGlyph focus={day.focus} size={28} />
+          </span>
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted flex items-center gap-1.5 flex-wrap">
+              <span>Week {day.week.number}</span>
+              {day.week.style &&
+                (() => {
+                  const info = termInfo(day.week.style!);
+                  const label = (
+                    <span className="text-accent">: {day.week.style}</span>
+                  );
+                  return info ? (
+                    <InfoTip
+                      title={info.title}
+                      desc={info.desc}
+                      className="text-accent"
+                    >
+                      {label}
+                    </InfoTip>
+                  ) : (
+                    label
+                  );
+                })()}
+              <span>· Day {(day.week.number - 1) * 7 + day.dayNumber}</span>
+            </div>
+            <h1 className="text-2xl font-bold leading-tight">{day.focus}</h1>
+          </div>
+        </div>
+
+        <WorkoutLogger
+          dayId={day.id}
+          unit={user.unit as Unit}
+          exercises={exercises}
+          initialStatus={session?.status === "completed" ? "completed" : "in_progress"}
+          initialMeta={{
+            notes: session?.notes ?? "",
+            mood: session?.mood ?? "",
+            bodyweight: session?.bodyweight ?? null,
+          }}
+        />
+      </main>
+    </>
+  );
+}
