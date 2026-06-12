@@ -10,6 +10,7 @@ import {
   setNutritionGoalsAction,
 } from "@/lib/actions";
 import { toast } from "@/lib/toast";
+import EmptyState from "./EmptyState";
 
 type Entry = {
   id: string;
@@ -62,7 +63,12 @@ export function FoodLog({ entries }: { entries: Entry[] }) {
     <div>
       <div className="space-y-2 mb-4">
         {entries.length === 0 && (
-          <p className="text-muted text-sm">Nothing logged yet today.</p>
+          <EmptyState
+            compact
+            icon="🍽️"
+            title="No food logged yet"
+            description="Add your first meal below to start tracking calories and macros for today."
+          />
         )}
         {entries.map((e) => (
           <div

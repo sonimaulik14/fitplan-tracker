@@ -13,6 +13,11 @@
   --accent-hi: #18a9ff;
   --accent-2: #2fe6a8;
   --accent-3: #7c8cff;
+  /* semantic palette — consistent meaning across the app */
+  --success: #2fe6a8;
+  --warn: #f5c451;
+  --danger: #ff6a3d;
+  --pr: #ffd25f; /* gold — personal records & milestones */
 }
 
 :root[data-theme="light"] {
@@ -26,6 +31,11 @@
   --muted: #515a6b;
   --accent: #2f6bff;
   --accent-hi: #18a9ff;
+  /* darker semantic tones so they stay legible on the light background */
+  --success: #0a9d6b;
+  --warn: #b67c0a;
+  --danger: #e0521f;
+  --pr: #c79200;
 }
 
 @theme inline {
@@ -41,6 +51,10 @@
   --color-accent-hi: var(--accent-hi);
   --color-accent-2: var(--accent-2);
   --color-accent-3: var(--accent-3);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-pr: var(--pr);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-inter), system-ui, sans-serif;
 }
@@ -48,6 +62,9 @@
 html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Always keep the vertical scrollbar track so short→tall page changes don't
+     shift the layout sideways on navigation. */
+  overflow-y: scroll;
 }
 
 body {
@@ -224,9 +241,11 @@ h1 {
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    opacity: 0.5;
-    filter: saturate(1.05) contrast(1.02);
+    opacity: 0.8;
+    filter: saturate(1.12) contrast(1.05) brightness(0.9);
   }
+  /* Legibility scrim: lighter at top (immersive) → darker toward content,
+     plus a soft vignette so the photo reads without washing out cards. */
   .ambient-photo::after {
     content: "";
     position: absolute;
@@ -234,13 +253,18 @@ h1 {
     background:
       linear-gradient(
         180deg,
-        color-mix(in srgb, var(--background) 78%, transparent) 0%,
-        color-mix(in srgb, var(--background) 90%, transparent) 55%,
-        var(--background) 100%
+        color-mix(in srgb, var(--background) 32%, transparent) 0%,
+        color-mix(in srgb, var(--background) 55%, transparent) 42%,
+        color-mix(in srgb, var(--background) 80%, transparent) 100%
+      ),
+      radial-gradient(
+        130% 100% at 50% -5%,
+        transparent 35%,
+        color-mix(in srgb, var(--background) 75%, transparent) 100%
       );
   }
   :root[data-theme="light"] .ambient-photo {
-    opacity: 0.18;
+    opacity: 0.32;
   }
   .card-hover {
     transition:
@@ -256,7 +280,7 @@ h1 {
   .btn,
   .btn-primary,
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5
       text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed
       active:scale-[0.97];
   }

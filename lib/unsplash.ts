@@ -11,6 +11,7 @@ export type Photo = {
 // Local fallbacks (always present in /public/kris) keyed by slot. Page slots map
 // to varied local photos so banners differ even without an Unsplash key.
 const PAGE_FALLBACK: Record<string, string> = {
+  "page:auth": "back",
   "page:analysis": "back",
   "page:progress": "cardio",
   "page:plan": "legs",

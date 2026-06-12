@@ -19,7 +19,7 @@ export default async function PhotoHero({
   const photo = await getPhoto(queryKey);
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl img-overlay h-44 sm:h-56 animate-fade-up ${className}`}
+      className={`relative overflow-hidden rounded-2xl img-overlay h-56 sm:h-72 animate-fade-up ${className}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -33,7 +33,7 @@ export default async function PhotoHero({
             {eyebrow}
           </span>
         )}
-        <h1 className="font-display text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
+        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white drop-shadow-lg">
           {title}
         </h1>
         {subtitle && (

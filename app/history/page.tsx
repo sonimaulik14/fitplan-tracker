@@ -5,13 +5,14 @@ import { getWorkoutHistory } from "@/lib/metrics";
 import { fmtVolume, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
+import EmptyState from "@/app/components/EmptyState";
 import { FocusGlyph } from "@/app/components/icons";
 
 export const metadata = { title: "Workout history" };
 
 const statusCls: Record<string, string> = {
-  completed: "text-accent-2 border-accent-2/30 bg-accent-2/10",
-  in_progress: "text-amber-300 border-amber-400/30 bg-amber-400/10",
+  completed: "text-success border-success/30 bg-success/10",
+  in_progress: "text-warn border-warn/30 bg-warn/10",
 };
 
 export default async function HistoryPage() {
@@ -37,8 +38,14 @@ export default async function HistoryPage() {
         </Link>
 
         {history.length === 0 ? (
-          <div className="card p-8 mt-6 text-center text-muted">
-            No workouts logged yet — start one from the dashboard.
+          <div className="card mt-6">
+            <EmptyState
+              icon="🏋️"
+              title="No workouts logged yet"
+              description="Log your first session and it'll show up here — newest first — so you can track every workout over time."
+              ctaLabel="Start a workout"
+              ctaHref="/dashboard"
+            />
           </div>
         ) : (
           <div className="card divide-y divide-border overflow-hidden mt-6">

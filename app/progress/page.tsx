@@ -18,6 +18,7 @@ import {
 } from "@/app/components/ProgressClient";
 import { Reveal } from "@/app/components/motion";
 import ShareCard from "@/app/components/ShareCard";
+import PhotoCompare from "@/app/components/PhotoCompare";
 import PhotoHero from "@/app/components/PhotoHero";
 import { AchievementBadge } from "@/app/components/icons";
 import { fmtVolume, type Unit } from "@/lib/ui";
@@ -297,18 +298,15 @@ export default async function ProgressPage() {
             ) : (
               <>
                 {photos.length >= 2 && (
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <BeforeAfter
-                      label="Before"
-                      src={photos[0].dataUrl}
-                      date={photos[0].date}
-                    />
-                    <BeforeAfter
-                      label="Latest"
-                      src={photos[photos.length - 1].dataUrl}
-                      date={photos[photos.length - 1].date}
-                    />
-                  </div>
+                  <PhotoCompare
+                    photos={photos.map((ph) => ({
+                      id: ph.id,
+                      dataUrl: ph.dataUrl,
+                      date: ph.date.toISOString(),
+                    }))}
+                    bw={bw}
+                    unit={unit}
+                  />
                 )}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {photos.map((ph) => (
@@ -393,29 +391,6 @@ function StreakStat({
         {value}
       </div>
       <div className="text-xs text-muted">{label}</div>
-    </div>
-  );
-}
-
-function BeforeAfter({
-  label,
-  src,
-  date,
-}: {
-  label: string;
-  src: string;
-  date: Date;
-}) {
-  return (
-    <div className="relative rounded-xl overflow-hidden aspect-[3/4] border border-border img-overlay">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={label} className="w-full h-full object-cover" />
-      <div className="absolute bottom-2 left-3 z-10 text-white">
-        <div className="font-semibold text-sm drop-shadow">{label}</div>
-        <div className="text-[11px] text-white/80">
-          {new Date(date).toLocaleDateString()}
-        </div>
-      </div>
     </div>
   );
 }

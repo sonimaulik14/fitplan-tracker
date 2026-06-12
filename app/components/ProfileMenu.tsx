@@ -66,7 +66,7 @@ export default function ProfileMenu({
             aria-hidden
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-64 z-50 card p-2 shadow-2xl animate-scale-in origin-top-right">
+          <div className="absolute right-0 mt-2 w-64 z-50 rounded-2xl border border-border-strong bg-surface-solid p-2 shadow-2xl animate-scale-in origin-top-right">
             {/* header */}
             <div className="flex items-center gap-3 p-2">
               <Avatar name={name} src={avatarUrl} size={40} />
@@ -87,6 +87,13 @@ export default function ProfileMenu({
               icon="sliders"
             >
               Training preferences
+            </MenuLink>
+            <MenuLink
+              href="/plans"
+              onClick={() => setOpen(false)}
+              icon="switch"
+            >
+              Switch program
             </MenuLink>
 
             <div className="h-px bg-border my-1.5" />
@@ -122,7 +129,7 @@ export default function ProfileMenu({
             <div className="h-px bg-border my-1.5" />
 
             <form action={logoutAction}>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-300 hover:bg-red-500/10 transition-colors">
+              <button className="btn-ghost w-full">
                 <Icon name="logout" />
                 Sign out
               </button>
@@ -183,6 +190,15 @@ function Icon({ name }: { name: string }) {
         <circle cx="16" cy="6" r="2" />
         <circle cx="8" cy="12" r="2" />
         <circle cx="13" cy="18" r="2" />
+      </svg>
+    );
+  if (name === "switch")
+    return (
+      <svg {...common}>
+        <path d="M17 2l4 4-4 4" />
+        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+        <path d="M7 22l-4-4 4-4" />
+        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
       </svg>
     );
   return (

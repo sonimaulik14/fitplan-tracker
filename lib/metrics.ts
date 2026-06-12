@@ -1,19 +1,52 @@
 import { prisma } from "./prisma";
 
-export async function getActivePlan() {
-  return prisma.plan.findFirst({
+const PLAN_INCLUDE = {
+  weeks: {
+    orderBy: { number: "asc" as const },
     include: {
-      weeks: {
-        orderBy: { number: "asc" },
-        include: {
-          days: {
-            orderBy: { orderIndex: "asc" },
-            include: { exercises: { orderBy: { orderIndex: "asc" } } },
-          },
-        },
+      days: {
+        orderBy: { orderIndex: "asc" as const },
+        include: { exercises: { orderBy: { orderIndex: "asc" as const } } },
       },
     },
+  },
+};
+
+// The plan to show a user. With a userId, returns the plan from their active
+// enrollment (so each user sees the plan they started), or null if they haven't
+// enrolled yet. With no userId, falls back to the first plan (browse contexts).
+export async function getActivePlan(userId?: string) {
+  if (userId) {
+    const enr = await prisma.enrollment.findFirst({
+      where: { userId, status: "active" },
+      orderBy: { startDate: "desc" },
+    });
+    if (!enr) return null;
+    return prisma.plan.findUnique({
+      where: { id: enr.planId },
+      include: PLAN_INCLUDE,
+    });
+  }
+  return prisma.plan.findFirst({ include: PLAN_INCLUDE });
+}
+
+// All plans the user can choose from, with light summary stats for the picker.
+export async function getAllPlans() {
+  const plans = await prisma.plan.findMany({
+    orderBy: { totalWeeks: "asc" },
+    include: { weeks: { take: 1, orderBy: { number: "asc" }, include: { days: true } } },
   });
+  return plans.map((pl) => ({
+    id: pl.id,
+    name: pl.name,
+    description: pl.description,
+    totalWeeks: pl.totalWeeks,
+    daysPerWeek: pl.weeks[0]
+      ? pl.weeks[0].days.filter(
+          (d) => !d.focus.toLowerCase().includes("rest")
+        ).length
+      : 0,
+  }));
 }
 
 /**
@@ -52,7 +85,7 @@ export type DayProgress = {
 };
 
 export async function getProgress(userId: string) {
-  const plan = await getActivePlan();
+  const plan = await getActivePlan(userId);
   if (!plan) return null;
 
   const enrollment = await prisma.enrollment.findFirst({
@@ -825,6 +858,101 @@ export async function getExerciseHistory(userId: string, name: string) {
   const latestBwKg = bw.length ? bw[bw.length - 1].weight : null;
 
   return { name, muscle, points, best1RM, plateau, latestBwKg };
+}
+
+export type Plateau = {
+  name: string;
+  muscle: string;
+  repTarget: string;
+  bestKg: number; // best est. 1RM reached before stalling
+  recentTopKg: number; // heaviest top-set weight in the most recent session
+  recentReps: number;
+  sessionsStalled: number;
+};
+
+/**
+ * All weighted lifts whose estimated 1RM has stalled — the last 3+ sessions
+ * never exceeded the prior best. One query across every exercise, so the
+ * dashboard can proactively coach instead of waiting for the user to dig.
+ */
+export async function getPlateaus(userId: string): Promise<Plateau[]> {
+  const entries = await prisma.setEntry.findMany({
+    where: {
+      done: true,
+      weight: { not: null },
+      reps: { not: null },
+      session: { enrollment: { userId } },
+    },
+    include: {
+      planExercise: true,
+      session: { include: { enrollment: { include: { swaps: true } } } },
+    },
+    orderBy: { session: { performedDate: "asc" } },
+  });
+
+  type Pt = { date: string; topWeight: number; reps: number; best1RM: number };
+  const byEx = new Map<
+    string,
+    { muscle: string; repTarget: string; byDate: Map<string, Pt> }
+  >();
+
+  for (const e of entries) {
+    if (e.planExercise.isCardio) continue;
+    const swap = e.session.enrollment.swaps.find(
+      (s) => s.planExerciseId === e.planExerciseId
+    );
+    const name = swap?.name ?? e.planExercise.name;
+    let rec = byEx.get(name);
+    if (!rec) {
+      rec = {
+        muscle: e.planExercise.muscle,
+        repTarget: e.planExercise.repTarget,
+        byDate: new Map(),
+      };
+      byEx.set(name, rec);
+    }
+    const key = ymd(e.session.performedDate);
+    const w = e.weight!;
+    const reps = e.reps!;
+    const cur =
+      rec.byDate.get(key) ?? { date: key, topWeight: 0, reps: 0, best1RM: 0 };
+    if (w > cur.topWeight) {
+      cur.topWeight = w;
+      cur.reps = reps;
+    }
+    cur.best1RM = Math.max(cur.best1RM, est1RM(w, reps));
+    rec.byDate.set(key, cur);
+  }
+
+  const plateaus: Plateau[] = [];
+  for (const [name, rec] of byEx) {
+    const points = [...rec.byDate.values()].sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
+    if (points.length < 4) continue;
+    const priorBest = Math.max(...points.slice(0, -3).map((p) => p.best1RM));
+    const stalledTail = points.slice(-3).every((p) => p.best1RM <= priorBest + 0.01);
+    if (!stalledTail) continue;
+
+    // how many of the most recent sessions are at/under the prior best
+    let sessionsStalled = 0;
+    for (let i = points.length - 1; i >= 0; i--) {
+      if (points[i].best1RM <= priorBest + 0.01) sessionsStalled++;
+      else break;
+    }
+    const recent = points[points.length - 1];
+    plateaus.push({
+      name,
+      muscle: rec.muscle,
+      repTarget: rec.repTarget,
+      bestKg: priorBest,
+      recentTopKg: recent.topWeight,
+      recentReps: recent.reps,
+      sessionsStalled,
+    });
+  }
+
+  return plateaus.sort((a, b) => b.sessionsStalled - a.sessionsStalled);
 }
 
 /** Effective exercise-name overrides for a user's plan enrollment. */

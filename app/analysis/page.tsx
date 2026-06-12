@@ -111,6 +111,76 @@ export default async function AnalysisPage() {
     .sort((a, b) => a.weeks[0] - b.weeks[0]);
   const maxStyleVol = Math.max(1, ...styles.map((s) => s.volume));
 
+  // ---- Insights band: turn the dense data below into a plain-language summary ----
+  const trained = p.weekly.filter((w) => w.doneSets > 0);
+  const lastWk = trained[trained.length - 1];
+  const prevWk = trained[trained.length - 2];
+  const volTrend =
+    lastWk && prevWk && prevWk.volume > 0
+      ? Math.round(((lastWk.volume - prevWk.volume) / prevWk.volume) * 100)
+      : null;
+
+  const muscleCompletion = muscles
+    .map((m) => ({
+      muscle: m,
+      pct: p.setsByMuscle[m].prescribed
+        ? p.setsByMuscle[m].done / p.setsByMuscle[m].prescribed
+        : 0,
+      done: p.setsByMuscle[m].done,
+    }))
+    .filter((x) => x.done > 0);
+  const best = [...muscleCompletion].sort((a, b) => b.pct - a.pct)[0];
+  const worst = [...muscleCompletion].sort((a, b) => a.pct - b.pct)[0];
+
+  const narrative = [
+    `You've completed ${p.completedWorkouts} of ${p.prescribedWorkouts} workouts at ${p.workoutAdherence}% adherence.`,
+    volTrend !== null
+      ? volTrend >= 0
+        ? `Volume is up ${volTrend}% week-over-week — keep that momentum.`
+        : `Volume dipped ${Math.abs(volTrend)}% this week; an easy win is to recover the lost sets.`
+      : null,
+    best && worst && best.muscle !== worst.muscle
+      ? `Strongest area is ${best.muscle}; give ${worst.muscle} some extra attention.`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const insights: {
+    icon: string;
+    value: string;
+    label: string;
+    color: string;
+  }[] = [
+    {
+      icon: "✅",
+      value: `${p.completedWorkouts}/${p.prescribedWorkouts}`,
+      label: "Workouts done",
+      color: "var(--success)",
+    },
+    {
+      icon: volTrend !== null && volTrend < 0 ? "📉" : "📈",
+      value:
+        volTrend !== null
+          ? `${volTrend >= 0 ? "+" : ""}${volTrend}%`
+          : fmtVolume(p.totalVolume, unit),
+      label: volTrend !== null ? "Volume vs last wk" : `${unit} lifted total`,
+      color: volTrend !== null && volTrend < 0 ? "var(--danger)" : "var(--success)",
+    },
+    {
+      icon: "🔥",
+      value: `${p.currentStreak}`,
+      label: "Day streak",
+      color: "var(--warn)",
+    },
+    {
+      icon: "🏆",
+      value: `${p.prs.length}`,
+      label: "Personal records",
+      color: "var(--pr)",
+    },
+  ];
+
   return (
     <>
       <NavBar user={user} />
@@ -120,6 +190,35 @@ export default async function AnalysisPage() {
           title="Analysis"
           subtitle={`How closely you're following ${p.plan.name}.`}
         />
+
+        {/* Insights — the dense charts below, in one glance */}
+        <section className="card p-6 animate-fade-up">
+          <h2 className="section-title">Highlights</h2>
+          {narrative && (
+            <p className="text-sm text-muted mt-2.5 leading-relaxed max-w-2xl">
+              {narrative}
+            </p>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+            {insights.map((it) => (
+              <div
+                key={it.label}
+                className="rounded-xl border border-border bg-surface-2 p-4"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg leading-none">{it.icon}</span>
+                  <span
+                    className="text-2xl font-display font-bold"
+                    style={{ color: it.color }}
+                  >
+                    {it.value}
+                  </span>
+                </div>
+                <div className="text-xs text-muted mt-1.5">{it.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Rings */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-up">
@@ -296,10 +395,10 @@ export default async function AnalysisPage() {
                 const pos = (n: number) => `${Math.min(100, (n / scale) * 100)}%`;
                 const toneColor =
                   verdict.tone === "good"
-                    ? "var(--accent-2)"
+                    ? "var(--success)"
                     : verdict.tone === "high"
-                      ? "#ff6a3d"
-                      : "#f5c451";
+                      ? "var(--danger)"
+                      : "var(--warn)";
                 return (
                   <div key={muscle}>
                     <div className="flex justify-between items-center text-sm mb-2">

@@ -12,8 +12,8 @@ export default function Landing() {
     <div className="flex-1">
       {/* Nav */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/60 backdrop-blur-xl">
-        <nav className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <nav className="max-w-6xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="grid place-items-center w-8 h-8 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
               F
             </span>
@@ -21,32 +21,33 @@ export default function Landing() {
               Fit<span className="gradient-text">Plan</span>
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <ThemeToggle />
-            <Link href="/login" className="btn-ghost !py-2">
+            <Link href="/login" className="btn-ghost !py-2 !px-3 sm:!px-4">
               Sign in
             </Link>
-            <Link href="/signup" className="btn-primary !py-2">
+            <Link href="/signup" className="btn-primary !py-2 !px-3 sm:!px-4">
               Get started
             </Link>
           </div>
         </nav>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute top-0 right-0 w-full lg:w-2/3 h-full opacity-25 [mask-image:linear-gradient(to_left,black,transparent)] pointer-events-none"
-        >
+      {/* Hero — full-bleed cinematic */}
+      <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+        <div aria-hidden className="absolute inset-0 pointer-events-none">
           <ExImage
             srcKey="hero"
             alt=""
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover kenburns"
           />
+          {/* dark to the left for headline legibility, photo breathes to the right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/25" />
+          {/* blend the bottom edge into the page below */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
         </div>
-      <div className="relative max-w-6xl mx-auto px-5 pt-16 sm:pt-24 pb-16 grid lg:grid-cols-2 gap-12 items-center">
-        <div>
+      <div className="relative w-full max-w-6xl mx-auto px-5 pt-20 sm:pt-24 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="min-w-0">
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -61,7 +62,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-5xl sm:text-6xl xl:text-7xl font-bold leading-[1.02] mt-6"
+            className="font-display text-[2.75rem] sm:text-6xl xl:text-7xl font-bold leading-[1.02] mt-6"
           >
             Your plan.
             <br />
@@ -110,7 +111,7 @@ export default function Landing() {
           initial={{ opacity: 0, scale: 0.92, rotate: -2 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="relative"
+          className="relative min-w-0 w-full"
         >
           <motion.div
             animate={{ y: [0, -12, 0] }}

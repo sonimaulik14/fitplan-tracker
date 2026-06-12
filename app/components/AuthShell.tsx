@@ -1,18 +1,41 @@
+import CoachPhoto from "./CoachPhoto";
+
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex-1 grid lg:grid-cols-2">
       {/* form side */}
-      <div className="flex items-center justify-center p-6 sm:p-10">
-        {children}
+      <div className="flex flex-col">
+        {/* mobile-only photographic header (desktop gets the full panel at right) */}
+        <div className="lg:hidden relative h-44 sm:h-52 overflow-hidden">
+          <CoachPhoto className="absolute inset-0 w-full h-full object-cover object-top duotone kenburns" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-background/10" />
+          <div className="absolute inset-0 flex flex-col justify-end p-6">
+            <span className="chip w-fit mb-2 !bg-black/30 !border-white/20 text-white backdrop-blur">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-2" /> 12-week
+              program
+            </span>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
+              Train the plan.{" "}
+              <span className="gradient-text">Track the proof.</span>
+            </h2>
+          </div>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center p-6 sm:p-10">
+          {children}
+        </div>
       </div>
 
-      {/* hero side */}
+      {/* hero side — full-bleed coach photo */}
       <div className="hidden lg:flex relative overflow-hidden border-l border-border">
+        <CoachPhoto className="absolute inset-0 w-full h-full object-cover object-top duotone kenburns" />
+        {/* scrim for text legibility + brand glow */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-background/20" />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(40rem 40rem at 80% 10%, rgba(47,107,255,0.25), transparent 55%), radial-gradient(40rem 40rem at 10% 90%, rgba(124,140,255,0.22), transparent 55%)",
+              "radial-gradient(40rem 40rem at 80% 10%, rgba(47,107,255,0.28), transparent 55%), radial-gradient(40rem 40rem at 10% 90%, rgba(124,140,255,0.22), transparent 55%)",
           }}
         />
         <div className="relative z-10 flex flex-col justify-center p-12 xl:p-16 max-w-xl">

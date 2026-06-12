@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress } from "@/lib/metrics";
+import { resetProgramAction } from "@/lib/actions";
 import { muscleStyle, focusKey, termInfo, GLOSSARY } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
+import DangerButton from "@/app/components/DangerButton";
 import ExImage from "@/app/components/ExImage";
 import InfoTip from "@/app/components/InfoTip";
 import PhotoHero from "@/app/components/PhotoHero";
@@ -43,12 +45,20 @@ export default async function PlanPage() {
           title={plan?.name ?? "Your plan"}
           subtitle={plan?.description ?? undefined}
         />
-        <Link
-          href="/library"
-          className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
-        >
-          📚 Browse exercise library →
-        </Link>
+        <div className="flex items-center gap-4 flex-wrap">
+          <Link
+            href="/library"
+            className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
+          >
+            📚 Browse exercise library →
+          </Link>
+          <Link
+            href="/plans"
+            className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
+          >
+            🔄 Change program
+          </Link>
+        </div>
 
         {!plan && (
           <div className="card p-8 mt-6 text-center text-muted">
@@ -270,6 +280,26 @@ export default async function PlanPage() {
             </dl>
           </details>
         </section>
+
+        {/* Reset program */}
+        {plan && (
+          <section className="card p-6 mt-6 flex items-center justify-between gap-4 border-danger/25">
+            <div>
+              <h2 className="font-bold">Reset this program</h2>
+              <p className="text-xs text-muted mt-0.5 max-w-sm">
+                Start over from day one. Clears your logged workouts; body
+                metrics, nutrition and photos are kept.
+              </p>
+            </div>
+            <DangerButton
+              label="Reset program"
+              title="Reset entire program?"
+              message="This permanently deletes every workout you've logged in this program and restarts it from day one. Body metrics, nutrition and photos are kept. This can't be undone."
+              confirmLabel="Reset program"
+              onConfirm={resetProgramAction}
+            />
+          </section>
+        )}
       </main>
     </>
   );

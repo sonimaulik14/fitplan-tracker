@@ -52,13 +52,62 @@ export async function loginAction(
   if (!user || !(await verifyPassword(password, user.passwordHash)))
     return { error: "Invalid email or password." };
 
-  await createSession(user.id);
+  const remember = formData.get("remember") != null;
+  await createSession(user.id, remember);
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
   await destroySession();
   redirect("/login");
+}
+
+// Clear all logged sets for a single workout day (deletes that day's session;
+// set entries cascade). The day shows as not-started again.
+export async function resetDayAction(
+  workoutDayId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  const day = await prisma.workoutDay.findUnique({
+    where: { id: workoutDayId },
+    include: { week: true },
+  });
+  if (!day) return { ok: false, error: "Workout not found." };
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { userId: user.id, planId: day.week.planId },
+  });
+  if (!enrollment) return { ok: false, error: "Not enrolled." };
+
+  await prisma.workoutSession.deleteMany({
+    where: { enrollmentId: enrollment.id, workoutDayId },
+  });
+  revalidatePath(`/workout/${workoutDayId}`);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// Wipe all logged progress for the active program and restart from day one
+// (deletes every session; set entries cascade; resets the start date). Logged
+// body metrics, nutrition and photos are untouched.
+export async function resetProgramAction() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { userId: user.id, status: "active" },
+    orderBy: { startDate: "desc" },
+  });
+  if (enrollment) {
+    await prisma.workoutSession.deleteMany({
+      where: { enrollmentId: enrollment.id },
+    });
+    await prisma.enrollment.update({
+      where: { id: enrollment.id },
+      data: { startDate: new Date() },
+    });
+  }
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function changePasswordAction(
@@ -143,16 +192,24 @@ export async function resetPasswordAction(
   redirect("/dashboard");
 }
 
-export async function startPlanAction() {
+export async function startPlanAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const plan = await prisma.plan.findFirst();
+  const planId = String(formData.get("planId") ?? "");
+  const plan = planId
+    ? await prisma.plan.findUnique({ where: { id: planId } })
+    : await prisma.plan.findFirst();
   if (!plan) throw new Error("No plan available to start.");
 
+  // Only one active plan at a time — pause any others, then activate this one.
+  await prisma.enrollment.updateMany({
+    where: { userId: user.id, status: "active" },
+    data: { status: "paused" },
+  });
   await prisma.enrollment.upsert({
     where: { userId_planId: { userId: user.id, planId: plan.id } },
-    update: {},
+    update: { status: "active" },
     create: { userId: user.id, planId: plan.id },
   });
 
@@ -325,15 +382,8 @@ export async function completeOnboardingAction(input: OnboardingInput) {
     },
   });
 
-  // Auto-enroll in the active plan.
-  const plan = await prisma.plan.findFirst();
-  if (plan) {
-    await prisma.enrollment.upsert({
-      where: { userId_planId: { userId: user.id, planId: plan.id } },
-      update: {},
-      create: { userId: user.id, planId: plan.id },
-    });
-  }
+  // Note: no auto-enroll — after onboarding the user lands on the dashboard's
+  // plan picker and chooses which program to start.
 
   // Optional starting weigh-in (convert chosen unit → kg).
   if (input.bodyweight && input.bodyweight > 0) {

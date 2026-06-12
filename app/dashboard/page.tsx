@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress } from "@/lib/metrics";
-import { startPlanAction } from "@/lib/actions";
+import { getProgress, getPlateaus, getAllPlans } from "@/lib/metrics";
 import { focusKey, quoteForDay, fmtVolume, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import MusclePhoto from "@/app/components/MusclePhoto";
 import ReminderNudge from "@/app/components/ReminderNudge";
 import WeekSwitcher from "@/app/components/WeekSwitcher";
 import WelcomeTour from "@/app/components/WelcomeTour";
+import PlateauCoach from "@/app/components/PlateauCoach";
+import PlanPicker from "@/app/components/PlanPicker";
 import {
   Reveal,
   GlowCard,
@@ -27,8 +28,8 @@ const statusMeta: Record<
   },
   in_progress: {
     label: "In progress",
-    cls: "text-amber-300 border-amber-400/30 bg-amber-400/10",
-    dot: "bg-amber-400",
+    cls: "text-warn border-warn/30 bg-warn/10",
+    dot: "bg-warn",
   },
   not_started: {
     label: "Not started",
@@ -48,6 +49,11 @@ export default async function DashboardPage({
   if (!user) redirect("/login");
   if (!user.onboardedAt) redirect("/onboarding");
   const p = await getProgress(user.id);
+  // A placeholder program (selected but no workouts built yet) has no days.
+  const hasWorkouts = (p?.days.length ?? 0) > 0;
+  const plateaus = p?.enrolled && hasWorkouts ? await getPlateaus(user.id) : [];
+  // Not enrolled yet → offer the available plans to choose from.
+  const plans = p?.enrolled ? [] : await getAllPlans();
   const firstName = user.name.split(" ")[0];
 
   // "Up next" = first not-completed training day (skip rest days if possible).
@@ -95,7 +101,7 @@ export default async function DashboardPage({
           </h1>
         </div>
 
-        {p?.enrolled && (
+        {p?.enrolled && hasWorkouts && (
           <ReminderNudge
             trainingToday={trainingToday}
             loggedToday={loggedToday}
@@ -106,7 +112,31 @@ export default async function DashboardPage({
           />
         )}
 
-        {!p?.plan && (
+        {/* Enrolled in a program whose workouts aren't built yet */}
+        {p?.enrolled && !hasWorkouts && (
+          <div
+            className="relative overflow-hidden card p-8 sm:p-10 mt-6 text-center animate-fade-up"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(47,107,255,0.12), rgba(124,140,255,0.10))",
+            }}
+          >
+            <div className="text-4xl">🏗️</div>
+            <h2 className="font-display text-2xl font-bold mt-3">
+              {p.plan.name}
+            </h2>
+            <p className="text-muted mt-2 max-w-md mx-auto">
+              This program&apos;s workouts are coming soon. Check back shortly —
+              or switch to another program in the meantime.
+            </p>
+            <Link href="/plans" className="btn-primary mt-6 !px-6 !py-3">
+              Switch program →
+            </Link>
+          </div>
+        )}
+
+        {/* No plans seeded at all */}
+        {!p?.enrolled && plans.length === 0 && (
           <div className="card p-6 mt-6 animate-fade-up">
             <p className="text-muted">
               No training plan is loaded yet. Run <code>npm run seed</code> to
@@ -115,30 +145,10 @@ export default async function DashboardPage({
           </div>
         )}
 
-        {/* Not enrolled → CTA hero */}
-        {p?.plan && !p.enrolled && (
-          <div
-            className="relative overflow-hidden card p-8 sm:p-10 mt-6 animate-fade-up"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(47,107,255,0.14), rgba(124,140,255,0.12))",
-            }}
-          >
-            <span className="chip mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-2" />{" "}
-              {p.totalWeeks}-week program
-            </span>
-            <h2 className="text-2xl font-bold max-w-lg">{p.plan.name}</h2>
-            <p className="text-muted mt-2 max-w-xl">{p.plan.description}</p>
-            <form action={startPlanAction} className="mt-6">
-              <button className="btn-primary !px-6 !py-3">
-                Start my plan →
-              </button>
-            </form>
-          </div>
-        )}
+        {/* Not enrolled → choose a plan to start */}
+        {!p?.enrolled && plans.length > 0 && <PlanPicker plans={plans} />}
 
-        {p?.enrolled && (
+        {p?.enrolled && hasWorkouts && (
           <>
             {/* Photo hero — "up next" workout */}
             {nextDay && (
@@ -265,6 +275,9 @@ export default async function DashboardPage({
                 </div>
               </div>
             </section>
+
+            {/* Coach — proactive plateau / deload guidance */}
+            <PlateauCoach plateaus={plateaus} unit={user.unit as Unit} />
 
             {/* Workouts */}
             {(() => {

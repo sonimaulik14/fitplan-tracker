@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const PLAN_NAME = "12-Week Transformation";
+const PLAN_NAME = "Kris Gethin's 12-Week Muscle Builder";
 
 type Ex = {
   name: string;
@@ -1232,9 +1232,20 @@ async function main() {
     }
   }
 
+  // Placeholder second program — selectable in the picker now; its weeks and
+  // exercises get added later.
+  await prisma.plan.create({
+    data: {
+      name: "Kris Gethin's 6-Week Shortcut to Shred",
+      description:
+        "A fast-paced 6-week fat-loss & conditioning block. Workouts coming soon.",
+      totalWeeks: 6,
+    },
+  });
+
   const exCount = await prisma.planExercise.count();
   console.log(
-    `Seeded "${PLAN_NAME}": ${Object.keys(WEEKS).length} week(s), ${exCount} exercises across ${week1.length} days.`
+    `Seeded "${PLAN_NAME}" + 1 placeholder plan: ${Object.keys(WEEKS).length} week(s), ${exCount} exercises across ${week1.length} days.`
   );
 }
 

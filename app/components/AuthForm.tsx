@@ -66,6 +66,43 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           />
         </div>
 
+        {mode === "login" && (
+          <div className="flex items-center justify-between gap-3">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-muted hover:text-foreground transition-colors">
+              <input
+                type="checkbox"
+                name="remember"
+                defaultChecked
+                className="peer sr-only"
+              />
+              <span className="grid place-items-center w-4 h-4 rounded border border-border-strong bg-surface-2 transition-colors peer-checked:bg-accent peer-checked:border-accent peer-checked:[&>svg]:opacity-100">
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="text-white opacity-0 transition-opacity"
+                >
+                  <path
+                    d="M5 12.5 10 17l9-10"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              Keep me signed in
+            </label>
+            <Link
+              href="/forgot"
+              className="text-sm text-muted hover:text-foreground shrink-0"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        )}
+
         {state?.error && (
           <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2.5">
             {state.error}
@@ -79,17 +116,6 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
               ? "Sign in"
               : "Create account"}
         </button>
-
-        {mode === "login" && (
-          <div className="text-right">
-            <Link
-              href="/forgot"
-              className="text-sm text-muted hover:text-foreground"
-            >
-              Forgot password?
-            </Link>
-          </div>
-        )}
       </form>
 
       {mode === "login" && (
