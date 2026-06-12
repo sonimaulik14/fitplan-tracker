@@ -244,7 +244,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   },
   dtp: {
     title: "DTP (Dramatic Transformation Principle)",
-    desc: "Kris Gethin's ascending-then-descending rep pyramids (e.g. 50→10→50) for huge volume and pump.",
+    desc: "Ascending-then-descending rep pyramids (e.g. 50→10→50) for huge volume and pump.",
   },
   "dtp extreme": {
     title: "DTP Extreme",

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
-// Login/auth hero photo of the coach (Kris Gethin). Drop the real photo at
+// Login/auth hero photo of the coach. Drop the real photo at
 // /public/kris/coach.jpg and it shows automatically; until then it falls back
 // to the hero gym shot so the page never has a broken image.
 export default function CoachPhoto({ className = "" }: { className?: string }) {
