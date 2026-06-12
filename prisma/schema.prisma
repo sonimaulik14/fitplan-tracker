@@ -12,6 +12,7 @@ model User {
   email        String          @unique
   name         String
   passwordHash String
+  tokenVersion Int             @default(0) // bumped to invalidate existing sessions
   unit         String          @default("kg")
   avatarUrl    String?
   goal         String?

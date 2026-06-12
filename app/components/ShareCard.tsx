@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { toPng } from "html-to-image";
 import { fmtVolume, type Unit } from "@/lib/ui";
 
 export default function ShareCard({
@@ -34,7 +33,7 @@ export default function ShareCard({
     if (!ref.current) return;
     setBusy(true);
     try {
-      const url = await toPng(ref.current, { pixelRatio: 2, cacheBust: true });
+      const url = await (await import("html-to-image")).toPng(ref.current, { pixelRatio: 2, cacheBust: true });
       const a = document.createElement("a");
       a.href = url;
       a.download = "fitplan-progress.png";

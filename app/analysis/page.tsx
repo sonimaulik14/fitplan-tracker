@@ -248,13 +248,13 @@ export default async function AnalysisPage() {
           <p className="text-xs text-muted mt-0.5 mb-5">
             Set completion and training volume per week.
           </p>
-          <div className="flex items-end gap-4 h-44">
+          <div className="flex items-end gap-1.5 sm:gap-4 h-44">
             {p.weekly.map((w) => (
               <div
                 key={w.weekNumber}
                 className="flex-1 flex flex-col items-center gap-2"
               >
-                <div className="flex items-end gap-1.5 h-32 w-full justify-center">
+                <div className="flex items-end gap-0.5 sm:gap-1.5 h-32 w-full justify-center">
                   <Bar
                     heightPct={w.setAdherence}
                     className="bg-gradient-to-t from-accent-2/60 to-accent-2"
@@ -631,7 +631,7 @@ function Bar({
 }) {
   return (
     <div
-      className={`w-4 rounded-t-md ${className}`}
+      className={`w-2.5 sm:w-4 rounded-t-md ${className}`}
       style={{ height: `${Math.max(2, heightPct)}%` }}
       title={title}
     />

@@ -359,6 +359,7 @@ export default async function DashboardPage({
                       <MusclePhoto
                         srcKey={focusKey(d.focus)}
                         alt={d.focus}
+                        sizes="(max-width: 640px) 100vw, 480px"
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 duotone"
                       />
                       {isToday && (

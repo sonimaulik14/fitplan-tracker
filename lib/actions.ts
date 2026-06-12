@@ -10,7 +10,9 @@ import {
   createSession,
   destroySession,
   getCurrentUser,
+  revokeSessions,
 } from "./auth";
+import { rateLimit } from "./rate-limit";
 
 const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
@@ -20,6 +22,8 @@ export async function signupAction(
   _prev: AuthState,
   formData: FormData
 ): Promise<AuthState> {
+  if (!(await rateLimit("signup", 5, 60_000)))
+    return { error: "Too many attempts. Please wait a minute and try again." };
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -43,6 +47,8 @@ export async function loginAction(
   _prev: AuthState,
   formData: FormData
 ): Promise<AuthState> {
+  if (!(await rateLimit("login", 8, 60_000)))
+    return { error: "Too many attempts. Please wait a minute and try again." };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
@@ -135,6 +141,10 @@ export async function changePasswordAction(
     where: { id: sessionUser.id },
     data: { passwordHash: await hashPassword(next) },
   });
+  // Invalidate sessions on other devices, then re-issue one for this device so
+  // the user stays signed in here.
+  await revokeSessions(sessionUser.id);
+  await createSession(sessionUser.id);
   return { ok: true };
 }
 
@@ -144,6 +154,8 @@ export async function requestPasswordResetAction(
   _prev: { sent?: boolean; link?: string } | undefined,
   formData: FormData
 ): Promise<{ sent?: boolean; link?: string }> {
+  // Throttle to curb reset-spam and email enumeration. Always report "sent".
+  if (!(await rateLimit("reset", 5, 15 * 60_000))) return { sent: true };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const user = email
     ? await prisma.user.findUnique({ where: { email } })
@@ -188,6 +200,8 @@ export async function resetPasswordAction(
     data: { passwordHash: await hashPassword(next) },
   });
   await prisma.passwordResetToken.deleteMany({ where: { userId: row.userId } });
+  // Invalidate any sessions issued before the reset, then sign in fresh.
+  await revokeSessions(row.userId);
   await createSession(row.userId);
   redirect("/dashboard");
 }

@@ -25,6 +25,7 @@ export default function ExImage({
       src={src}
       alt={alt}
       loading="lazy"
+      decoding="async"
       onError={() => {
         if (!src.endsWith(".svg")) setSrc(`/kris/${srcKey}.svg`);
       }}

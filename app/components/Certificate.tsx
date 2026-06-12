@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { toPng } from "html-to-image";
 
 export default function Certificate({
   name,
@@ -25,7 +24,7 @@ export default function Certificate({
     if (!ref.current) return;
     setBusy(true);
     try {
-      const url = await toPng(ref.current, {
+      const url = await (await import("html-to-image")).toPng(ref.current, {
         pixelRatio: 2,
         cacheBust: true,
       });

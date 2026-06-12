@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getPhoto } from "@/lib/unsplash";
 import PhotoCredit from "./PhotoCredit";
 
@@ -21,11 +22,13 @@ export default async function PhotoHero({
     <div
       className={`relative overflow-hidden rounded-2xl img-overlay h-56 sm:h-72 animate-fade-up ${className}`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src={photo.url}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover duotone kenburns"
+        fill
+        priority
+        sizes="(max-width: 768px) 100vw, 768px"
+        className="object-cover duotone kenburns"
       />
       <div className="absolute inset-0 z-10 p-6 flex flex-col justify-end">
         {eyebrow && (
