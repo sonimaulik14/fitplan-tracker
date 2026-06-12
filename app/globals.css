@@ -10,7 +10,7 @@
   --foreground: #f4f6fb;
   --muted: #a8b1c2;
   --accent: #2f6bff;
-  --accent-hi: #18a9ff;
+  --accent-hi: #4f86f5;
   --accent-2: #2fe6a8;
   --accent-3: #7c8cff;
   /* semantic palette — consistent meaning across the app */
@@ -30,7 +30,7 @@
   --foreground: #161a24;
   --muted: #515a6b;
   --accent: #2f6bff;
-  --accent-hi: #18a9ff;
+  --accent-hi: #4f86f5;
   /* darker semantic tones so they stay legible on the light background */
   --success: #0a9d6b;
   --warn: #b67c0a;
@@ -293,7 +293,7 @@ h1 {
     color: #ffffff;
     background: linear-gradient(135deg, var(--accent-hi), var(--accent));
     box-shadow:
-      0 6px 20px -6px rgba(47,107,255, 0.6),
+      0 6px 18px -8px rgba(47,107,255, 0.35),
       inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
   /* glossy sheen across the top of primary buttons */
@@ -310,7 +310,7 @@ h1 {
   }
   .btn-primary:hover {
     box-shadow:
-      0 12px 30px -6px rgba(47,107,255, 0.8),
+      0 10px 26px -8px rgba(47,107,255, 0.5),
       inset 0 1px 0 rgba(255, 255, 255, 0.28);
   }
   .btn-ghost {
@@ -359,7 +359,7 @@ h1 {
     background: linear-gradient(var(--accent-hi), var(--accent));
   }
   .gradient-text {
-    background: linear-gradient(135deg, var(--accent-hi), var(--accent), #18a9ff);
+    background: linear-gradient(135deg, var(--accent-hi), var(--accent), #4f86f5);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
