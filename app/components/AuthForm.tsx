@@ -118,7 +118,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         </button>
       </form>
 
-      {mode === "login" && (
+      {mode === "login" && process.env.NODE_ENV !== "production" && (
         <div className="mt-4 rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-xs text-muted">
           Demo login —{" "}
           <span className="text-foreground font-semibold">demo@fitplan.com</span> /{" "}
