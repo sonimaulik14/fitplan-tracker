@@ -390,7 +390,6 @@ export default async function AnalysisPage() {
             </p>
             <div className="space-y-5">
               {landmarks.map(({ muscle, weekly, l, verdict }) => {
-                const st = muscleStyle(muscle);
                 const scale = l.mrv * 1.25;
                 const pos = (n: number) => `${Math.min(100, (n / scale) * 100)}%`;
                 const toneColor =
@@ -515,7 +514,6 @@ export default async function AnalysisPage() {
           ) : (
             <div className="grid sm:grid-cols-2 gap-2">
               {p.prs.slice(0, 12).map((pr) => {
-                const st = muscleStyle(pr.muscle);
                 return (
                   <Link
                     key={pr.name}

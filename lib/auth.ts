@@ -100,8 +100,7 @@ export async function getCurrentUser() {
     });
     // Reject sessions issued before the latest password change.
     if (!user || user.tokenVersion !== tv) return null;
-    const { tokenVersion: _tv, ...rest } = user;
-    return rest;
+    return user;
   } catch {
     return null;
   }

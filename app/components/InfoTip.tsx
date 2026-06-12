@@ -51,7 +51,8 @@ export default function InfoTip({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          open ? hide() : show();
+          if (open) hide();
+          else show();
         }}
         onMouseEnter={show}
         aria-label={`What is ${title}?`}

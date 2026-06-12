@@ -483,7 +483,7 @@ export async function getLeaderboard() {
     }
     // current streak
     let streak = 0;
-    let cursor = new Date();
+    const cursor = new Date();
     cursor.setHours(0, 0, 0, 0);
     let t = cursor.getTime();
     if (!activeDates.has(ymd(new Date(t)))) t -= dayMs;

@@ -7,6 +7,24 @@ import InfoTip from "./InfoTip";
 
 type Wk = { number: number; style: string | null; completed: boolean };
 
+// Hoisted out of the component so it isn't recreated on every render.
+function Arrow({ to, dir }: { to?: Wk; dir: "l" | "r" }) {
+  return to ? (
+    <Link
+      href={`/dashboard?week=${to.number}`}
+      scroll={false}
+      aria-label={dir === "l" ? "Previous week" : "Next week"}
+      className="grid place-items-center w-8 h-8 rounded-lg border border-border bg-surface-2 text-muted hover:text-foreground hover:border-border-strong transition-colors"
+    >
+      {dir === "l" ? "‹" : "›"}
+    </Link>
+  ) : (
+    <span className="grid place-items-center w-8 h-8 rounded-lg border border-border/50 text-muted/40 select-none">
+      {dir === "l" ? "‹" : "›"}
+    </span>
+  );
+}
+
 export default function WeekSwitcher({
   weeks,
   selected,
@@ -28,22 +46,6 @@ export default function WeekSwitcher({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
-
-  const Arrow = ({ to, dir }: { to?: Wk; dir: "l" | "r" }) =>
-    to ? (
-      <Link
-        href={`/dashboard?week=${to.number}`}
-        scroll={false}
-        aria-label={dir === "l" ? "Previous week" : "Next week"}
-        className="grid place-items-center w-8 h-8 rounded-lg border border-border bg-surface-2 text-muted hover:text-foreground hover:border-border-strong transition-colors"
-      >
-        {dir === "l" ? "‹" : "›"}
-      </Link>
-    ) : (
-      <span className="grid place-items-center w-8 h-8 rounded-lg border border-border/50 text-muted/40 select-none">
-        {dir === "l" ? "‹" : "›"}
-      </span>
-    );
 
   return (
     <div className="flex items-center gap-2">

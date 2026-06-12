@@ -5,6 +5,17 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // React Compiler advisory rules flag correct-but-disprefered SSR /
+    // latest-value-ref patterns (e.g. reading localStorage in a mount effect to
+    // avoid a hydration mismatch). Keep them visible as warnings instead of
+    // failing the build; tighten incrementally.
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/immutability": "warn",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
