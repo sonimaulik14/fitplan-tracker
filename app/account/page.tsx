@@ -7,6 +7,7 @@ import ChangePasswordForm from "@/app/components/ChangePasswordForm";
 import AvatarUploader from "@/app/components/AvatarUploader";
 import ResetDemoCacheButton from "@/app/components/ResetDemoCacheButton";
 import RefreshPhotosButton from "@/app/components/RefreshPhotosButton";
+import RemindersSettings from "@/app/components/RemindersSettings";
 import PhotoHero from "@/app/components/PhotoHero";
 
 export const metadata = { title: "Account" };
@@ -39,6 +40,21 @@ export default async function AccountPage() {
           >
             Edit training preferences →
           </Link>
+        </section>
+
+        {/* Reminders */}
+        <section className="card p-6 animate-fade-up">
+          <h2 className="font-bold mb-4">Reminders</h2>
+          <RemindersSettings
+            remindersOn={user.remindersOn}
+            reminderTime={user.reminderTime}
+            trainingDays={
+              (user.trainingDays ?? "")
+                .split(",")
+                .map((s) => Number(s.trim()))
+                .filter((d) => !Number.isNaN(d))
+            }
+          />
         </section>
 
         {/* Security */}

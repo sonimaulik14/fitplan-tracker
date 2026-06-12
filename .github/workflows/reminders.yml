@@ -1,0 +1,19 @@
+# Reliable 15-minute reminder pings — use this if you're on Vercel's Hobby plan
+# (where native crons only fire once per day). Add two repo secrets:
+#   CRON_SECRET   — same value as the app's CRON_SECRET env var
+#   APP_URL       — your deployment origin, e.g. https://fitplan-tracker-seven.vercel.app
+# Then this hits the reminder endpoint every 15 minutes.
+name: reminders
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger reminder send
+        run: |
+          curl -fsS -X GET "${{ secrets.APP_URL }}/api/cron/reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

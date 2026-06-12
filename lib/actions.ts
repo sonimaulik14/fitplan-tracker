@@ -443,6 +443,38 @@ export async function setUnitAction(unit: "kg" | "lb") {
   return { ok: true };
 }
 
+export async function updateRemindersAction(input: {
+  remindersOn: boolean;
+  reminderTime: string;
+  trainingDays: number[];
+  timezone?: string;
+}) {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+
+  const time = /^\d{2}:\d{2}$/.test(input.reminderTime)
+    ? input.reminderTime
+    : "18:00";
+  const days = [...new Set(input.trainingDays)]
+    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+    .sort((a, b) => a - b);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      remindersOn: input.remindersOn,
+      reminderTime: time,
+      trainingDays: days.length ? days.join(",") : null,
+      ...(input.timezone && input.timezone.length < 64
+        ? { timezone: input.timezone }
+        : {}),
+    },
+  });
+  revalidatePath("/account");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
 export async function swapExerciseAction(
   planExerciseId: string,
   name: string
