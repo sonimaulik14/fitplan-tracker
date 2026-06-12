@@ -9,6 +9,7 @@ import CommandPalette from "./CommandPalette";
 const LINKS = [
   { href: "/dashboard", label: "Home", icon: HomeIcon },
   { href: "/plan", label: "Plan", icon: ListIcon },
+  { href: "/coach", label: "Coach", icon: CoachIcon },
   { href: "/progress", label: "Progress", icon: FireIcon },
   { href: "/leaderboard", label: "Ranks", icon: TrophyIcon },
   { href: "/analysis", label: "Stats", icon: ChartIcon },
@@ -108,7 +109,7 @@ export default function NavBar({ user }: { user: NavUser }) {
 
       {/* Mobile bottom tab bar */}
       <div className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {LINKS.map((l) => {
             const Icon = l.icon;
             const active = isActive(l.href);
@@ -165,6 +166,24 @@ function ListIcon({ active }: { active?: boolean }) {
         stroke="currentColor"
         strokeWidth={active ? 2.4 : 1.8}
         strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+function CoachIcon({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z"
+        stroke="currentColor"
+        strokeWidth={active ? 2.2 : 1.7}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"
+        stroke="currentColor"
+        strokeWidth={active ? 2 : 1.5}
         strokeLinejoin="round"
       />
     </svg>
