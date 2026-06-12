@@ -729,7 +729,7 @@ export default function WorkoutLogger({
               <button
                 type="button"
                 onClick={openFocus}
-                className="inline-flex items-center gap-1.5 rounded-full border border-accent/45 bg-surface-solid px-3 py-1 text-xs font-semibold text-accent hover:border-accent/70 hover:bg-accent/10 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent/45 bg-surface-solid px-3 py-1 text-xs font-semibold text-accent hover:border-accent/70 transition-colors"
               >
                 ⚡ Focus mode
               </button>
@@ -1500,7 +1500,7 @@ function AdaptControl({
         type="button"
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        className="inline-flex items-center gap-1.5 rounded-full border border-accent-2/45 bg-surface-solid px-3 py-1 text-xs font-semibold text-accent-2 hover:border-accent-2/70 hover:bg-accent-2/10 transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-full border border-accent-2/45 bg-surface-solid px-3 py-1 text-xs font-semibold text-accent-2 hover:border-accent-2/70 transition-colors"
       >
         🧰 Adapt
       </button>
