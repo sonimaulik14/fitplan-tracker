@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -1241,6 +1242,27 @@ async function main() {
         "A fast-paced 6-week fat-loss & conditioning block. Workouts coming soon.",
       totalWeeks: 6,
     },
+  });
+
+  // Demo account advertised on the login screen. Idempotent (upsert) so it
+  // survives reseeds, and enrolled in the main plan so the app has context.
+  const demoHash = await bcrypt.hash("demo123", 10);
+  const demo = await prisma.user.upsert({
+    where: { email: "demo@fitplan.com" },
+    update: { passwordHash: demoHash },
+    create: {
+      email: "demo@fitplan.com",
+      name: "Demo Athlete",
+      passwordHash: demoHash,
+      unit: "kg",
+      goal: "Build muscle",
+      onboardedAt: new Date(),
+    },
+  });
+  await prisma.enrollment.upsert({
+    where: { userId_planId: { userId: demo.id, planId: plan.id } },
+    update: { status: "active" },
+    create: { userId: demo.id, planId: plan.id, status: "active" },
   });
 
   const exCount = await prisma.planExercise.count();
