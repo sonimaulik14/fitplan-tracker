@@ -4,7 +4,17 @@ import { useEffect, useState, useTransition } from "react";
 import { updateRemindersAction } from "@/lib/actions";
 import { toast } from "@/lib/toast";
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+// Display Monday-first (how most people read a week); the value is the weekday
+// number stored in trainingDays (0=Sun .. 6=Sat).
+const DAY_ORDER = [
+  { v: 1, label: "Mon" },
+  { v: 2, label: "Tue" },
+  { v: 3, label: "Wed" },
+  { v: 4, label: "Thu" },
+  { v: 5, label: "Fri" },
+  { v: 6, label: "Sat" },
+  { v: 0, label: "Sun" },
+];
 
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -184,27 +194,32 @@ export default function RemindersSettings({
 
           <div>
             <span className="text-sm font-medium">On these days</span>
-            <div className="flex gap-1.5 mt-2 flex-wrap">
-              {DAYS.map((d, i) => {
-                const active = days.includes(i);
+            <div className="grid grid-cols-7 gap-1.5 mt-2">
+              {DAY_ORDER.map(({ v, label }) => {
+                const active = days.includes(v);
                 return (
                   <button
-                    key={d}
+                    key={v}
                     type="button"
-                    onClick={() => toggleDay(i)}
-                    className={`w-10 h-9 rounded-lg text-xs font-semibold border transition-colors ${
+                    aria-pressed={active}
+                    onClick={() => toggleDay(v)}
+                    className={`h-11 rounded-xl text-xs font-bold border transition-colors ${
                       active
-                        ? "bg-accent/15 border-accent/45 text-accent"
-                        : "bg-surface-2 border-border text-muted hover:text-foreground"
+                        ? "bg-accent text-white border-accent shadow-sm shadow-accent/30"
+                        : "bg-surface-2 text-muted border-border hover:text-foreground hover:border-border-strong"
                     }`}
                   >
-                    {d[0]}
+                    {label}
                   </button>
                 );
               })}
             </div>
-            <p className="text-[11px] text-muted mt-1.5">
-              No days selected = remind every day.
+            <p className="text-xs text-muted mt-2">
+              {days.length === 0
+                ? "Reminding you every day."
+                : `Reminding you on ${DAY_ORDER.filter((d) => days.includes(d.v))
+                    .map((d) => d.label)
+                    .join(", ")}.`}
             </p>
           </div>
         </>
