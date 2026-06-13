@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress, getActivity, buildAchievements } from "@/lib/metrics";
 import NavBar from "@/app/components/NavBar";
-import MonthCalendar from "@/app/components/MonthCalendar";
 import Certificate from "@/app/components/Certificate";
 import PhotoHero from "@/app/components/PhotoHero";
 import { AchievementBadge } from "@/app/components/icons";
@@ -33,8 +32,6 @@ export default async function AchievementsPage() {
   const unlocked = achievements.filter((a) => a.unlocked).length;
 
   const now = new Date();
-  const cells = activity.grid.map((g) => ({ date: g.date, count: g.count }));
-  const todayKey = activity.grid[activity.grid.length - 1]?.date ?? "";
 
   const planComplete =
     p.weeksSeeded === p.totalWeeks &&
@@ -104,17 +101,6 @@ export default async function AchievementsPage() {
               </div>
             </div>
           )}
-        </section>
-
-        {/* Calendar */}
-        <section className="card p-6 animate-fade-up">
-          <h2 className="section-title mb-4">Training calendar</h2>
-          <MonthCalendar
-            cells={cells}
-            initialYear={now.getFullYear()}
-            initialMonth={now.getMonth()}
-            todayKey={todayKey}
-          />
         </section>
 
         {/* Badges */}

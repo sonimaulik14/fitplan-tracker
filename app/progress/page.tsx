@@ -9,7 +9,6 @@ import {
   buildAchievements,
 } from "@/lib/metrics";
 import NavBar from "@/app/components/NavBar";
-import Heatmap from "@/app/components/Heatmap";
 import BodyweightChart from "@/app/components/BodyweightChart";
 import {
   WeighInForm,
@@ -150,17 +149,6 @@ export default async function ProgressPage() {
             </section>
           </Reveal>
         )}
-
-        {/* Heatmap */}
-        <Reveal>
-          <section className="card p-6">
-            <h2 className="section-title mb-1">Training calendar</h2>
-            <p className="text-xs text-muted mb-5">
-              Every day you logged sets, shaded by how much.
-            </p>
-            <Heatmap grid={activity.grid} />
-          </section>
-        </Reveal>
 
         {/* Weekly completion */}
         {p && (
