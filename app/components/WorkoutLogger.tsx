@@ -4,7 +4,7 @@ import { useState, useRef, useTransition, useMemo, useEffect, useCallback } from
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
-import { X, Check, ChevronLeft, ArrowLeftRight } from "lucide-react";
+import { X, Check, ChevronLeft, ArrowLeftRight, Zap, Wand2 } from "lucide-react";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
 import DangerButton from "./DangerButton";
 import {
@@ -708,45 +708,18 @@ export default function WorkoutLogger({
       {/* Progress header */}
       {!isLightDay && (
       <div className="card p-4 sticky top-[68px] z-20">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between gap-3 text-sm">
           <span className="text-muted">
             <span className="text-foreground font-bold text-base">{doneRows}</span>{" "}
             / {totalRows} sets logged
           </span>
-          <div className="flex items-center gap-2">
-            {status !== "completed" && (
-              <AdaptControl
-                exercises={exercises.map((e) => ({
-                  id: e.id,
-                  name: e.name,
-                  muscle: e.muscle,
-                  isCardio: e.isCardio,
-                }))}
-                onApply={applyAdaptations}
-              />
-            )}
-            {steps.length > 0 && status !== "completed" && (
-              <button
-                type="button"
-                onClick={openFocus}
-                className="inline-flex items-center gap-1.5 rounded-full border border-accent/45 bg-surface-solid px-3 py-1 text-xs font-semibold text-accent hover:border-accent/70 transition-colors"
-              >
-                ⚡ Focus mode
-              </button>
-            )}
-            <span className="text-muted text-xs w-14 text-right">
-              {saveState === "saving"
-                ? "Saving…"
-                : saveState === "saved"
-                  ? "Saved ✓"
-                  : `${pct}%`}
-            </span>
-            {status === "completed" && (
-              <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent-2" /> Done
-              </span>
-            )}
-          </div>
+          <span className="shrink-0 text-xs font-semibold text-muted tabular-nums">
+            {saveState === "saving"
+              ? "Saving…"
+              : saveState === "saved"
+                ? "Saved ✓"
+                : `${pct}%`}
+          </span>
         </div>
         <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-2.5">
           <div
@@ -754,6 +727,34 @@ export default function WorkoutLogger({
             style={{ width: `${pct}%` }}
           />
         </div>
+        {status === "completed" ? (
+          <div className="mt-3">
+            <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-2" /> Workout complete
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 mt-3">
+            <AdaptControl
+              exercises={exercises.map((e) => ({
+                id: e.id,
+                name: e.name,
+                muscle: e.muscle,
+                isCardio: e.isCardio,
+              }))}
+              onApply={applyAdaptations}
+            />
+            {steps.length > 0 && (
+              <button
+                type="button"
+                onClick={openFocus}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm font-semibold text-accent hover:bg-accent/20 active:scale-[0.98] transition-all"
+              >
+                <Zap size={15} /> Focus mode
+              </button>
+            )}
+          </div>
+        )}
       </div>
       )}
 
@@ -1500,9 +1501,9 @@ function AdaptControl({
         type="button"
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        className="inline-flex items-center gap-1.5 rounded-full border border-accent-2/45 bg-surface-solid px-3 py-1 text-xs font-semibold text-accent-2 hover:border-accent-2/70 transition-colors"
+        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-accent-2/30 bg-accent-2/10 px-3 py-2 text-sm font-semibold text-accent-2 hover:bg-accent-2/20 active:scale-[0.98] transition-all"
       >
-        🧰 Adapt
+        <Wand2 size={15} /> Adapt
       </button>
 
       {open && mounted && createPortal(

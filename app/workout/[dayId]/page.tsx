@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -107,22 +108,26 @@ export default async function WorkoutPage({
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28">
         <Link
           href="/dashboard"
-          className="text-sm text-muted hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 py-1.5 pl-2 pr-3.5 text-sm font-medium text-muted hover:text-foreground hover:border-border-strong transition-colors"
         >
-          ← Back to dashboard
+          <ChevronLeft size={16} /> Dashboard
         </Link>
-        <div className="mt-3 mb-6 flex items-center gap-4 animate-fade-up">
-          <span className="grid place-items-center w-14 h-14 rounded-2xl bg-surface-2 border border-border">
+        <div className="mt-4 mb-6 flex items-center gap-4 animate-fade-up">
+          <span className="grid place-items-center w-14 h-14 rounded-2xl bg-surface-2 border border-border shrink-0">
             <FocusGlyph focus={day.focus} size={28} />
           </span>
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted flex items-center gap-1.5 flex-wrap">
-              <span>Week {day.week.number}</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1.5 text-sm">
+              <span className="font-semibold text-muted">
+                Week {day.week.number}
+              </span>
               {day.week.style &&
                 (() => {
                   const info = termInfo(day.week.style!);
-                  const label = (
-                    <span className="text-accent">: {day.week.style}</span>
+                  const chip = (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-accent/30 bg-accent/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent">
+                      {day.week.style}
+                    </span>
                   );
                   return info ? (
                     <InfoTip
@@ -130,13 +135,16 @@ export default async function WorkoutPage({
                       desc={info.desc}
                       className="text-accent"
                     >
-                      {label}
+                      {chip}
                     </InfoTip>
                   ) : (
-                    label
+                    chip
                   );
                 })()}
-              <span>· Day {(day.week.number - 1) * 7 + day.dayNumber}</span>
+              <span className="text-muted">·</span>
+              <span className="font-semibold text-muted">
+                Day {(day.week.number - 1) * 7 + day.dayNumber}
+              </span>
             </div>
             <h1 className="text-2xl font-bold leading-tight">{day.focus}</h1>
           </div>

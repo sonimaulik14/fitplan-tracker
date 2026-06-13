@@ -22,17 +22,44 @@ type NavUser = {
   avatarUrl?: string | null;
 };
 
+// Title shown centered in the mobile header for context.
+const TITLES: Record<string, string> = {
+  workout: "Workout",
+  account: "Account",
+  nutrition: "Nutrition",
+  measurements: "Body",
+  records: "Records",
+  history: "History",
+  library: "Library",
+  targets: "Targets",
+  wrapped: "Wrapped",
+  exercise: "Exercise",
+  plans: "Programs",
+  onboarding: "Setup",
+};
+function pageTitle(pathname: string, isActive: (h: string) => boolean): string {
+  const link = LINKS.find((l) => isActive(l.href));
+  if (link) return link.label;
+  const seg = pathname.split("/").filter(Boolean)[0] ?? "";
+  return TITLES[seg] ?? (seg ? seg[0].toUpperCase() + seg.slice(1) : "");
+}
+
 export default function NavBar({ user }: { user: NavUser }) {
   const pathname = usePathname();
   const unit: Unit = user.unit === "lb" ? "lb" : "kg";
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
+  const title = pageTitle(pathname, isActive);
 
   return (
     <>
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/55 backdrop-blur-2xl shadow-[0_8px_30px_-24px_rgba(0,0,0,0.8)] pt-[env(safe-area-inset-top)]">
-        <nav className="max-w-5xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-3">
+        <nav className="relative max-w-5xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-3">
+          {/* mobile: page title centered, fills the bar with context */}
+          <span className="md:hidden absolute left-1/2 -translate-x-1/2 font-display font-bold text-base text-foreground pointer-events-none">
+            {title}
+          </span>
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
             <span className="grid place-items-center w-8 h-8 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
               F
@@ -65,6 +92,17 @@ export default function NavBar({ user }: { user: NavUser }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* mobile: icon-only search → opens the command palette */}
+            <button
+              onClick={() => window.dispatchEvent(new Event("fitplan:command"))}
+              aria-label="Search"
+              className="sm:hidden grid place-items-center w-9 h-9 rounded-xl border border-border bg-surface-2 text-muted active:scale-95 transition-transform"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+                <path d="m20 20-3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
             <button
               onClick={() =>
                 window.dispatchEvent(new Event("fitplan:command"))
