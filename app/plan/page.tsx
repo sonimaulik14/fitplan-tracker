@@ -146,7 +146,7 @@ export default async function PlanPage() {
 
         {plan?.weeks.map((week) => (
           <section key={week.id} className="mt-8">
-            <h2 className="font-bold text-lg mb-4 flex items-center gap-1.5">
+            <h2 className="font-display font-bold text-xl mb-4 flex items-center gap-1.5 tracking-tight">
               Week {week.number}
               {week.style ? (
                 (() => {

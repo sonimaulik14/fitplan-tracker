@@ -208,7 +208,7 @@ export default async function AnalysisPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-lg leading-none">{it.icon}</span>
                   <span
-                    className="text-2xl font-display font-bold"
+                    className="text-3xl font-display font-bold tracking-tight"
                     style={{ color: it.color }}
                   >
                     {it.value}

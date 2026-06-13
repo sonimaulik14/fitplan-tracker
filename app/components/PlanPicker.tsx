@@ -51,9 +51,10 @@ export default function PlanPicker({
               type="button"
               onClick={() => setSelected(p.id)}
               aria-pressed={on}
+              style={on ? { background: "var(--grad-brand-soft)" } : undefined}
               className={`text-left rounded-2xl border p-5 transition-all ${
                 on
-                  ? "border-accent ring-1 ring-accent/40 bg-accent/5"
+                  ? "border-accent ring-1 ring-accent/40 shadow-[0_18px_40px_-22px_rgba(106,92,246,0.55)]"
                   : "border-border bg-surface hover:border-border-strong"
               }`}
             >
@@ -70,7 +71,7 @@ export default function PlanPicker({
                 </span>
                 <span
                   className={`grid place-items-center w-5 h-5 rounded-full border-2 shrink-0 ${
-                    on ? "border-accent bg-accent" : "border-border-strong"
+                    on ? "border-transparent brand-bg" : "border-border-strong"
                   }`}
                 >
                   {on && (
@@ -78,7 +79,7 @@ export default function PlanPicker({
                   )}
                 </span>
               </div>
-              <h3 className="font-display font-bold text-lg mt-3">{p.name}</h3>
+              <h3 className="font-display font-bold text-xl mt-3">{p.name}</h3>
               {p.description && (
                 <p className="text-sm text-muted mt-1.5 leading-relaxed line-clamp-3">
                   {p.description}
