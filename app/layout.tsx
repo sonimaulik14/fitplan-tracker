@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Toaster from "./components/Toaster";
@@ -60,11 +61,12 @@ export default function RootLayout({
       className={`${inter.variable} h-full`}
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'dark';if(t==='system'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();`,
-          }}
-        />
+        {/* Anti-flash theme init — runs before paint. next/script keeps it out
+            of React's render tree (no "script in component" warning) while
+            still inlining it into the initial HTML head. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'dark';if(t==='system'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();`}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col">
         <AmbientPhoto />

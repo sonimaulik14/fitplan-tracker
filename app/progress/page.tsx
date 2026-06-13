@@ -383,7 +383,7 @@ function StreakStat({
       <Icon
         className={`${big ? "text-accent" : "text-muted"}`}
         size={big ? 22 : 20}
-        strokeWidth={2}
+        strokeWidth={1.75}
         aria-hidden
       />
       <div
