@@ -188,13 +188,13 @@ export default function RemindersSettings({
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="input !w-auto !py-1.5"
+              className="input !w-auto !py-2 text-base font-semibold"
             />
           </div>
 
           <div>
             <span className="text-sm font-medium">On these days</span>
-            <div className="grid grid-cols-7 gap-1.5 mt-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mt-2">
               {DAY_ORDER.map(({ v, label }) => {
                 const active = days.includes(v);
                 return (
@@ -202,11 +202,12 @@ export default function RemindersSettings({
                     key={v}
                     type="button"
                     aria-pressed={active}
+                    aria-label={label}
                     onClick={() => toggleDay(v)}
-                    className={`h-11 rounded-xl text-xs font-bold border transition-colors ${
+                    className={`flex items-center justify-center h-12 rounded-xl text-xs font-bold border transition-colors ${
                       active
                         ? "bg-accent text-white border-accent shadow-sm shadow-accent/30"
-                        : "bg-surface-2 text-muted border-border hover:text-foreground hover:border-border-strong"
+                        : "bg-surface-2 text-muted border-border active:bg-surface hover:text-foreground hover:border-border-strong"
                     }`}
                   >
                     {label}
@@ -228,7 +229,7 @@ export default function RemindersSettings({
       <button
         onClick={save}
         disabled={saving}
-        className="btn-primary !py-2 disabled:opacity-50"
+        className="btn-primary w-full sm:w-auto !py-2.5 disabled:opacity-50"
       >
         {saving ? "Saving…" : "Save reminders"}
       </button>
@@ -288,7 +289,7 @@ function DeviceRow({
       <button
         onClick={onEnable}
         disabled={busy}
-        className="btn-ghost !py-2 text-sm disabled:opacity-50"
+        className="btn-ghost w-full sm:w-auto justify-center !py-2.5 text-sm disabled:opacity-50"
       >
         🔔 Enable notifications on this device
       </button>
