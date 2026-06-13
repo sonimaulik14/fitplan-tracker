@@ -31,7 +31,7 @@ export default function NavBar({ user }: { user: NavUser }) {
   return (
     <>
       {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/55 backdrop-blur-2xl shadow-[0_8px_30px_-24px_rgba(0,0,0,0.8)]">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/55 backdrop-blur-2xl shadow-[0_8px_30px_-24px_rgba(0,0,0,0.8)] pt-[env(safe-area-inset-top)]">
         <nav className="max-w-5xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-3">
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
             <span className="grid place-items-center w-8 h-8 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
@@ -96,7 +96,7 @@ export default function NavBar({ user }: { user: NavUser }) {
       <Link
         href="/workout/next"
         aria-label="Start today's workout"
-        className="md:hidden fixed left-1/2 -translate-x-1/2 bottom-[52px] z-40 grid place-items-center w-14 h-14 rounded-full text-white active:scale-95 transition-transform ring-4 ring-background"
+        className="md:hidden fixed left-1/2 -translate-x-1/2 bottom-[calc(52px+env(safe-area-inset-bottom))] z-40 grid place-items-center w-14 h-14 rounded-full text-white active:scale-95 transition-transform ring-4 ring-background"
         style={{
           background: "linear-gradient(135deg, var(--accent-hi), var(--accent))",
           boxShadow:
@@ -108,7 +108,7 @@ export default function NavBar({ user }: { user: NavUser }) {
       </Link>
 
       {/* Mobile bottom tab bar */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
         <div className="grid grid-cols-6">
           {LINKS.map((l) => {
             const Icon = l.icon;

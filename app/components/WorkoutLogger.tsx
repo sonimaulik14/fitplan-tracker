@@ -1158,7 +1158,7 @@ export default function WorkoutLogger({
       </div>
 
       {/* Sticky action bar (sits above mobile tab bar) */}
-      <div className="fixed bottom-[60px] sm:bottom-0 left-0 right-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
+      <div className="fixed bottom-[calc(60px+env(safe-area-inset-bottom))] sm:bottom-0 left-0 right-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-5 py-3 flex items-center gap-3">
           <span className="text-xs text-muted">
             {saveState === "saving"
@@ -1415,7 +1415,7 @@ function SwapControl({
             </div>
 
             {/* footer: custom + save */}
-            <div className="px-5 py-4 border-t border-border bg-surface-solid rounded-b-2xl">
+            <div className="px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border bg-surface-solid rounded-b-2xl">
               <input
                 className="input w-full mb-2.5"
                 value={custom}
@@ -1612,7 +1612,7 @@ function AdaptControl({
             </div>
 
             {/* footer */}
-            <div className="px-5 py-4 border-t border-border bg-surface-solid rounded-b-2xl">
+            <div className="px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border bg-surface-solid rounded-b-2xl">
               <button
                 type="button"
                 className="btn-primary w-full"
@@ -1666,7 +1666,7 @@ function WorkoutSummary({
     },
   ];
   return (
-    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <button
         className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         aria-hidden

@@ -68,7 +68,7 @@ export default function DangerButton({
               className="fixed inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => !pending && setOpen(false)}
             />
-            <div className="relative z-10 w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl p-6 animate-fade-up">
+            <div className="relative z-10 w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] animate-fade-up">
               <div className="text-3xl">⚠️</div>
               <h2 className="font-display text-lg font-bold mt-2">{title}</h2>
               <p className="text-sm text-muted mt-1.5 leading-relaxed">

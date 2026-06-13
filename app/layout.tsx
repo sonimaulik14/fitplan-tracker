@@ -31,6 +31,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#07080c",
+  // Extend under the iOS status bar / home indicator so we can pad around them
+  // with env(safe-area-inset-*). Without this, those insets always report 0.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
