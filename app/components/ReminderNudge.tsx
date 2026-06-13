@@ -23,7 +23,9 @@ export default function ReminderNudge({
   );
 
   useEffect(() => {
+    // browser notification permission isn't available during SSR — read post-mount
     if (typeof Notification === "undefined") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPerm("unsupported");
       return;
     }

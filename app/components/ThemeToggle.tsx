@@ -17,6 +17,8 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     try {
+      // read persisted theme post-mount to avoid an SSR hydration mismatch
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPref((localStorage.getItem("theme") as Pref) || "dark");
     } catch {}
   }, []);
@@ -26,6 +28,8 @@ export default function ThemeToggle() {
     try {
       localStorage.setItem("theme", p);
     } catch {}
+    // DOM side-effect in an event handler (not render) — intentional
+    // eslint-disable-next-line react-hooks/immutability
     document.documentElement.dataset.theme = resolve(p);
   };
 

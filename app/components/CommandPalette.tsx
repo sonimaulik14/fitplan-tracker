@@ -62,8 +62,11 @@ export default function CommandPalette() {
         .catch(() => {});
     }
     if (open) {
+      // reset palette state when it opens (intentional)
+      /* eslint-disable react-hooks/set-state-in-effect */
       setQ("");
       setActive(0);
+      /* eslint-enable react-hooks/set-state-in-effect */
       setTimeout(() => inputRef.current?.focus(), 20);
     }
   }, [open, index]);
@@ -105,6 +108,8 @@ export default function CommandPalette() {
   }, [q, index]);
 
   useEffect(() => {
+    // keep the active row in range as results shrink
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (active >= results.length) setActive(0);
   }, [results, active]);
 

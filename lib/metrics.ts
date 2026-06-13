@@ -513,15 +513,29 @@ export async function getLeaderboard() {
   }));
 }
 
-/** All logged sessions, newest first, with per-session totals. */
-export async function getWorkoutHistory(userId: string) {
+/** Logged sessions, newest first, with per-session totals. Bounded by `take`
+ *  (covers multi-year history while capping memory) and selects only the
+ *  columns the summary needs. */
+export async function getWorkoutHistory(userId: string, take = 200) {
   const sessions = await prisma.workoutSession.findMany({
     where: { enrollment: { userId } },
-    include: {
-      setEntries: true,
-      workoutDay: { include: { week: true } },
+    select: {
+      id: true,
+      workoutDayId: true,
+      performedDate: true,
+      status: true,
+      mood: true,
+      workoutDay: {
+        select: {
+          focus: true,
+          dayNumber: true,
+          week: { select: { number: true } },
+        },
+      },
+      setEntries: { select: { done: true, weight: true, reps: true } },
     },
     orderBy: { performedDate: "desc" },
+    take,
   });
   return sessions.map((s) => {
     const done = s.setEntries.filter((e) => e.done);

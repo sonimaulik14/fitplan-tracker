@@ -31,6 +31,8 @@ export default function WelcomeTour() {
 
   useEffect(() => {
     try {
+      // show the tour once, based on a post-mount localStorage read
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!localStorage.getItem("fitplan-toured")) setOpen(true);
     } catch {}
   }, []);

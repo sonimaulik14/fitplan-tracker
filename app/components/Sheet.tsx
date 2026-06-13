@@ -31,6 +31,8 @@ export default function Sheet({
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, open && mounted);
 
+  // portal mount gate (SSR-safe); flips once after mount
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!open) return;
