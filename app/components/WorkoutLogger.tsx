@@ -4,7 +4,15 @@ import { useState, useRef, useTransition, useMemo, useEffect, useCallback } from
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
-import { X, Check, ChevronLeft, ArrowLeftRight, Zap, Wand2 } from "lucide-react";
+import {
+  X,
+  Check,
+  ChevronLeft,
+  ArrowLeftRight,
+  Zap,
+  Wand2,
+  Target as TargetIcon,
+} from "lucide-react";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
 import DangerButton from "./DangerButton";
 import {
@@ -13,7 +21,6 @@ import {
   weightNum,
   unitToKg,
   termInfo,
-  schemeInfo,
   type Unit,
 } from "@/lib/ui";
 import {
@@ -822,30 +829,17 @@ export default function WorkoutLogger({
                   <h3 className="font-semibold mt-1 flex items-center gap-2 flex-wrap">
                     {ex.name}
                   </h3>
-                  {!ex.isCardio && (
-                    <div className="mt-1.5">
-                      <ExerciseDemoInline name={ex.name} />
-                    </div>
-                  )}
-                  <div className="text-xs text-muted mt-0.5 flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1">
-                      Target:{" "}
-                      <span className="text-foreground">{ex.repTarget}</span>
-                      {(() => {
-                        const info = schemeInfo(ex.repTarget);
-                        return info ? (
-                          <InfoTip
-                            title={info.title}
-                            desc={info.desc}
-                            className="text-muted hover:text-foreground"
-                          >
-                            <span className="sr-only">{info.title}</span>
-                          </InfoTip>
-                        ) : null;
-                      })()}
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    {!ex.isCardio && <ExerciseDemoInline name={ex.name} />}
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-2.5 py-1 text-xs font-semibold">
+                      <TargetIcon size={13} className="text-accent shrink-0" />
+                      <span className="text-muted font-medium">Target</span>
+                      <span className="text-foreground tabular-nums">
+                        {ex.repTarget}
+                      </span>
                     </span>
                     {ex.swapped && (
-                      <span className="inline-flex items-center gap-1 text-accent-2">
+                      <span className="inline-flex items-center gap-1 text-xs text-accent-2">
                         <ArrowLeftRight size={11} /> swapped from{" "}
                         {ex.originalName}
                       </span>
