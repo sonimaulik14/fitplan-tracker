@@ -11,7 +11,16 @@ const GOALS = [
   { id: "strength", label: "Get stronger", icon: "🏋️" },
   { id: "consistency", label: "Stay consistent", icon: "📈" },
 ];
-const DOW = ["S", "M", "T", "W", "T", "F", "S"];
+// Monday-first; value is the weekday number stored in trainingDays (0=Sun..6=Sat).
+const DAY_ORDER = [
+  { v: 1, label: "Mon" },
+  { v: 2, label: "Tue" },
+  { v: 3, label: "Wed" },
+  { v: 4, label: "Thu" },
+  { v: 5, label: "Fri" },
+  { v: 6, label: "Sat" },
+  { v: 0, label: "Sun" },
+];
 
 export default function OnboardingForm({
   edit,
@@ -143,22 +152,34 @@ export default function OnboardingForm({
       {/* Training days */}
       <div className="mt-5">
         <div className="label">Which days do you train?</div>
-        <div className="flex gap-1.5">
-          {DOW.map((d, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => toggleDay(i)}
-              className={`w-10 h-10 rounded-xl border text-sm font-bold transition-colors ${
-                days.includes(i)
-                  ? "border-accent bg-accent text-[#ffffff]"
-                  : "border-border bg-surface-2 text-muted hover:text-foreground"
-              }`}
-            >
-              {d}
-            </button>
-          ))}
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+          {DAY_ORDER.map(({ v, label }) => {
+            const active = days.includes(v);
+            return (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={active}
+                aria-label={label}
+                onClick={() => toggleDay(v)}
+                className={`flex items-center justify-center h-12 rounded-xl text-xs font-bold border transition-colors ${
+                  active
+                    ? "bg-accent text-white border-accent shadow-sm shadow-accent/30"
+                    : "bg-surface-2 text-muted border-border active:bg-surface hover:text-foreground hover:border-border-strong"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
+        <p className="text-xs text-muted mt-2">
+          {days.length === 0
+            ? "Pick the days you plan to train."
+            : `Training on ${DAY_ORDER.filter((d) => days.includes(d.v))
+                .map((d) => d.label)
+                .join(", ")}.`}
+        </p>
       </div>
 
       {/* Reminders */}
