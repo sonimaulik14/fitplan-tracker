@@ -61,8 +61,28 @@ export default function OnboardingForm({
     });
   };
 
+  // Leave without saving. Only offered in edit mode — first-time setup is
+  // required (the dashboard redirects un-onboarded users back here).
+  const close = () => {
+    if (typeof window !== "undefined" && window.history.length > 1)
+      router.back();
+    else router.push("/dashboard");
+  };
+
   return (
-    <div className="w-full max-w-lg card p-7 sm:p-8 animate-fade-up">
+    <div className="relative w-full max-w-lg card p-7 sm:p-8 animate-fade-up">
+      {edit && (
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Close without saving"
+          className="absolute top-4 right-4 grid place-items-center w-9 h-9 rounded-lg text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
       <div className="flex items-center gap-2 mb-1">
         <span className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
           F
