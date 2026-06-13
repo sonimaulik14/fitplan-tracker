@@ -812,26 +812,35 @@ export function est1RM(weightKg: number, reps: number): number {
 
 /** Per-exercise progression history (matched by effective or original name). */
 export async function getExerciseHistory(userId: string, name: string) {
-  const entries = await prisma.setEntry.findMany({
-    where: {
-      done: true,
-      weight: { not: null },
-      reps: { not: null },
-      session: { enrollment: { userId } },
-    },
-    include: {
-      planExercise: true,
-      session: { include: { enrollment: { include: { swaps: true } } } },
-    },
-    orderBy: { session: { performedDate: "asc" } },
-  });
+  // Fetch swaps once (instead of re-including enrollment.swaps on every set row)
+  // and select only the columns this function uses.
+  const [entries, swaps] = await Promise.all([
+    prisma.setEntry.findMany({
+      where: {
+        done: true,
+        weight: { not: null },
+        reps: { not: null },
+        session: { enrollment: { userId } },
+      },
+      select: {
+        weight: true,
+        reps: true,
+        planExerciseId: true,
+        planExercise: { select: { name: true, muscle: true } },
+        session: { select: { performedDate: true } },
+      },
+      orderBy: { session: { performedDate: "asc" } },
+    }),
+    prisma.exerciseSwap.findMany({
+      where: { enrollment: { userId } },
+      select: { planExerciseId: true, name: true },
+    }),
+  ]);
+  const swapName = new Map(swaps.map((s) => [s.planExerciseId, s.name]));
 
   // keep only entries whose effective (or original) name matches
   const matched = entries.filter((e) => {
-    const swap = e.session.enrollment.swaps.find(
-      (s) => s.planExerciseId === e.planExerciseId
-    );
-    const eff = swap?.name ?? e.planExercise.name;
+    const eff = swapName.get(e.planExerciseId) ?? e.planExercise.name;
     return eff === name || e.planExercise.name === name;
   });
 
@@ -893,19 +902,31 @@ export type Plateau = {
  * dashboard can proactively coach instead of waiting for the user to dig.
  */
 export async function getPlateaus(userId: string): Promise<Plateau[]> {
-  const entries = await prisma.setEntry.findMany({
-    where: {
-      done: true,
-      weight: { not: null },
-      reps: { not: null },
-      session: { enrollment: { userId } },
-    },
-    include: {
-      planExercise: true,
-      session: { include: { enrollment: { include: { swaps: true } } } },
-    },
-    orderBy: { session: { performedDate: "asc" } },
-  });
+  const [entries, swaps] = await Promise.all([
+    prisma.setEntry.findMany({
+      where: {
+        done: true,
+        weight: { not: null },
+        reps: { not: null },
+        session: { enrollment: { userId } },
+      },
+      select: {
+        weight: true,
+        reps: true,
+        planExerciseId: true,
+        planExercise: {
+          select: { name: true, muscle: true, repTarget: true, isCardio: true },
+        },
+        session: { select: { performedDate: true } },
+      },
+      orderBy: { session: { performedDate: "asc" } },
+    }),
+    prisma.exerciseSwap.findMany({
+      where: { enrollment: { userId } },
+      select: { planExerciseId: true, name: true },
+    }),
+  ]);
+  const swapName = new Map(swaps.map((s) => [s.planExerciseId, s.name]));
 
   type Pt = { date: string; topWeight: number; reps: number; best1RM: number };
   const byEx = new Map<
@@ -915,10 +936,7 @@ export async function getPlateaus(userId: string): Promise<Plateau[]> {
 
   for (const e of entries) {
     if (e.planExercise.isCardio) continue;
-    const swap = e.session.enrollment.swaps.find(
-      (s) => s.planExerciseId === e.planExerciseId
-    );
-    const name = swap?.name ?? e.planExercise.name;
+    const name = swapName.get(e.planExerciseId) ?? e.planExercise.name;
     let rec = byEx.get(name);
     if (!rec) {
       rec = {
