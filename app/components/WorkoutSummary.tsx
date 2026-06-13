@@ -105,7 +105,13 @@ export default function WorkoutSummary({
             router.push(programDone ? "/achievements" : "/dashboard");
           }}
         >
-          {programDone ? "🎓 Get my certificate" : "Back to dashboard"}
+          {programDone ? (
+            <>
+              <GraduationCap size={16} aria-hidden /> Get my certificate
+            </>
+          ) : (
+            "Back to dashboard"
+          )}
         </button>
         <button
           type="button"

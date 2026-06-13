@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
+import { Target, CheckCircle2, TrendingUp, Users } from "lucide-react";
 import { Reveal, AnimatedNumber, AnimatedRing } from "./motion";
 import ThemeToggle from "./ThemeToggle";
 import ExImage from "./ExImage";
@@ -190,7 +191,9 @@ export default function Landing() {
           {FEATURES.map((f, i) => (
             <Reveal key={f.title} delay={i * 0.08}>
               <div className="card card-hover p-6 h-full">
-                <div className="text-3xl">{f.icon}</div>
+                <span className="grid place-items-center w-11 h-11 rounded-xl bg-accent/12 text-accent">
+                  <f.Icon size={20} strokeWidth={1.75} aria-hidden />
+                </span>
                 <h3 className="font-semibold mt-4">{f.title}</h3>
                 <p className="text-sm text-muted mt-1.5 leading-relaxed">
                   {f.body}
@@ -282,22 +285,22 @@ export default function Landing() {
 
 const FEATURES = [
   {
-    icon: "🎯",
+    Icon: Target,
     title: "Plan adherence",
     body: "See the % of prescribed workouts and sets you actually completed.",
   },
   {
-    icon: "✅",
+    Icon: CheckCircle2,
     title: "Rep quality",
     body: "Know whether your reps actually landed in the target range — not just that you showed up.",
   },
   {
-    icon: "📈",
+    Icon: TrendingUp,
     title: "Volume & PRs",
     body: "Track training volume per muscle and your heaviest lifts over time.",
   },
   {
-    icon: "👥",
+    Icon: Users,
     title: "Built for everyone",
     body: "Multiple people, private accounts — the whole crew on the same plan.",
   },

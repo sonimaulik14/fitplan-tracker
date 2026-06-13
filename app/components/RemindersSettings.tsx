@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { Bell } from "lucide-react";
 import { updateRemindersAction } from "@/lib/actions";
 import { toast } from "@/lib/toast";
 
@@ -122,7 +123,7 @@ export default function RemindersSettings({
       if (!r.ok) throw new Error();
       setPush("on");
       if (!on) setOn(true);
-      toast("Notifications enabled on this device 🔔");
+      toast("Notifications enabled on this device");
     } catch {
       toast("Couldn't enable notifications here");
       setPush("off");
@@ -291,7 +292,7 @@ function DeviceRow({
         disabled={busy}
         className="btn-ghost w-full sm:w-auto justify-center !py-2.5 text-sm disabled:opacity-50"
       >
-        🔔 Enable notifications on this device
+        <Bell size={15} aria-hidden /> Enable notifications on this device
       </button>
     );
   // on

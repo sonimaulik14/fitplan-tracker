@@ -10,6 +10,7 @@ import {
   setNutritionGoalsAction,
 } from "@/lib/actions";
 import { toast } from "@/lib/toast";
+import { UtensilsCrossed } from "lucide-react";
 import EmptyState from "./EmptyState";
 
 type Entry = {
@@ -65,7 +66,7 @@ export function FoodLog({ entries }: { entries: Entry[] }) {
         {entries.length === 0 && (
           <EmptyState
             compact
-            icon="🍽️"
+            Icon={UtensilsCrossed}
             title="No food logged yet"
             description="Add your first meal below to start tracking calories and macros for today."
           />

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Trophy, Dumbbell } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getWorkoutHistory } from "@/lib/metrics";
@@ -34,13 +35,13 @@ export default async function HistoryPage() {
           href="/records"
           className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
         >
-          🏆 View personal records →
+          <Trophy size={15} aria-hidden /> View personal records →
         </Link>
 
         {history.length === 0 ? (
           <div className="card mt-6">
             <EmptyState
-              icon="🏋️"
+              Icon={Dumbbell}
               title="No workouts logged yet"
               description="Log your first session and it'll show up here — newest first — so you can track every workout over time."
               ctaLabel="Start a workout"

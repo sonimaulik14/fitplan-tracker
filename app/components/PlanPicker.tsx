@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CalendarDays, Dumbbell } from "lucide-react";
 import { startPlanAction } from "@/lib/actions";
 
 type Plan = {
@@ -86,8 +87,14 @@ export default function PlanPicker({
                 </p>
               )}
               <div className="flex items-center gap-4 mt-4 text-xs text-muted">
-                <span>🗓️ {p.totalWeeks} weeks</span>
-                {p.daysPerWeek > 0 && <span>🏋️ {p.daysPerWeek} days / week</span>}
+                <span className="flex items-center gap-1.5">
+                  <CalendarDays size={13} aria-hidden /> {p.totalWeeks} weeks
+                </span>
+                {p.daysPerWeek > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <Dumbbell size={13} aria-hidden /> {p.daysPerWeek} days / week
+                  </span>
+                )}
               </div>
             </button>
           );

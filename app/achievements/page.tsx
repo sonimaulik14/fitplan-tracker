@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress, getActivity, buildAchievements } from "@/lib/metrics";
@@ -66,7 +67,7 @@ export default async function AchievementsPage() {
             />
           ) : (
             <div className="text-center py-4">
-              <div className="text-4xl opacity-40">🔒</div>
+              <Lock className="w-9 h-9 mx-auto text-muted/50" strokeWidth={1.75} aria-hidden />
               <p className="text-muted text-sm mt-3">
                 Finish every workout across all {p.totalWeeks} weeks to unlock
                 your downloadable completion certificate.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress, est1RM } from "@/lib/metrics";
@@ -29,7 +30,7 @@ export default async function RecordsPage() {
           href="/history"
           className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
         >
-          🗓️ View workout history →
+          <CalendarDays size={15} aria-hidden /> View workout history →
         </Link>
 
         {prs.length === 0 ? (

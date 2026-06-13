@@ -1,10 +1,11 @@
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 
 // Reusable, motivating empty state — icon badge + copy + optional CTA.
 // Use instead of bare "Nothing logged yet" text so first-run screens feel
 // intentional and point users at the next action.
 export default function EmptyState({
-  icon,
+  Icon,
   title,
   description,
   ctaLabel,
@@ -12,7 +13,7 @@ export default function EmptyState({
   compact = false,
   className = "",
 }: {
-  icon: string;
+  Icon: LucideIcon;
   title: string;
   description?: string;
   ctaLabel?: string;
@@ -26,8 +27,8 @@ export default function EmptyState({
         compact ? "py-8" : "py-12"
       } px-6 ${className}`}
     >
-      <div className="grid place-items-center w-14 h-14 rounded-2xl bg-surface-2 border border-border text-2xl mb-4">
-        {icon}
+      <div className="grid place-items-center w-14 h-14 rounded-2xl bg-surface-2 border border-border mb-4 text-muted">
+        <Icon size={24} strokeWidth={1.75} aria-hidden />
       </div>
       <p className="font-semibold">{title}</p>
       {description && (
