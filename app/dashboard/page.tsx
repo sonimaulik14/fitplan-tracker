@@ -120,13 +120,7 @@ export default async function DashboardPage({
 
         {/* Enrolled in a program whose workouts aren't built yet */}
         {p?.enrolled && !hasWorkouts && (
-          <div
-            className="relative overflow-hidden card p-8 sm:p-10 mt-6 text-center animate-fade-up"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(47,107,255,0.12), rgba(124,140,255,0.10))",
-            }}
-          >
+          <div className="relative overflow-hidden card p-8 sm:p-10 mt-6 text-center animate-fade-up">
             <div className="text-4xl">🏗️</div>
             <h2 className="font-display text-2xl font-bold mt-3">
               {p.plan.name}
@@ -329,13 +323,7 @@ export default async function DashboardPage({
                 <>
                   {wk?.completed && (
                     <Reveal>
-                      <div
-                        className="relative overflow-hidden card p-5 mt-10 flex items-center gap-4"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, rgba(47,230,168,0.16), rgba(124,140,255,0.12))",
-                        }}
-                      >
+                      <div className="relative overflow-hidden card p-5 mt-10 flex items-center gap-4 border-accent-2/30 bg-accent-2/5">
                         <span className="grid place-items-center w-12 h-12 rounded-2xl bg-accent-2/20 text-2xl shrink-0">
                           🏆
                         </span>

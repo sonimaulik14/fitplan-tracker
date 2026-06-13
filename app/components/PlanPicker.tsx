@@ -54,7 +54,7 @@ export default function PlanPicker({
               style={on ? { background: "var(--grad-brand-soft)" } : undefined}
               className={`text-left rounded-2xl border p-5 transition-all ${
                 on
-                  ? "border-accent ring-1 ring-accent/40 shadow-[0_18px_40px_-22px_rgba(106,92,246,0.55)]"
+                  ? "border-accent ring-1 ring-accent/40"
                   : "border-border bg-surface hover:border-border-strong"
               }`}
             >

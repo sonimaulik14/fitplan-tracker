@@ -121,7 +121,6 @@ export function AnimatedRing({
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const clamped = Math.max(0, Math.min(100, pct));
-  const gradId = `aring-${size}-${String(color).replace(/[^a-z0-9]/gi, "")}`;
 
   const mv = useMotionValue(0);
   const spring = useSpring(mv, { stiffness: 60, damping: 18 });
@@ -141,18 +140,12 @@ export function AnimatedRing({
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <defs>
-          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={color} />
-            <stop offset="100%" stopColor="var(--accent-hi)" />
-          </linearGradient>
-        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
+          stroke="var(--surface-2)"
           strokeWidth={stroke}
         />
         <motion.circle
@@ -160,13 +153,10 @@ export function AnimatedRing({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={`url(#${gradId})`}
+          stroke={color}
           strokeWidth={stroke}
           strokeLinecap="round"
-          style={{
-            strokeDasharray: dash,
-            filter: `drop-shadow(0 0 6px color-mix(in srgb, ${color} 60%, transparent))`,
-          }}
+          style={{ strokeDasharray: dash }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">

@@ -18,13 +18,10 @@
   --warn: #f5c451;
   --danger: #ff6a3d;
   --pr: #ffd25f; /* gold — personal records & milestones */
-  /* Bold-athletic signature gradient — blue→violet energy, kept tasteful. */
-  --grad-brand: linear-gradient(115deg, #2f6bff 0%, #6a5cf6 50%, #a855f7 100%);
-  --grad-brand-soft: linear-gradient(
-    115deg,
-    rgba(47, 107, 255, 0.18),
-    rgba(168, 85, 247, 0.18)
-  );
+  /* Single solid accent — restraint over decoration. (Names kept for the
+     call sites that still reference them; both resolve to flat color now.) */
+  --grad-brand: var(--accent);
+  --grad-brand-soft: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 :root[data-theme="light"] {
@@ -45,12 +42,8 @@
   --warn: #b67c0a;
   --danger: #e0521f;
   --pr: #c79200;
-  --grad-brand: linear-gradient(115deg, #2f6bff 0%, #6a5cf6 50%, #a855f7 100%);
-  --grad-brand-soft: linear-gradient(
-    115deg,
-    rgba(47, 107, 255, 0.14),
-    rgba(168, 85, 247, 0.14)
-  );
+  --grad-brand: var(--accent);
+  --grad-brand-soft: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 @theme inline {
@@ -154,35 +147,6 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .kenburns {
     animation: none;
-  }
-}
-
-/* Soft pulsing halo behind the mobile FAB */
-@keyframes fabPulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  70% {
-    transform: scale(1.7);
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-.fab-pulse {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: var(--accent);
-  animation: fabPulse 2.6s ease-out infinite;
-  z-index: -1;
-}
-@media (prefers-reduced-motion: reduce) {
-  .fab-pulse {
-    animation: none;
-    display: none;
   }
 }
 
@@ -295,12 +259,10 @@ h1 {
      and the card stays raised, which looks broken. */
   @media (hover: hover) {
     .card-hover:hover {
-      transform: translateY(-3px);
-      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
       background: var(--surface-2);
-      box-shadow:
-        0 18px 40px -22px rgba(106, 92, 246, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      box-shadow: 0 14px 34px -24px rgba(0, 0, 0, 0.7);
     }
   }
   .btn,
@@ -311,57 +273,12 @@ h1 {
       active:scale-[0.97];
   }
   .btn-primary {
-    position: relative;
-    overflow: hidden;
     color: #ffffff;
-    background: var(--grad-brand);
-    box-shadow:
-      0 8px 22px -10px rgba(106, 92, 246, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    background: var(--accent);
   }
-  /* glossy sheen across the top of primary buttons */
-  .btn-primary::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.24),
-      transparent 42%
-    );
-    pointer-events: none;
-  }
-  /* diagonal light sweep that fires on hover */
-  .btn-primary::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 45%;
-    left: -60%;
-    background: linear-gradient(
-      100deg,
-      transparent,
-      rgba(255, 255, 255, 0.35),
-      transparent
-    );
-    transform: skewX(-18deg);
-    pointer-events: none;
-  }
-  /* Pointer-only hover: a phone tap would otherwise stick these effects. */
   @media (hover: hover) {
     .btn-primary:hover {
-      box-shadow:
-        0 12px 30px -10px rgba(106, 92, 246, 0.6),
-        inset 0 1px 0 rgba(255, 255, 255, 0.32);
-    }
-    .btn-primary:hover::after {
-      animation: btnSheen 0.7s ease;
-    }
-  }
-  @keyframes btnSheen {
-    to {
-      left: 120%;
+      background: color-mix(in srgb, var(--accent) 88%, #ffffff);
     }
   }
   .btn-ghost {
@@ -389,9 +306,7 @@ h1 {
   }
   .input:focus {
     border-color: var(--accent);
-    box-shadow:
-      0 0 0 3px rgba(47,107,255, 0.18),
-      0 0 18px -4px rgba(47,107,255, 0.4);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   }
   .label {
     @apply block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5;
@@ -406,28 +321,23 @@ h1 {
   }
   .section-title::before {
     content: "";
-    width: 4px;
-    height: 1.1em;
+    width: 3px;
+    height: 1.05em;
     border-radius: 9999px;
-    background: var(--grad-brand);
+    background: var(--accent);
   }
+  /* Single solid accent word (e.g. the wordmark) — no gradient clip. */
   .gradient-text {
-    background: var(--grad-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--accent);
   }
-  /* Big hero/stat numbers in the brand gradient — data as the hero. */
+  /* Hero/stat numbers: solid, let size + weight carry the emphasis. */
   .num-brand {
-    background: var(--grad-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--foreground);
     letter-spacing: -0.02em;
   }
-  /* Solid brand-gradient fill (logo tiles, badges, accents). */
+  /* Solid accent fill (logo tiles, badges, FAB). */
   .brand-bg {
-    background: var(--grad-brand);
+    background: var(--accent);
   }
   /* Oversized, tight display heading for hero moments. */
   .display-hero {

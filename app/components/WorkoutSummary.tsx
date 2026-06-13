@@ -48,13 +48,9 @@ export default function WorkoutSummary({
     >
       <div
         className="text-white px-6 py-8 text-center relative overflow-hidden"
-        style={{
-          background: programDone
-            ? "linear-gradient(135deg, #ff6a3d 0%, var(--accent) 55%, #7c8cff 100%)"
-            : "var(--grad-brand)",
-        }}
+        style={{ background: "var(--accent)" }}
       >
-        <div className="text-5xl drop-shadow-lg">
+        <div className="text-5xl">
           {programDone ? "🎓" : weekDone ? "🏆" : "🎉"}
         </div>
         <h2 className="display-hero text-3xl mt-2 text-white">

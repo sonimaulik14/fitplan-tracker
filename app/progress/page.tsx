@@ -75,10 +75,7 @@ export default async function ProgressPage() {
           <Link
             href="/wrapped"
             className="relative block overflow-hidden rounded-2xl p-5 animate-fade-up active:scale-[0.99] transition-transform"
-            style={{
-              background:
-                "linear-gradient(120deg, #2f6bff 0%, #7c5cff 50%, #ff4d8d 100%)",
-            }}
+            style={{ background: "var(--accent)" }}
           >
             <div className="flex items-center justify-between gap-3 text-white">
               <div>
@@ -114,13 +111,7 @@ export default async function ProgressPage() {
         {/* Weekly recap */}
         {p && recapWeek && (
           <Reveal>
-            <section
-              className="relative overflow-hidden card p-6"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(47,107,255,0.12), rgba(124,140,255,0.1))",
-              }}
-            >
+            <section className="relative overflow-hidden card p-6">
               <div className="flex items-center justify-between">
                 <h2 className="section-title">
                   Week {recapWeek.weekNumber}

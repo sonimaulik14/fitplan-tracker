@@ -251,14 +251,8 @@ export default function Landing() {
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-5 py-16">
         <Reveal>
-          <div
-            className="relative overflow-hidden card p-10 sm:p-16 text-center"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(47,107,255,0.16), rgba(124,140,255,0.14))",
-            }}
-          >
-            <h2 className="font-display text-3xl sm:text-5xl font-bold">
+          <div className="relative overflow-hidden card p-10 sm:p-16 text-center">
+            <h2 className="display-hero text-3xl sm:text-5xl">
               Start your 12 weeks today.
             </h2>
             <p className="text-muted mt-4 max-w-md mx-auto">

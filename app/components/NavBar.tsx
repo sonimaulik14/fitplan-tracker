@@ -108,12 +108,10 @@ export default function NavBar({ user }: { user: NavUser }) {
         aria-label="Start today's workout"
         className="md:hidden fixed left-1/2 -translate-x-1/2 bottom-[calc(60px+env(safe-area-inset-bottom))] z-40 grid place-items-center w-14 h-14 rounded-full text-white active:scale-95 transition-transform ring-4 ring-background"
         style={{
-          background: "var(--grad-brand)",
-          boxShadow:
-            "0 10px 30px -6px rgba(47,107,255,0.85), 0 0 0 1px rgba(255,255,255,0.12) inset",
+          background: "var(--accent)",
+          boxShadow: "0 8px 24px -10px rgba(0,0,0,0.6)",
         }}
       >
-        <span className="fab-pulse" aria-hidden />
         <DumbbellIcon />
       </Link>
 
