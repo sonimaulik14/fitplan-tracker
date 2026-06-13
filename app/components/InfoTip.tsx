@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { useFocusTrap } from "@/lib/useFocusTrap";
+import { useState } from "react";
+import Sheet from "./Sheet";
 
-// Tap-to-open explainer. On mobile it's a bottom sheet, on desktop a small
-// centered card — solid (not glassy) and it doesn't vanish when you scroll,
-// which the old hover/positioned tooltip did.
+// Tap-to-open explainer. Mobile bottom sheet / desktop centered card — solid
+// (not glassy) and scroll-proof. Behavior (portal, focus trap, Escape) comes
+// from <Sheet>.
 export default function InfoTip({
   title,
   desc,
@@ -19,17 +18,6 @@ export default function InfoTip({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const dialogRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef, open && mounted);
-
-  useEffect(() => setMounted(true), []);
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
 
   return (
     <>
@@ -49,6 +37,7 @@ export default function InfoTip({
           height="13"
           viewBox="0 0 24 24"
           fill="none"
+          aria-hidden="true"
           className="opacity-70 shrink-0"
         >
           <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
@@ -57,50 +46,32 @@ export default function InfoTip({
         </svg>
       </button>
 
-      {mounted &&
-        open &&
-        createPortal(
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={title}
-            className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center sm:p-4"
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        ariaLabel={title}
+        panelClassName="w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-left normal-case tracking-normal"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-bold text-base text-foreground">{title}</h3>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+            className="-mr-1 -mt-1 grid place-items-center w-8 h-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-2 transition-colors shrink-0"
           >
-            <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setOpen(false)}
-              aria-hidden
-            />
-            <div
-              ref={dialogRef}
-              tabIndex={-1}
-              className="relative z-10 w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-up text-left normal-case tracking-normal outline-none"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="font-bold text-base text-foreground">{title}</h3>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close"
-                  className="-mr-1 -mt-1 grid place-items-center w-8 h-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-2 transition-colors shrink-0"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M6 6l12 12M18 6L6 18"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-sm text-muted mt-2 leading-relaxed font-normal">
-                {desc}
-              </p>
-            </div>
-          </div>,
-          document.body
-        )}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <p className="text-sm text-muted mt-2 leading-relaxed font-normal">{desc}</p>
+      </Sheet>
     </>
   );
 }
