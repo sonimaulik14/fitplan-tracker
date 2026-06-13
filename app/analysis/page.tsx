@@ -1,4 +1,13 @@
 import Link from "next/link";
+import {
+  CheckCircle2,
+  TrendingUp,
+  TrendingDown,
+  Flame,
+  Trophy,
+  BarChart3,
+  type LucideIcon,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress } from "@/lib/metrics";
@@ -32,7 +41,7 @@ export default async function AnalysisPage() {
         <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28">
           <h1 className="text-2xl font-bold">Analysis</h1>
           <div className="card p-8 mt-6 text-center">
-            <div className="text-4xl mb-3">📊</div>
+            <BarChart3 className="w-9 h-9 mx-auto mb-3 text-muted" strokeWidth={1.75} />
             <p className="text-muted">
               Start the plan and log a few workouts to unlock your analysis.
             </p>
@@ -147,19 +156,19 @@ export default async function AnalysisPage() {
     .join(" ");
 
   const insights: {
-    icon: string;
+    Icon: LucideIcon;
     value: string;
     label: string;
     color: string;
   }[] = [
     {
-      icon: "✅",
+      Icon: CheckCircle2,
       value: `${p.completedWorkouts}/${p.prescribedWorkouts}`,
       label: "Workouts done",
       color: "var(--success)",
     },
     {
-      icon: volTrend !== null && volTrend < 0 ? "📉" : "📈",
+      Icon: volTrend !== null && volTrend < 0 ? TrendingDown : TrendingUp,
       value:
         volTrend !== null
           ? `${volTrend >= 0 ? "+" : ""}${volTrend}%`
@@ -168,13 +177,13 @@ export default async function AnalysisPage() {
       color: volTrend !== null && volTrend < 0 ? "var(--danger)" : "var(--success)",
     },
     {
-      icon: "🔥",
+      Icon: Flame,
       value: `${p.currentStreak}`,
       label: "Day streak",
       color: "var(--warn)",
     },
     {
-      icon: "🏆",
+      Icon: Trophy,
       value: `${p.prs.length}`,
       label: "Personal records",
       color: "var(--pr)",
@@ -206,7 +215,7 @@ export default async function AnalysisPage() {
                 className="rounded-xl border border-border bg-surface-2 p-4"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none">{it.icon}</span>
+                  <it.Icon size={16} style={{ color: it.color }} aria-hidden />
                   <span
                     className="text-3xl font-display font-bold tracking-tight"
                     style={{ color: it.color }}

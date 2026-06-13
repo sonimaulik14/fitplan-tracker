@@ -2,14 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { BicepsFlexed, Flame, Dumbbell, TrendingUp } from "lucide-react";
 import { completeOnboardingAction } from "@/lib/actions";
 import type { Unit } from "@/lib/ui";
 
 const GOALS = [
-  { id: "muscle", label: "Build muscle", icon: "💪" },
-  { id: "fatloss", label: "Lose fat", icon: "🔥" },
-  { id: "strength", label: "Get stronger", icon: "🏋️" },
-  { id: "consistency", label: "Stay consistent", icon: "📈" },
+  { id: "muscle", label: "Build muscle", Icon: BicepsFlexed },
+  { id: "fatloss", label: "Lose fat", Icon: Flame },
+  { id: "strength", label: "Get stronger", Icon: Dumbbell },
+  { id: "consistency", label: "Stay consistent", Icon: TrendingUp },
 ];
 // Monday-first; value is the weekday number stored in trainingDays (0=Sun..6=Sat).
 const DAY_ORDER = [
@@ -122,7 +123,7 @@ export default function OnboardingForm({
                   : "border-border bg-surface-2 text-muted hover:text-foreground"
               }`}
             >
-              <span>{g.icon}</span> {g.label}
+              <g.Icon size={16} aria-hidden /> {g.label}
             </button>
           ))}
         </div>

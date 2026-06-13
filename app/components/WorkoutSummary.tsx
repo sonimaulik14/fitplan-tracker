@@ -1,6 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import {
+  CheckCircle2,
+  Dumbbell,
+  Package,
+  TrendingUp,
+  Trophy,
+  GraduationCap,
+  Sparkles,
+} from "lucide-react";
 import type { Unit } from "@/lib/ui";
 import Sheet from "./Sheet";
 
@@ -26,19 +35,20 @@ export default function WorkoutSummary({
   const programDone = summary.programComplete;
   const weekDone = summary.week != null;
   const stats = [
-    { label: "Sets logged", value: String(summary.sets), icon: "✅" },
-    { label: "Exercises", value: String(summary.exercises), icon: "🏋️" },
+    { label: "Sets logged", value: String(summary.sets), Icon: CheckCircle2 },
+    { label: "Exercises", value: String(summary.exercises), Icon: Dumbbell },
     {
       label: "Total volume",
       value: `${summary.volume.toLocaleString()} ${unit}`,
-      icon: "📦",
+      Icon: Package,
     },
     {
       label: "Beat last time",
       value: `${summary.beat} lift${summary.beat === 1 ? "" : "s"}`,
-      icon: "📈",
+      Icon: TrendingUp,
     },
   ];
+  const HeaderIcon = programDone ? GraduationCap : weekDone ? Trophy : Sparkles;
   return (
     <Sheet
       open
@@ -50,9 +60,7 @@ export default function WorkoutSummary({
         className="text-white px-6 py-8 text-center relative overflow-hidden"
         style={{ background: "var(--accent)" }}
       >
-        <div className="text-5xl">
-          {programDone ? "🎓" : weekDone ? "🏆" : "🎉"}
-        </div>
+        <HeaderIcon className="w-11 h-11 mx-auto" strokeWidth={1.75} aria-hidden />
         <h2 className="display-hero text-3xl mt-2 text-white">
           {programDone
             ? "12 weeks complete!"
@@ -76,7 +84,7 @@ export default function WorkoutSummary({
             key={s.label}
             className="rounded-xl border border-border bg-surface-2 p-4"
           >
-            <div className="text-lg">{s.icon}</div>
+            <s.Icon className="w-4 h-4 text-muted" aria-hidden />
             <div
               className={`font-display font-bold text-xl mt-1 ${
                 s.label === "Total volume" ? "num-brand" : ""

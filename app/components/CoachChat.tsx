@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Sparkles } from "lucide-react";
 
 type Msg = { role: "user" | "assistant"; content: string; error?: string };
 
@@ -78,8 +79,8 @@ export default function CoachChat({ starters }: { starters: string[] }) {
       >
         {empty ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-4 animate-fade-up">
-            <span className="grid place-items-center w-14 h-14 rounded-2xl brand-bg text-2xl shadow-lg shadow-accent/25">
-              🧠
+            <span className="grid place-items-center w-14 h-14 rounded-2xl brand-bg text-white shadow-lg shadow-accent/25">
+              <Sparkles size={26} strokeWidth={1.75} aria-hidden />
             </span>
             <h2 className="font-display font-bold text-xl mt-4">
               Ask your coach

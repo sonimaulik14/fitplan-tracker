@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Flame, Target, Trophy, Dumbbell, Hammer } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress, getPlateaus, getAllPlans } from "@/lib/metrics";
@@ -100,8 +101,7 @@ export default async function DashboardPage({
         <div className="animate-fade-up">
           <p className="eyebrow">Welcome back</p>
           <h1 className="display-hero text-4xl sm:text-5xl mt-1">
-            Hi <span className="num-brand">{firstName}</span>{" "}
-            <span className="inline-block">👋</span>
+            Hi <span className="num-brand">{firstName}</span>
           </h1>
         </div>
 
@@ -119,7 +119,7 @@ export default async function DashboardPage({
         {/* Enrolled in a program whose workouts aren't built yet */}
         {p?.enrolled && !hasWorkouts && (
           <div className="relative overflow-hidden card p-8 sm:p-10 mt-6 text-center animate-fade-up">
-            <div className="text-4xl">🏗️</div>
+            <Hammer className="w-9 h-9 mx-auto text-muted" strokeWidth={1.75} />
             <h2 className="font-display text-2xl font-bold mt-3">
               {p.plan.name}
             </h2>
@@ -168,8 +168,8 @@ export default async function DashboardPage({
                           <div className="font-display text-2xl font-bold text-white leading-none">
                             {p.currentStreak}
                           </div>
-                          <div className="text-[10px] uppercase tracking-wide text-white/70 mt-1">
-                            🔥 day streak
+                          <div className="text-[10px] uppercase tracking-wide text-white/70 mt-1 flex items-center justify-center gap-1">
+                            <Flame size={11} /> day streak
                           </div>
                         </div>
                       )}
@@ -219,7 +219,7 @@ export default async function DashboardPage({
                 <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 text-center sm:text-left">
                   <div className="relative grid place-items-center w-[132px] h-[132px] shrink-0">
                     <div className="absolute inset-0 rounded-full border-[6px] border-dashed border-accent/30" />
-                    <span className="text-5xl animate-pulse-soft">🔥</span>
+                    <Flame className="w-11 h-11 text-accent animate-pulse-soft" strokeWidth={1.75} />
                   </div>
                   <div className="min-w-0">
                     <p className="eyebrow text-accent">Day one</p>
@@ -289,7 +289,9 @@ export default async function DashboardPage({
                     href="/targets"
                     className="card card-hover p-4 flex flex-col justify-center items-start"
                   >
-                    <span className="text-sm font-semibold">🎯 This week&apos;s targets</span>
+                    <span className="text-sm font-semibold flex items-center gap-2">
+                      <Target size={15} className="text-accent" /> This week&apos;s targets
+                    </span>
                     <span className="text-accent text-sm font-semibold mt-1">
                       Open →
                     </span>
@@ -320,8 +322,8 @@ export default async function DashboardPage({
                   {wk?.completed && (
                     <Reveal>
                       <div className="relative overflow-hidden card p-5 mt-10 flex items-center gap-4 border-accent-2/30 bg-accent-2/5">
-                        <span className="grid place-items-center w-12 h-12 rounded-2xl bg-accent-2/20 text-2xl shrink-0">
-                          🏆
+                        <span className="grid place-items-center w-12 h-12 rounded-2xl bg-accent-2/20 shrink-0">
+                          <Trophy className="w-6 h-6 text-accent-2" />
                         </span>
                         <div>
                           <div className="font-display font-bold text-lg">
@@ -330,7 +332,7 @@ export default async function DashboardPage({
                           </div>
                           <div className="text-sm text-muted">
                             All {wk.trainingDays} workouts done. Outstanding
-                            consistency 💪
+                            consistency.
                           </div>
                         </div>
                       </div>
@@ -412,7 +414,7 @@ export default async function DashboardPage({
                       {!isRest && (
                         <div className="flex items-center gap-3 text-xs text-muted mb-3">
                           <span className="flex items-center gap-1.5">
-                            🏋️ {d.exerciseCount} exercises
+                            <Dumbbell size={13} /> {d.exerciseCount} exercises
                           </span>
                         </div>
                       )}

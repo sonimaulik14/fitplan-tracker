@@ -1,4 +1,14 @@
 import Link from "next/link";
+import {
+  Flame,
+  Medal,
+  CalendarDays,
+  Zap,
+  Film,
+  Lock,
+  Download,
+  type LucideIcon,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -24,7 +34,7 @@ import { fmtVolume, type Unit } from "@/lib/ui";
 
 function recapMessage(pct: number, completed: boolean): string {
   if (completed)
-    return "🔥 Perfect week — every session done. Bump the weight a little next week.";
+    return "Perfect week — every session done. Bump the weight a little next week.";
   if (pct >= 60)
     return "Strong week. Close out the last sessions to complete it.";
   if (pct > 0)
@@ -82,8 +92,8 @@ export default async function ProgressPage() {
                 <div className="text-[11px] uppercase tracking-[0.2em] font-semibold text-white/80">
                   New
                 </div>
-                <div className="font-display font-bold text-xl mt-0.5">
-                  🎬 Your 12-Week Wrapped
+                <div className="font-display font-bold text-xl mt-0.5 flex items-center gap-2">
+                  <Film size={18} /> Your 12-Week Wrapped
                 </div>
                 <div className="text-white/85 text-sm mt-0.5">
                   A swipeable recap of your season — tap to play.
@@ -98,14 +108,14 @@ export default async function ProgressPage() {
 
         {/* Streak stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger">
-          <StreakStat icon="🔥" value={activity.current} label="Day streak" big />
-          <StreakStat icon="🏅" value={activity.longest} label="Longest streak" />
+          <StreakStat Icon={Flame} value={activity.current} label="Day streak" big />
+          <StreakStat Icon={Medal} value={activity.longest} label="Longest streak" />
           <StreakStat
-            icon="📅"
+            Icon={CalendarDays}
             value={activity.totalActiveDays}
             label="Active days"
           />
-          <StreakStat icon="⚡" value={activity.thisWeek} label="This week" />
+          <StreakStat Icon={Zap} value={activity.thisWeek} label="This week" />
         </div>
 
         {/* Weekly recap */}
@@ -185,7 +195,7 @@ export default async function ProgressPage() {
                               {wk!.trainingPct}%
                             </span>
                           ) : (
-                            <span className="text-xs text-muted">🔒</span>
+                            <Lock size={13} className="text-muted" aria-hidden />
                           )}
                         </div>
                         <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-3 border border-border/50">
@@ -330,7 +340,7 @@ export default async function ProgressPage() {
               />
               <div className="mt-5 pt-5 border-t border-border">
                 <a href="/api/export" className="btn-ghost !py-2" download>
-                  ⬇ Export all data (CSV)
+                  <Download size={15} /> Export all data (CSV)
                 </a>
               </div>
             </section>
@@ -351,12 +361,12 @@ function RecapStat({ label, value }: { label: string; value: string }) {
 }
 
 function StreakStat({
-  icon,
+  Icon,
   value,
   label,
   big,
 }: {
-  icon: string;
+  Icon: LucideIcon;
   value: number;
   label: string;
   big?: boolean;
@@ -370,7 +380,12 @@ function StreakStat({
           : undefined
       }
     >
-      <div className="text-2xl">{icon}</div>
+      <Icon
+        className={`${big ? "text-accent" : "text-muted"}`}
+        size={big ? 22 : 20}
+        strokeWidth={2}
+        aria-hidden
+      />
       <div
         className={`font-display font-bold mt-1 ${
           big ? "num-brand text-4xl sm:text-5xl leading-none" : "num-gradient text-2xl"

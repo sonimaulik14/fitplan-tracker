@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import type { Plateau } from "@/lib/metrics";
 import { weightNum, type Unit } from "@/lib/ui";
 import { MuscleGlyph } from "./icons";
@@ -34,8 +35,8 @@ export default function PlateauCoach({
   return (
     <section className="card p-6 mt-4 animate-fade-up">
       <div className="flex items-center gap-2.5">
-        <span className="grid place-items-center w-9 h-9 rounded-xl bg-warn/15 text-lg shrink-0">
-          🧠
+        <span className="grid place-items-center w-9 h-9 rounded-xl bg-warn/15 text-warn shrink-0">
+          <Sparkles size={18} strokeWidth={2} aria-hidden />
         </span>
         <div>
           <h2 className="font-bold leading-tight">Coach</h2>

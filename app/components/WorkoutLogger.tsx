@@ -331,7 +331,7 @@ export default function WorkoutLogger({
     setStatus("in_progress");
     setCollapsed({});
     setSaveState("idle");
-    toast("Day reset — start fresh 💪");
+    toast("Day reset — start fresh.");
     router.refresh();
   };
 
@@ -509,7 +509,7 @@ export default function WorkoutLogger({
           // Gold PR burst + toast on top when the session beat a previous best.
           if (beat > 0) {
             setTimeout(celebratePR, 260);
-            toast(`🏆 ${beat} new personal record${beat === 1 ? "" : "s"}!`);
+            toast(`${beat} new personal record${beat === 1 ? "" : "s"}!`);
           }
         } else {
           toast("Reopened for editing");
@@ -789,7 +789,7 @@ export default function WorkoutLogger({
 
             {!isCollapsed && sg && (
               <div className="mt-3 ml-1 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2">
-                <span className="text-sm">🎯</span>
+                <TargetIcon size={14} className="text-accent shrink-0" aria-hidden />
                 <div className="text-sm flex-1 min-w-0">
                   <span className="text-muted">Coach: </span>
                   <span className="font-semibold">{sg.label}</span>
