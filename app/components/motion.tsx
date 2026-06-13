@@ -55,6 +55,14 @@ export function AnimatedNumber({
 
   useEffect(() => {
     if (!inView) return;
+    // Respect reduced-motion — jump straight to the final value.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setDisplay(value);
+      return;
+    }
     const controls = animate(0, value, {
       duration,
       ease: [0.22, 1, 0.36, 1],
@@ -120,8 +128,15 @@ export function AnimatedRing({
   const dash = useTransform(spring, (v) => `${(v / 100) * c} ${c}`);
 
   useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      spring.jump(clamped);
+      return;
+    }
     mv.set(clamped);
-  }, [clamped, mv]);
+  }, [clamped, mv, spring]);
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>

@@ -16,7 +16,7 @@ import {
   PhotoUploader,
   DeletePhotoButton,
 } from "@/app/components/ProgressClient";
-import { Reveal } from "@/app/components/motion";
+import { Reveal, AnimatedNumber } from "@/app/components/motion";
 import ShareCard from "@/app/components/ShareCard";
 import PhotoCompare from "@/app/components/PhotoCompare";
 import PhotoHero from "@/app/components/PhotoHero";
@@ -397,7 +397,7 @@ function StreakStat({
           big ? "num-brand text-4xl sm:text-5xl leading-none" : "num-gradient text-2xl"
         }`}
       >
-        {value}
+        <AnimatedNumber value={value} />
       </div>
       <div className="text-xs text-muted mt-0.5">{label}</div>
     </div>
