@@ -268,7 +268,7 @@ function DeviceRow({
   if (state === "unsupported")
     return (
       <p className="text-xs text-muted">
-        This browser can&apos;t do push notifications. On iPhone, add FitPlan to
+        This browser can&apos;t do push notifications. On iPhone, add Vajra to
         your Home Screen first, then enable them from the installed app.
       </p>
     );

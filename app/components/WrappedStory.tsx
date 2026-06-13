@@ -165,7 +165,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
       stats.volume
     ).toLocaleString()} ${stats.unit} moved · ${stats.workouts} workouts · ${stats.longestStreak}-day streak.`;
     try {
-      if (navigator.share) await navigator.share({ title: "FitPlan Wrapped", text });
+      if (navigator.share) await navigator.share({ title: "Vajra Wrapped", text });
       else await navigator.clipboard.writeText(text);
     } catch {
       /* user dismissed */
@@ -257,7 +257,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
       </div>
 
       <div className="absolute bottom-5 inset-x-0 text-center text-white/60 text-xs z-0">
-        FitPlan · 12-Week Wrapped
+        Vajra · 12-Week Wrapped
       </div>
     </div>
   );

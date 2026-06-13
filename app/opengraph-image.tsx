@@ -1,10 +1,10 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "FitPlan — 12-Week Transformation";
+export const alt = "Vajra — 12-Week Transformation";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Branded social share image used when any FitPlan link is shared.
+// Branded social share image used when any Vajra link is shared.
 export default function OgImage() {
   return new ImageResponse(
     (
@@ -40,13 +40,14 @@ export default function OgImage() {
               alignItems: "center",
               justifyContent: "center",
               background: "#2f6bff",
-              color: "#fff",
-              fontSize: 34,
             }}
           >
-            F
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 3.5h10L20.8 9 12 21 3.2 9z" fill="#ffffff" />
+              <path d="M3.2 9h17.6M7 3.5 9.6 9 12 21 14.4 9 17 3.5" stroke="#0a0c12" strokeOpacity="0.22" strokeWidth="1.1" strokeLinejoin="round" />
+            </svg>
           </div>
-          FitPlan
+          Vajra
         </div>
         <div
           style={{

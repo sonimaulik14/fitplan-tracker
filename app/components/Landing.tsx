@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Target, CheckCircle2, TrendingUp, Users } from "lucide-react";
+import VajraMark from "./VajraMark";
 import { Reveal, AnimatedNumber, AnimatedRing } from "./motion";
 import ThemeToggle from "./ThemeToggle";
 import ExImage from "./ExImage";
@@ -15,11 +16,11 @@ export default function Landing() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/60 backdrop-blur-xl">
         <nav className="max-w-6xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
-            <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
-              F
+            <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg shadow-lg shadow-accent/30">
+              <VajraMark size={18} />
             </span>
             <span className="font-display font-bold text-lg tracking-tight">
-              Fit<span className="gradient-text">Plan</span>
+              Vajra
             </span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -273,7 +274,7 @@ export default function Landing() {
 
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-5 py-8 text-sm text-muted flex items-center justify-between">
-          <span>FitPlan · 12-Week Transformation Tracker</span>
+          <span>Vajra · 12-Week Transformation Tracker</span>
           <Link href="/login" className="hover:text-foreground">
             Sign in
           </Link>

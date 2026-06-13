@@ -13,7 +13,7 @@ export async function POST() {
     return new Response("Slow down a moment.", { status: 429 });
 
   const sent = await sendPushToUser(user.id, {
-    title: "FitPlan reminders are on 🔔",
+    title: "Vajra reminders are on",
     body: "This is a test notification — you'll get nudges on your training days.",
     url: "/dashboard",
     tag: "fitplan-test",

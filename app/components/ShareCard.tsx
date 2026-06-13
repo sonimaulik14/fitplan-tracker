@@ -45,10 +45,10 @@ export default function ShareCard({
   };
 
   const share = async () => {
-    const text = `My ${planName} progress: ${adherence}% adherence, ${completedWorkouts} workouts, ${streak}-day streak. #FitPlan`;
+    const text = `My ${planName} progress: ${adherence}% adherence, ${completedWorkouts} workouts, ${streak}-day streak. #Vajra`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "FitPlan progress", text });
+        await navigator.share({ title: "Vajra progress", text });
       } catch {}
     } else {
       await navigator.clipboard?.writeText(text);
@@ -84,7 +84,7 @@ export default function ShareCard({
             }}
           >
             <div style={{ fontWeight: 800, letterSpacing: "-0.5px" }}>
-              Fit<span style={{ color: "#2f6bff" }}>Plan</span>
+              Vajra
             </div>
             <div style={{ fontSize: 12, color: "#99a1b3" }}>{planName}</div>
           </div>

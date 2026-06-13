@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { resetPasswordAction, type AuthState } from "@/lib/actions";
 import PasswordInput from "./PasswordInput";
+import VajraMark from "./VajraMark";
 
 export default function ResetForm({ token }: { token: string }) {
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
@@ -13,11 +14,11 @@ export default function ResetForm({ token }: { token: string }) {
   return (
     <div className="w-full max-w-sm animate-fade-up">
       <div className="flex items-center gap-2 mb-6">
-        <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
-          F
+        <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg shadow-lg shadow-accent/30">
+          <VajraMark size={22} />
         </span>
         <span className="font-display font-bold text-xl">
-          Fit<span className="gradient-text">Plan</span>
+          Vajra
         </span>
       </div>
       <h1 className="text-2xl font-bold">Set a new password</h1>

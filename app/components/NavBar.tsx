@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Unit } from "@/lib/ui";
 import ProfileMenu from "./ProfileMenu";
 import CommandPalette from "./CommandPalette";
+import VajraMark from "./VajraMark";
 
 const LINKS = [
   { href: "/dashboard", label: "Home", icon: HomeIcon },
@@ -33,11 +34,11 @@ export default function NavBar({ user }: { user: NavUser }) {
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-2xl shadow-[0_8px_30px_-24px_rgba(0,0,0,0.8)] pt-[env(safe-area-inset-top)]">
         <nav className="max-w-5xl mx-auto px-4 sm:px-5 h-[72px] sm:h-16 flex items-center justify-between gap-3">
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-            <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
-              F
+            <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg shadow-lg shadow-accent/30">
+              <VajraMark size={18} />
             </span>
             <span className="font-display font-bold text-lg tracking-tight">
-              Fit<span className="gradient-text">Plan</span>
+              Vajra
             </span>
           </Link>
 

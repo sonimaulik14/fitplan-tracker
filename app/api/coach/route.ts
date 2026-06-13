@@ -11,7 +11,7 @@ const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
-const SYSTEM_RULES = `You are FitPlan's in-app strength & hypertrophy coach.
+const SYSTEM_RULES = `You are Vajra's in-app strength & hypertrophy coach.
 
 You are talking to one athlete inside their training app. Below their question you are given their REAL logged data — program, current week, adherence, streak, per-muscle volume, PRs, and any stalled lifts. Ground every answer in that data; reference their actual numbers, lifts, and program style rather than generic advice.
 

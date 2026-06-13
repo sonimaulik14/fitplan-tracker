@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { loginAction, signupAction, type AuthState } from "@/lib/actions";
 import PasswordInput from "./PasswordInput";
+import VajraMark from "./VajraMark";
 
 export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const action = mode === "login" ? loginAction : signupAction;
@@ -16,11 +17,11 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     <div className="w-full max-w-sm animate-fade-up">
       <div className="mb-7">
         <div className="flex items-center gap-2 mb-6">
-          <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
-            F
+          <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg shadow-lg shadow-accent/30">
+            <VajraMark size={22} />
           </span>
           <span className="font-display font-bold text-xl tracking-tight">
-            Fit<span className="gradient-text">Plan</span>
+            Vajra
           </span>
         </div>
         <h1 className="text-2xl font-bold">

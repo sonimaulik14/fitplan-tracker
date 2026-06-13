@@ -19,24 +19,23 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "FitPlan — 12-Week Transformation Tracker",
-    template: "%s · FitPlan",
+    default: "Vajra — 12-Week Transformation Tracker",
+    template: "%s · Vajra",
   },
   description:
     "Follow your 12-week training plan, log every set, and track how closely you stick to it.",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "FitPlan" },
-  icons: { apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Vajra" },
   openGraph: {
     type: "website",
-    siteName: "FitPlan",
-    title: "FitPlan — 12-Week Transformation Tracker",
+    siteName: "Vajra",
+    title: "Vajra — 12-Week Transformation Tracker",
     description:
       "Follow your 12-week training plan, log every set, and track your progress.",
     url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: "FitPlan — 12-Week Transformation Tracker",
+    title: "Vajra — 12-Week Transformation Tracker",
     description:
       "Follow your 12-week training plan, log every set, and track your progress.",
   },

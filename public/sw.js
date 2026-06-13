@@ -1,4 +1,4 @@
-// FitPlan service worker — app shell caching + offline fallback.
+// Vajra service worker — app shell caching + offline fallback.
 // Bump CACHE on each release that changes precached/static-cached assets so the
 // activate handler purges the old cache.
 const CACHE = "fitplan-v2";
@@ -30,9 +30,9 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: "FitPlan", body: event.data ? event.data.text() : "" };
+    data = { title: "Vajra", body: event.data ? event.data.text() : "" };
   }
-  const title = data.title || "FitPlan";
+  const title = data.title || "Vajra";
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || "",
