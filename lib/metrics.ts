@@ -289,20 +289,11 @@ export async function getProgress(userId: string) {
   const prs = [...prByName.values()].sort((a, b) => b.maxWeight - a.maxWeight);
 
   // Streak + loggedToday (derived here so the dashboard needs only one scan).
-  const dayMs = 86400000;
   const activeDates = new Set<string>();
   for (const s of enrollment?.sessions ?? [])
     if (s.setEntries.some((e) => e.done)) activeDates.add(ymd(s.performedDate));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const loggedToday = activeDates.has(ymd(today));
-  let currentStreak = 0;
-  let cursor = today.getTime();
-  if (!activeDates.has(ymd(new Date(cursor)))) cursor -= dayMs;
-  while (activeDates.has(ymd(new Date(cursor)))) {
-    currentStreak += 1;
-    cursor -= dayMs;
-  }
+  const loggedToday = activeDates.has(ymd(new Date()));
+  const currentStreak = computeStreak(activeDates);
 
   return {
     plan,
@@ -334,6 +325,21 @@ function ymd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate()
   ).padStart(2, "0")}`;
+}
+
+// Current streak: consecutive calendar days (ending today, or yesterday so an
+// unlogged "today" doesn't break it) present in `activeDates` ("YYYY-MM-DD").
+// Steps by calendar day so DST transitions can't silently drop a day.
+function computeStreak(activeDates: Set<string>): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  if (!activeDates.has(ymd(d))) d.setDate(d.getDate() - 1);
+  let streak = 0;
+  while (activeDates.has(ymd(d))) {
+    streak += 1;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
 }
 
 export function todayKey(): string {
@@ -419,17 +425,10 @@ export async function getActivity(userId: string, days = 119) {
     prev = t;
   }
 
-  // current streak (consecutive days ending today or yesterday)
+  // current streak (consecutive days ending today or yesterday), DST-safe
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  let current = 0;
-  const has = (t: number) => byDate.has(ymd(new Date(t)));
-  let cursor = today.getTime();
-  if (!has(cursor)) cursor -= dayMs; // allow "yesterday" to keep streak alive
-  while (has(cursor)) {
-    current += 1;
-    cursor -= dayMs;
-  }
+  const current = computeStreak(new Set(byDate.keys()));
 
   // this week (last 7 days) active count
   let thisWeek = 0;
@@ -504,28 +503,14 @@ export async function getLeaderboard() {
     datesByUser.set(r.userId, set);
   }
 
-  const dayMs = 86400000;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return agg.map((r) => {
-    const dates = datesByUser.get(r.id) ?? new Set<string>();
-    let streak = 0;
-    let t = today.getTime();
-    if (!dates.has(ymd(new Date(t)))) t -= dayMs;
-    while (dates.has(ymd(new Date(t)))) {
-      streak += 1;
-      t -= dayMs;
-    }
-    return {
-      id: r.id,
-      name: r.name,
-      completedWorkouts: Number(r.completedWorkouts),
-      doneSets: Number(r.doneSets),
-      volume: Math.round(Number(r.volume ?? 0)),
-      streak,
-    };
-  });
+  return agg.map((r) => ({
+    id: r.id,
+    name: r.name,
+    completedWorkouts: Number(r.completedWorkouts),
+    doneSets: Number(r.doneSets),
+    volume: Math.round(Number(r.volume ?? 0)),
+    streak: computeStreak(datesByUser.get(r.id) ?? new Set<string>()),
+  }));
 }
 
 /** All logged sessions, newest first, with per-session totals. */

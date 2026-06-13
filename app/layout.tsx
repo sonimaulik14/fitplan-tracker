@@ -18,7 +18,11 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://fitplan-tracker-seven.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "FitPlan — 12-Week Transformation Tracker",
     template: "%s · FitPlan",
@@ -27,6 +31,20 @@ export const metadata: Metadata = {
     "Follow your 12-week training plan, log every set, and track how closely you stick to it.",
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "FitPlan" },
   icons: { apple: "/apple-touch-icon.png" },
+  openGraph: {
+    type: "website",
+    siteName: "FitPlan",
+    title: "FitPlan — 12-Week Transformation Tracker",
+    description:
+      "Follow your 12-week training plan, log every set, and track your progress.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FitPlan — 12-Week Transformation Tracker",
+    description:
+      "Follow your 12-week training plan, log every set, and track your progress.",
+  },
 };
 
 export const viewport: Viewport = {
