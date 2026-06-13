@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 
 const PLAN_INCLUDE = {
@@ -453,62 +454,78 @@ export async function getActivity(userId: string, days = 119) {
 
 export type ActivitySummary = Awaited<ReturnType<typeof getActivity>>;
 
-/** Cross-user leaderboard ranked by completed workouts, then sets, then volume. */
+/** Cross-user leaderboard ranked by completed workouts, then sets, then volume.
+ *  Aggregated in SQL (one indexed pass, top 100) rather than loading every
+ *  user's full session/set history into memory. */
 export async function getLeaderboard() {
-  const users = await prisma.user.findMany({
-    include: {
-      enrollments: {
-        include: { sessions: { include: { setEntries: true } } },
-      },
-    },
-  });
+  const agg = await prisma.$queryRaw<
+    {
+      id: string;
+      name: string;
+      completedWorkouts: bigint;
+      doneSets: bigint;
+      volume: number | null;
+    }[]
+  >`
+    SELECT u."id",
+           u."name",
+           COUNT(DISTINCT s."id") FILTER (WHERE s."status" = 'completed') AS "completedWorkouts",
+           COUNT(se."id") FILTER (WHERE se."done") AS "doneSets",
+           COALESCE(SUM(se."weight" * se."reps")
+             FILTER (WHERE se."done" AND se."weight" IS NOT NULL AND se."reps" IS NOT NULL), 0) AS "volume"
+    FROM "User" u
+    JOIN "Enrollment" e ON e."userId" = u."id"
+    JOIN "WorkoutSession" s ON s."enrollmentId" = e."id"
+    LEFT JOIN "SetEntry" se ON se."sessionId" = s."id"
+    GROUP BY u."id", u."name"
+    HAVING COUNT(se."id") FILTER (WHERE se."done") > 0
+        OR COUNT(DISTINCT s."id") FILTER (WHERE s."status" = 'completed') > 0
+    ORDER BY "completedWorkouts" DESC, "doneSets" DESC, "volume" DESC
+    LIMIT 100
+  `;
+  if (agg.length === 0) return [];
+
+  // Streak is display-only (not used for ranking), so compute it for just the
+  // ranked users — distinct active dates pulled in one grouped query.
+  const ids = agg.map((r) => r.id);
+  const dateRows = await prisma.$queryRaw<{ userId: string; d: Date }[]>`
+    SELECT e."userId" AS "userId", DATE(s."performedDate") AS "d"
+    FROM "WorkoutSession" s
+    JOIN "Enrollment" e ON e."id" = s."enrollmentId"
+    JOIN "SetEntry" se ON se."sessionId" = s."id" AND se."done" = true
+    WHERE e."userId" IN (${Prisma.join(ids)})
+    GROUP BY e."userId", DATE(s."performedDate")
+  `;
+
+  const datesByUser = new Map<string, Set<string>>();
+  for (const r of dateRows) {
+    const set = datesByUser.get(r.userId) ?? new Set<string>();
+    set.add(ymd(new Date(r.d)));
+    datesByUser.set(r.userId, set);
+  }
 
   const dayMs = 86400000;
-  const rows = users.map((u) => {
-    const sessions = u.enrollments.flatMap((e) => e.sessions);
-    let completedWorkouts = 0;
-    let doneSets = 0;
-    let volume = 0;
-    const activeDates = new Set<string>();
-    for (const s of sessions) {
-      if (s.status === "completed") completedWorkouts += 1;
-      let dayHas = false;
-      for (const e of s.setEntries) {
-        if (!e.done) continue;
-        doneSets += 1;
-        dayHas = true;
-        if (e.weight && e.reps) volume += e.weight * e.reps;
-      }
-      if (dayHas) activeDates.add(ymd(s.performedDate));
-    }
-    // current streak
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return agg.map((r) => {
+    const dates = datesByUser.get(r.id) ?? new Set<string>();
     let streak = 0;
-    const cursor = new Date();
-    cursor.setHours(0, 0, 0, 0);
-    let t = cursor.getTime();
-    if (!activeDates.has(ymd(new Date(t)))) t -= dayMs;
-    while (activeDates.has(ymd(new Date(t)))) {
+    let t = today.getTime();
+    if (!dates.has(ymd(new Date(t)))) t -= dayMs;
+    while (dates.has(ymd(new Date(t)))) {
       streak += 1;
       t -= dayMs;
     }
     return {
-      id: u.id,
-      name: u.name,
-      completedWorkouts,
-      doneSets,
-      volume: Math.round(volume),
+      id: r.id,
+      name: r.name,
+      completedWorkouts: Number(r.completedWorkouts),
+      doneSets: Number(r.doneSets),
+      volume: Math.round(Number(r.volume ?? 0)),
       streak,
     };
   });
-
-  return rows
-    .filter((r) => r.doneSets > 0 || r.completedWorkouts > 0)
-    .sort(
-      (a, b) =>
-        b.completedWorkouts - a.completedWorkouts ||
-        b.doneSets - a.doneSets ||
-        b.volume - a.volume
-    );
 }
 
 /** All logged sessions, newest first, with per-session totals. */

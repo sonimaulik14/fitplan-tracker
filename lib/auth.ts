@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
@@ -68,7 +69,9 @@ export async function revokeSessions(userId: string) {
   });
 }
 
-export async function getCurrentUser() {
+// Wrapped in React cache() so repeated calls within one request (layout, page,
+// nested server components) share a single DB lookup instead of re-querying.
+export const getCurrentUser = cache(async () => {
   assertSecret();
   const store = await cookies();
   const token = store.get(COOKIE)?.value;
@@ -104,4 +107,4 @@ export async function getCurrentUser() {
   } catch {
     return null;
   }
-}
+});

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser, pushEnabled } from "@/lib/push";
 
@@ -31,14 +32,19 @@ function localNow(tz: string) {
   };
 }
 
+// Constant-time bearer-token check. Vercel Cron sends `Authorization: Bearer
+// $CRON_SECRET` automatically, so no query-string secret (which would leak into
+// access logs) is accepted.
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
-  const header = req.headers.get("authorization") || "";
-  const url = new URL(req.url);
-  return (
-    header === `Bearer ${secret}` || url.searchParams.get("key") === secret
+  const presented = (req.headers.get("authorization") || "").replace(
+    /^Bearer\s+/,
+    ""
   );
+  const a = Buffer.from(presented);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export async function GET(req: Request) {
