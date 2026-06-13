@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Calculator, Plus, Minus } from "lucide-react";
 import type { Unit } from "@/lib/ui";
 
 const PLATES: Record<Unit, number[]> = {
@@ -60,9 +61,12 @@ export default function WorkoutTools({ unit }: { unit: Unit }) {
         className="w-full flex items-center justify-between"
       >
         <span className="font-semibold text-sm flex items-center gap-2">
-          🧮 Plate & warm-up calculator
+          <Calculator size={16} className="text-muted" aria-hidden />
+          Plate &amp; warm-up calculator
         </span>
-        <span className="text-muted text-sm">{open ? "−" : "+"}</span>
+        <span className="grid place-items-center w-6 h-6 rounded-md text-muted">
+          {open ? <Minus size={15} /> : <Plus size={15} />}
+        </span>
       </button>
 
       {open && (

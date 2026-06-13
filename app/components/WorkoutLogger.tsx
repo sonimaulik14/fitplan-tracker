@@ -534,7 +534,7 @@ export default function WorkoutLogger({
   const isLightDay = exercises.length > 0 && exercises.every((e) => e.isCardio);
 
   return (
-    <div className="space-y-4 pb-28">
+    <div className="space-y-5 pb-28">
       {/* Floating rest timer — auto-starts on set completion, works in both
           normal and focus mode (z above the focus overlay). */}
       {rest && !summary && (
@@ -648,14 +648,14 @@ export default function WorkoutLogger({
         return (
           <div
             key={ex.id}
-            className="card p-5 relative overflow-hidden animate-fade-up"
+            className="card p-5 sm:p-6 relative overflow-hidden animate-fade-up"
             style={{ animationDelay: `${idx * 30}ms` }}
           >
             <span
-              className="absolute left-0 top-0 bottom-0 w-1"
+              className="absolute left-0 top-5 bottom-5 w-1 rounded-full opacity-70"
               style={{ background: st.color }}
             />
-            <div className="flex items-start justify-between gap-3 pl-1">
+            <div className="flex items-start justify-between gap-3 pl-2.5">
               <div className="flex items-start gap-3 min-w-0">
                 {ex.photoUrl ? (
                   <Image
@@ -782,13 +782,13 @@ export default function WorkoutLogger({
             </div>
 
             {isCollapsed && (
-              <div className="mt-3 pl-1 text-sm text-muted">
-                {exDone}/{ex.rows.length} sets done — tap ⌄ to expand
+              <div className="mt-3 pl-2.5 text-sm text-muted">
+                {exDone}/{ex.rows.length} sets done — tap to expand
               </div>
             )}
 
             {!isCollapsed && sg && (
-              <div className="mt-3 ml-1 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2">
+              <div className="mt-4 ml-2.5 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2">
                 <TargetIcon size={14} className="text-accent shrink-0" aria-hidden />
                 <div className="text-sm flex-1 min-w-0">
                   <span className="text-muted">Coach: </span>
@@ -812,11 +812,11 @@ export default function WorkoutLogger({
             )}
 
             {!isCollapsed && (
-            <div className="mt-4 space-y-2 pl-1">
+            <div className="mt-5 space-y-2.5 pl-2.5">
               {ex.rows.map((r) => (
                 <div
                   key={r.setNumber}
-                  className={`grid items-center gap-2 rounded-xl px-2 py-1.5 transition-colors ${
+                  className={`grid items-center gap-2 rounded-xl px-2 py-2 transition-colors ${
                     ex.isCardio
                       ? "grid-cols-[3rem_1fr_auto]"
                       : "grid-cols-[2.6rem_1fr_1fr_3rem_2.5rem]"
@@ -936,11 +936,11 @@ export default function WorkoutLogger({
                 </div>
               ))}
               {!ex.isCardio && (
-                <div className="flex gap-3 pt-1 pl-1">
+                <div className="flex gap-4 pt-3 pl-2.5">
                   <button
                     type="button"
                     onClick={() => addSet(ex.id)}
-                    className="text-xs text-accent font-semibold hover:underline"
+                    className="inline-flex items-center gap-1 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/15 transition-colors"
                   >
                     + Add set
                   </button>

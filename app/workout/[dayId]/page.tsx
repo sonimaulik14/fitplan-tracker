@@ -113,12 +113,12 @@ export default async function WorkoutPage({
         >
           <ChevronLeft size={16} /> Dashboard
         </Link>
-        <div className="mt-4 mb-6 flex items-center gap-4 animate-fade-up">
+        <div className="mt-5 mb-7 flex items-start gap-4 animate-fade-up">
           <span className="grid place-items-center w-14 h-14 rounded-2xl bg-surface-2 border border-border shrink-0">
             <FocusGlyph focus={day.focus} size={28} />
           </span>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1.5 text-sm">
+            <div className="flex items-center gap-2 flex-wrap mb-2 text-sm">
               <span className="font-semibold text-foreground/85">
                 Week {day.week.number}
               </span>
@@ -132,9 +132,9 @@ export default async function WorkoutPage({
                 Day {(day.week.number - 1) * 7 + day.dayNumber}
               </span>
             </div>
-            <h1 className="text-2xl font-bold leading-tight">{day.focus}</h1>
+            <h1 className="display-hero text-3xl sm:text-4xl">{day.focus}</h1>
             {weekStyleInfo && (
-              <p className="text-xs text-muted mt-1.5 leading-snug max-w-md">
+              <p className="text-sm text-muted mt-2.5 leading-relaxed max-w-lg">
                 {weekStyleInfo.desc}
               </p>
             )}
