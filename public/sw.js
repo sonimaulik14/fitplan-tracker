@@ -1,5 +1,7 @@
 // FitPlan service worker — app shell caching + offline fallback.
-const CACHE = "fitplan-v1";
+// Bump CACHE on each release that changes precached/static-cached assets so the
+// activate handler purges the old cache.
+const CACHE = "fitplan-v2";
 const PRECACHE = ["/offline", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -68,13 +70,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
 
-  // Static assets → cache-first (hashed, safe to cache forever).
-  if (
-    url.pathname.startsWith("/_next/static") ||
-    url.pathname.startsWith("/kris/") ||
-    url.pathname.startsWith("/icon") ||
-    url.pathname === "/apple-touch-icon.png"
-  ) {
+  // Immutable, content-hashed build assets → cache-first forever.
+  if (url.pathname.startsWith("/_next/static")) {
     event.respondWith(
       caches.match(req).then(
         (hit) =>
@@ -84,6 +81,30 @@ self.addEventListener("fetch", (event) => {
             caches.open(CACHE).then((c) => c.put(req, copy));
             return res;
           })
+      )
+    );
+    return;
+  }
+
+  // Stable-URL assets (photos, icons) → stale-while-revalidate: serve the cached
+  // copy instantly but refresh it in the background so updates propagate without
+  // a cache-version bump.
+  if (
+    url.pathname.startsWith("/kris/") ||
+    url.pathname.startsWith("/icon") ||
+    url.pathname === "/apple-touch-icon.png"
+  ) {
+    event.respondWith(
+      caches.open(CACHE).then((cache) =>
+        cache.match(req).then((hit) => {
+          const fetched = fetch(req)
+            .then((res) => {
+              if (res && res.ok) cache.put(req, res.clone());
+              return res;
+            })
+            .catch(() => hit);
+          return hit || fetched;
+        })
       )
     );
     return;

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 // Tap-to-open explainer. On mobile it's a bottom sheet, on desktop a small
 // centered card — solid (not glassy) and it doesn't vanish when you scroll,
@@ -19,6 +20,8 @@ export default function InfoTip({
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, open && mounted);
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -68,7 +71,11 @@ export default function InfoTip({
               onClick={() => setOpen(false)}
               aria-hidden
             />
-            <div className="relative z-10 w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-up text-left normal-case tracking-normal">
+            <div
+              ref={dialogRef}
+              tabIndex={-1}
+              className="relative z-10 w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-up text-left normal-case tracking-normal outline-none"
+            >
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-bold text-base text-foreground">{title}</h3>
                 <button

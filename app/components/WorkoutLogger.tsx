@@ -27,6 +27,7 @@ import {
 } from "@/lib/alternatives";
 import ExImage from "./ExImage";
 import InfoTip from "./InfoTip";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { MuscleGlyph } from "./icons";
 import { ExerciseDemoInline } from "./ExerciseDemo";
 import WorkoutTools from "./WorkoutTools";
@@ -933,6 +934,7 @@ export default function WorkoutLogger({
                       type="number"
                       inputMode="numeric"
                       placeholder="minutes"
+                      aria-label={`${ex.name} set ${r.setNumber} minutes`}
                       className="input py-2 logfield"
                       onKeyDown={onFieldKeyDown}
                       value={r.reps ?? ""}
@@ -949,6 +951,7 @@ export default function WorkoutLogger({
                           type="text"
                           inputMode="decimal"
                           placeholder="wt  (or 100x10)"
+                          aria-label={`${ex.name} set ${r.setNumber} weight in ${unit}`}
                           className="input py-2 pr-7 logfield"
                           onKeyDown={onFieldKeyDown}
                           value={r.weight ?? ""}
@@ -964,6 +967,7 @@ export default function WorkoutLogger({
                         type="number"
                         inputMode="numeric"
                         placeholder="reps"
+                        aria-label={`${ex.name} set ${r.setNumber} reps`}
                         className="input py-2 logfield"
                         onKeyDown={onFieldKeyDown}
                         value={r.reps ?? ""}
@@ -979,6 +983,7 @@ export default function WorkoutLogger({
                           inputMode="decimal"
                           placeholder="RPE"
                           title="Rate of Perceived Exertion (1-10)"
+                          aria-label={`${ex.name} set ${r.setNumber} RPE`}
                           className="input py-2 px-1.5 text-center logfield"
                           onKeyDown={onFieldKeyDown}
                           value={r.rpe ?? ""}
@@ -1194,6 +1199,8 @@ function SwapControl({
   const [selected, setSelected] = useState<string | null>(null);
   const [custom, setCustom] = useState("");
   const [have, setHave] = useEquipment();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, open && mounted);
 
   useEffect(() => setMounted(true), []);
   // Lock background scroll while the sheet/dialog is open.
@@ -1266,7 +1273,11 @@ function SwapControl({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={close}
           />
-          <div className="relative z-10 flex max-h-[88vh] w-full flex-col rounded-t-3xl border border-border-strong bg-surface-solid shadow-2xl animate-fade-up sm:max-w-md sm:rounded-2xl">
+          <div
+            ref={dialogRef}
+            tabIndex={-1}
+            className="relative z-10 flex max-h-[88vh] w-full flex-col rounded-t-3xl border border-border-strong bg-surface-solid shadow-2xl animate-fade-up sm:max-w-md sm:rounded-2xl outline-none"
+          >
             {/* mobile grab handle */}
             <div className="sm:hidden mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-border-strong" />
 
