@@ -148,7 +148,10 @@ export function AnimatedRing({
           stroke={`url(#${gradId})`}
           strokeWidth={stroke}
           strokeLinecap="round"
-          style={{ strokeDasharray: dash }}
+          style={{
+            strokeDasharray: dash,
+            filter: `drop-shadow(0 0 6px color-mix(in srgb, ${color} 60%, transparent))`,
+          }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">

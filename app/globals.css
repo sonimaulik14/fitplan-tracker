@@ -18,6 +18,13 @@
   --warn: #f5c451;
   --danger: #ff6a3d;
   --pr: #ffd25f; /* gold — personal records & milestones */
+  /* Bold-athletic signature gradient — blue→violet energy, kept tasteful. */
+  --grad-brand: linear-gradient(115deg, #2f6bff 0%, #6a5cf6 50%, #a855f7 100%);
+  --grad-brand-soft: linear-gradient(
+    115deg,
+    rgba(47, 107, 255, 0.18),
+    rgba(168, 85, 247, 0.18)
+  );
 }
 
 :root[data-theme="light"] {
@@ -36,6 +43,12 @@
   --warn: #b67c0a;
   --danger: #e0521f;
   --pr: #c79200;
+  --grad-brand: linear-gradient(115deg, #2f6bff 0%, #6a5cf6 50%, #a855f7 100%);
+  --grad-brand-soft: linear-gradient(
+    115deg,
+    rgba(47, 107, 255, 0.14),
+    rgba(168, 85, 247, 0.14)
+  );
 }
 
 @theme inline {
@@ -271,17 +284,21 @@ h1 {
   }
   .card-hover {
     transition:
-      transform 0.18s ease,
-      border-color 0.18s ease,
-      background 0.18s ease;
+      transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
   /* Hover lift only on real pointer devices — on touch, a tap "sticks" :hover
      and the card stays raised, which looks broken. */
   @media (hover: hover) {
     .card-hover:hover {
-      transform: translateY(-2px);
-      border-color: var(--border-strong);
+      transform: translateY(-3px);
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
       background: var(--surface-2);
+      box-shadow:
+        0 18px 40px -22px rgba(106, 92, 246, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
   }
   .btn,
@@ -295,10 +312,10 @@ h1 {
     position: relative;
     overflow: hidden;
     color: #ffffff;
-    background: linear-gradient(135deg, var(--accent-hi), var(--accent));
+    background: var(--grad-brand);
     box-shadow:
-      0 6px 18px -8px rgba(47,107,255, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      0 8px 22px -10px rgba(106, 92, 246, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
   }
   /* glossy sheen across the top of primary buttons */
   .btn-primary::before {
@@ -307,17 +324,42 @@ h1 {
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.22),
+      rgba(255, 255, 255, 0.24),
       transparent 42%
     );
     pointer-events: none;
   }
-  /* Pointer-only hover: a phone tap would otherwise stick this enlarged glow. */
+  /* diagonal light sweep that fires on hover */
+  .btn-primary::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 45%;
+    left: -60%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.35),
+      transparent
+    );
+    transform: skewX(-18deg);
+    pointer-events: none;
+  }
+  /* Pointer-only hover: a phone tap would otherwise stick these effects. */
   @media (hover: hover) {
     .btn-primary:hover {
       box-shadow:
-        0 9px 24px -8px rgba(47,107,255, 0.45),
-        inset 0 1px 0 rgba(255, 255, 255, 0.28);
+        0 12px 30px -10px rgba(106, 92, 246, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    }
+    .btn-primary:hover::after {
+      animation: btnSheen 0.7s ease;
+    }
+  }
+  @keyframes btnSheen {
+    to {
+      left: 120%;
     }
   }
   .btn-ghost {
@@ -365,13 +407,32 @@ h1 {
     width: 4px;
     height: 1.1em;
     border-radius: 9999px;
-    background: linear-gradient(var(--accent-hi), var(--accent));
+    background: var(--grad-brand);
   }
   .gradient-text {
-    background: linear-gradient(135deg, var(--accent-hi), var(--accent), #4f86f5);
+    background: var(--grad-brand);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+  /* Big hero/stat numbers in the brand gradient — data as the hero. */
+  .num-brand {
+    background: var(--grad-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.02em;
+  }
+  /* Solid brand-gradient fill (logo tiles, badges, accents). */
+  .brand-bg {
+    background: var(--grad-brand);
+  }
+  /* Oversized, tight display heading for hero moments. */
+  .display-hero {
+    font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.94;
   }
 }
 

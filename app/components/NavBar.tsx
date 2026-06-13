@@ -33,7 +33,7 @@ export default function NavBar({ user }: { user: NavUser }) {
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-2xl shadow-[0_8px_30px_-24px_rgba(0,0,0,0.8)] pt-[env(safe-area-inset-top)]">
         <nav className="max-w-5xl mx-auto px-4 sm:px-5 h-[72px] sm:h-16 flex items-center justify-between gap-3">
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-            <span className="grid place-items-center w-8 h-8 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
+            <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
               F
             </span>
             <span className="font-display font-bold text-lg tracking-tight">
@@ -108,7 +108,7 @@ export default function NavBar({ user }: { user: NavUser }) {
         aria-label="Start today's workout"
         className="md:hidden fixed left-1/2 -translate-x-1/2 bottom-[calc(60px+env(safe-area-inset-bottom))] z-40 grid place-items-center w-14 h-14 rounded-full text-white active:scale-95 transition-transform ring-4 ring-background"
         style={{
-          background: "linear-gradient(135deg, var(--accent-hi), var(--accent))",
+          background: "var(--grad-brand)",
           boxShadow:
             "0 10px 30px -6px rgba(47,107,255,0.85), 0 0 0 1px rgba(255,255,255,0.12) inset",
         }}

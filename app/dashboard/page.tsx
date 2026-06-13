@@ -95,9 +95,12 @@ export default async function DashboardPage({
       <WelcomeTour />
       <main className="flex-1 max-w-5xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <div className="animate-fade-up">
-          <p className="text-muted text-sm">Welcome back</p>
-          <h1 className="text-3xl font-bold mt-0.5">
-            Hi {firstName} <span className="inline-block">👋</span>
+          <p className="text-muted text-xs uppercase tracking-[0.18em] font-semibold">
+            Welcome back
+          </p>
+          <h1 className="display-hero text-4xl sm:text-5xl mt-1">
+            Hi <span className="num-brand">{firstName}</span>{" "}
+            <span className="inline-block">👋</span>
           </h1>
         </div>
 
@@ -217,7 +220,7 @@ export default async function DashboardPage({
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <AnimatedRing pct={p.workoutAdherence} size={150} stroke={14}>
                   <div>
-                    <div className="text-5xl font-display font-bold num-gradient">
+                    <div className="text-5xl font-display font-bold num-brand">
                       <AnimatedNumber value={p.workoutAdherence} />
                       <span className="text-xl text-muted">%</span>
                     </div>

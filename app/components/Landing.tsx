@@ -14,7 +14,7 @@ export default function Landing() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/60 backdrop-blur-xl">
         <nav className="max-w-6xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
-            <span className="grid place-items-center w-8 h-8 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
+            <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
               F
             </span>
             <span className="font-display font-bold text-lg tracking-tight">

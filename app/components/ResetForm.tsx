@@ -13,7 +13,7 @@ export default function ResetForm({ token }: { token: string }) {
   return (
     <div className="w-full max-w-sm animate-fade-up">
       <div className="flex items-center gap-2 mb-6">
-        <span className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
+        <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
           F
         </span>
         <span className="font-display font-bold text-xl">

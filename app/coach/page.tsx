@@ -34,7 +34,7 @@ export default async function CoachPage() {
       <NavBar user={user} />
       <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-5 pt-5 pb-24 sm:pb-8">
         <div className="flex items-center gap-2.5 mb-3">
-          <span className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-lg shadow-md shadow-accent/25">
+          <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg text-lg shadow-md shadow-accent/25">
             🧠
           </span>
           <div>

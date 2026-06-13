@@ -44,7 +44,7 @@ export default function PWA() {
 
   return (
     <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 z-50 w-[min(92vw,26rem)] card p-4 shadow-2xl flex items-center gap-3 animate-fade-up">
-      <span className="grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-white font-black shrink-0">
+      <span className="grid place-items-center w-10 h-10 rounded-xl brand-bg text-white font-black shrink-0">
         F
       </span>
       <div className="flex-1 min-w-0">
