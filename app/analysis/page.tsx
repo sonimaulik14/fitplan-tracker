@@ -13,6 +13,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getProgress } from "@/lib/metrics";
 import {
   muscleStyle,
+  slugify,
   fmtVolume,
   fmtWeight,
   VOLUME_LANDMARKS,
@@ -526,7 +527,7 @@ export default async function AnalysisPage() {
                 return (
                   <Link
                     key={pr.name}
-                    href={`/exercise/${encodeURIComponent(pr.name)}`}
+                    href={`/exercise/${slugify(pr.name)}`}
                     className="flex items-center justify-between gap-3 rounded-xl bg-surface-2 border border-border px-3.5 py-2.5 hover:border-accent/40 transition-colors"
                   >
                     <span className="flex items-center gap-2 text-sm min-w-0">

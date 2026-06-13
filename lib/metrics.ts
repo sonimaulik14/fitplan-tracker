@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { ymd, streakLength, todayKey } from "./date";
+import { slugify } from "./ui";
 
 export { todayKey };
 
@@ -719,6 +720,36 @@ export function est1RM(weightKg: number, reps: number): number {
 }
 
 /** Per-exercise progression history (matched by effective or original name). */
+// Map a URL slug (or a legacy encoded name) back to the real exercise name.
+// Considers every exercise in the active plan plus any swapped-in names, so it
+// resolves even for exercises the user hasn't logged yet.
+export async function resolveExerciseSlug(
+  userId: string,
+  slugOrName: string
+): Promise<{ name: string; muscle: string } | null> {
+  const decoded = decodeURIComponent(slugOrName);
+  const [plan, swaps] = await Promise.all([
+    getActivePlan(userId),
+    prisma.exerciseSwap.findMany({
+      where: { enrollment: { userId } },
+      select: { name: true },
+    }),
+  ]);
+  // name -> muscle (plan exercises carry their muscle; swaps default to Other)
+  const byName = new Map<string, string>();
+  for (const w of plan?.weeks ?? [])
+    for (const d of w.days)
+      for (const ex of d.exercises)
+        if (!byName.has(ex.name)) byName.set(ex.name, ex.muscle);
+  for (const s of swaps) if (!byName.has(s.name)) byName.set(s.name, "Other");
+
+  const exact = byName.get(decoded);
+  if (exact !== undefined) return { name: decoded, muscle: exact };
+  const target = slugify(decoded);
+  for (const [n, m] of byName) if (slugify(n) === target) return { name: n, muscle: m };
+  return null;
+}
+
 export async function getExerciseHistory(userId: string, name: string) {
   // Fetch swaps once (instead of re-including enrollment.swaps on every set row)
   // and select only the columns this function uses.

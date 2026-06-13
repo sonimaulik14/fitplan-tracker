@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { ChevronLeft, AlertTriangle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getExerciseHistory } from "@/lib/metrics";
+import { getExerciseHistory, resolveExerciseSlug } from "@/lib/metrics";
 import {
   fmtWeight,
   fmtVolume,
@@ -21,19 +22,21 @@ export default async function ExerciseHistoryPage({
   params: Promise<{ name: string }>;
 }) {
   const { name: raw } = await params;
-  const name = decodeURIComponent(raw);
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const unit = user.unit as Unit;
 
-  const h = await getExerciseHistory(user.id, name);
-  const st = muscleStyle(h.muscle);
-  const standard =
-    h.best1RM > 0
-      ? strengthStandard(h.best1RM, h.latestBwKg, name)
-      : null;
+  // Clean slug → real exercise name + muscle (falls back to the decoded param).
+  const resolved = await resolveExerciseSlug(user.id, raw);
+  const name = resolved?.name ?? decodeURIComponent(raw);
 
-  // weight-trend points for the chart (top set per session)
+  const h = await getExerciseHistory(user.id, name);
+  // History only knows the muscle from logged sets; use the plan's muscle when
+  // the exercise hasn't been logged yet.
+  const muscle = h.muscle !== "Other" ? h.muscle : resolved?.muscle ?? h.muscle;
+  const st = muscleStyle(muscle);
+  const standard =
+    h.best1RM > 0 ? strengthStandard(h.best1RM, h.latestBwKg, name) : null;
   const chartPoints = h.points.map((p) => ({ date: p.date, weight: p.topWeight }));
 
   return (
@@ -42,54 +45,50 @@ export default async function ExerciseHistoryPage({
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-6">
         <Link
           href="/analysis"
-          className="text-sm text-muted hover:text-foreground transition-colors"
+          className="inline-flex w-fit items-center gap-1 text-sm text-muted hover:text-foreground transition-colors"
         >
-          ← Back to analysis
+          <ChevronLeft size={16} aria-hidden /> Back
         </Link>
 
-        <div className="flex items-center gap-3 animate-fade-up">
-          <span
-            className="w-1.5 h-10 rounded-full"
-            style={{ background: st.color }}
-          />
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted flex items-center gap-1.5">
-              <MuscleGlyph muscle={h.muscle} size={14} /> {h.muscle}
-            </div>
-            <h1 className="text-2xl font-bold">{name}</h1>
-          </div>
+        {/* Header */}
+        <div className="animate-fade-up">
+          <p className="eyebrow flex items-center gap-1.5" style={{ color: st.color }}>
+            <MuscleGlyph muscle={muscle} size={13} /> {muscle}
+          </p>
+          <h1 className="display-hero text-3xl sm:text-4xl mt-2">{name}</h1>
         </div>
 
         {/* Demo media — real clip if available, else muscle visual + video link */}
-        <ExerciseDemoHero name={name} muscle={h.muscle} />
+        <ExerciseDemoHero name={name} muscle={muscle} />
 
         {h.points.length === 0 ? (
-          <div className="card p-8 text-center text-muted">
-            No logged sets for this exercise yet.
+          <div className="card p-10 text-center text-muted animate-fade-up">
+            No sets logged for this exercise yet. Log it in a workout and your
+            trend, 1RM and session history will show up here.
           </div>
         ) : (
           <>
             {/* Stat row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 animate-fade-up">
               <div className="card p-4">
-                <div className="text-xs text-muted">Best est. 1RM</div>
-                <div className="text-2xl font-display font-bold mt-1">
+                <div className="eyebrow">Best est. 1RM</div>
+                <div className="text-2xl sm:text-3xl font-display font-bold num-gradient mt-1.5">
                   {fmtWeight(h.best1RM, unit)}
                 </div>
               </div>
               <div className="card p-4">
-                <div className="text-xs text-muted">Sessions</div>
-                <div className="text-2xl font-display font-bold mt-1">
+                <div className="eyebrow">Sessions</div>
+                <div className="text-2xl sm:text-3xl font-display font-bold num-gradient mt-1.5">
                   {h.points.length}
                 </div>
               </div>
               {standard && (
-                <div className="card p-4">
-                  <div className="text-xs text-muted">Strength level</div>
-                  <div className="text-2xl font-display font-bold mt-1">
+                <div className="card p-4 col-span-2 sm:col-span-1">
+                  <div className="eyebrow">Strength level</div>
+                  <div className="text-2xl sm:text-3xl font-display font-bold num-gradient mt-1.5">
                     {standard.level}
                   </div>
-                  <div className="text-xs text-muted mt-0.5">
+                  <div className="text-xs text-muted mt-1">
                     {standard.ratio}× bodyweight
                   </div>
                 </div>
@@ -98,22 +97,25 @@ export default async function ExerciseHistoryPage({
 
             {/* Plateau banner */}
             {h.plateau && (
-              <div className="card p-4 border border-amber-400/30 bg-amber-400/5 text-sm animate-fade-up">
-                ⚠️ <span className="font-semibold">Plateau detected</span> — your
-                estimated 1RM hasn&apos;t improved in 3 sessions. Consider a
-                deload week, a rep-range change, or an exercise swap.
+              <div className="card p-4 border border-warn/30 bg-warn/5 flex items-start gap-3 animate-fade-up">
+                <AlertTriangle size={18} className="text-warn shrink-0 mt-0.5" aria-hidden />
+                <p className="text-sm leading-relaxed">
+                  <span className="font-semibold">Plateau detected</span> — your
+                  estimated 1RM hasn&apos;t improved in 3 sessions. Consider a
+                  deload week, a rep-range change, or an exercise swap.
+                </p>
               </div>
             )}
 
             {/* Weight trend */}
             <section className="card p-6 animate-fade-up">
-              <h2 className="font-bold mb-4">Top set over time</h2>
+              <h2 className="section-title mb-4">Top set over time</h2>
               <BodyweightChart points={chartPoints} unit={unit} />
             </section>
 
             {/* Session table */}
             <section className="card p-6 animate-fade-up">
-              <h2 className="font-bold mb-4">Session log</h2>
+              <h2 className="section-title mb-4">Session log</h2>
               <div className="space-y-1">
                 <div className="grid grid-cols-4 text-[11px] uppercase tracking-wide text-muted pb-2 border-b border-border">
                   <span>Date</span>
@@ -124,7 +126,7 @@ export default async function ExerciseHistoryPage({
                 {[...h.points].reverse().map((p) => (
                   <div
                     key={p.date}
-                    className="grid grid-cols-4 text-sm py-2 border-b border-border last:border-0"
+                    className="grid grid-cols-4 text-sm py-2 border-b border-border last:border-0 tabular-nums"
                   >
                     <span className="text-muted">{p.date.slice(5)}</span>
                     <span>

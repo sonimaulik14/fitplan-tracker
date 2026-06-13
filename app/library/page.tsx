@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getActivePlan } from "@/lib/metrics";
-import { muscleStyle } from "@/lib/ui";
+import { muscleStyle, slugify } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import MusclePhoto from "@/app/components/MusclePhoto";
 import { MuscleGlyph } from "@/app/components/icons";
@@ -81,7 +81,7 @@ export default async function LibraryPage() {
                       className="flex items-center justify-between gap-3 px-4 py-3"
                     >
                       <Link
-                        href={`/exercise/${encodeURIComponent(ex.name)}`}
+                        href={`/exercise/${slugify(ex.name)}`}
                         className="min-w-0 flex-1 hover:text-accent transition-colors"
                       >
                         <span className="font-medium text-sm">{ex.name}</span>

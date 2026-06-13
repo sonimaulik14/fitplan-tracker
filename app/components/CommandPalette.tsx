@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { slugify } from "@/lib/ui";
 import {
   Home,
   ClipboardList,
@@ -110,7 +111,7 @@ export default function CommandPalette() {
         items.push({
           label: ex.name,
           sub: `${ex.muscle} · history`,
-          href: `/exercise/${encodeURIComponent(ex.name)}`,
+          href: `/exercise/${slugify(ex.name)}`,
           Icon: TrendingUp,
         });
     }

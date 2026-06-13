@@ -3,7 +3,7 @@ import { CalendarDays } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress, est1RM } from "@/lib/metrics";
-import { fmtWeight, muscleStyle, type Unit } from "@/lib/ui";
+import { fmtWeight, muscleStyle, slugify, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
 import { MuscleGlyph } from "@/app/components/icons";
@@ -44,7 +44,7 @@ export default async function RecordsPage() {
               return (
                 <Link
                   key={pr.name}
-                  href={`/exercise/${encodeURIComponent(pr.name)}`}
+                  href={`/exercise/${slugify(pr.name)}`}
                   className="card card-hover p-4 flex items-center gap-3"
                 >
                   <span className="w-7 text-center font-display font-bold text-muted">

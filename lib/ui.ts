@@ -72,6 +72,17 @@ export function focusKey(focus: string): string {
   return "hero";
 }
 
+// URL-friendly slug for an exercise name, e.g.
+// "Barbell Bench Press — Medium Grip" -> "barbell-bench-press-medium-grip".
+export function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 // ---------- weight units ----------
 export type Unit = "kg" | "lb";
 export const LB_PER_KG = 2.2046226218;

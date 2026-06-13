@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import type { Plateau } from "@/lib/metrics";
-import { weightNum, type Unit } from "@/lib/ui";
+import { weightNum, slugify, type Unit } from "@/lib/ui";
 import { MuscleGlyph } from "./icons";
 
 // Round a display-unit load to the nearest jump available on a bar:
@@ -88,7 +88,7 @@ export default function PlateauCoach({
               </div>
 
               <Link
-                href={`/exercise/${encodeURIComponent(pl.name)}`}
+                href={`/exercise/${slugify(pl.name)}`}
                 className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold mt-3 hover:underline"
               >
                 View progression →
