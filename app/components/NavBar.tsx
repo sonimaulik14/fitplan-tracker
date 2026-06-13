@@ -35,7 +35,7 @@ export default function NavBar({ user }: { user: NavUser }) {
         <nav className="max-w-5xl mx-auto px-4 sm:px-5 h-[72px] sm:h-16 flex items-center justify-between gap-3">
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
             <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg shadow-lg shadow-accent/30">
-              <VajraMark size={18} />
+              <VajraMark size={22} />
             </span>
             <span className="font-display font-bold text-lg tracking-tight">
               Vajra

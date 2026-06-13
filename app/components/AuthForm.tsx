@@ -18,7 +18,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <div className="mb-7">
         <div className="flex items-center gap-2 mb-6">
           <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg shadow-lg shadow-accent/30">
-            <VajraMark size={22} />
+            <VajraMark size={26} />
           </span>
           <span className="font-display font-bold text-xl tracking-tight">
             Vajra

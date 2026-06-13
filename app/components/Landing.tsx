@@ -17,7 +17,7 @@ export default function Landing() {
         <nav className="max-w-6xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
             <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg shadow-lg shadow-accent/30">
-              <VajraMark size={18} />
+              <VajraMark size={22} />
             </span>
             <span className="font-display font-bold text-lg tracking-tight">
               Vajra

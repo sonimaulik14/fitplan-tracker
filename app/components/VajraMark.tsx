@@ -1,6 +1,6 @@
-// Vajra brand mark — a faceted diamond (vajra = the indestructible diamond).
-// White gem with subtle cut facets; sits on an accent tile. Scales cleanly
-// from a 16px favicon up to the install icon.
+// Vajra brand mark — a gada (Hanuman's mace), the traditional Indian symbol
+// and tool of strength. Drawn head-down (bulb at the bottom). White on the
+// accent tile; reads from a 16px favicon up to the install icon.
 export default function VajraMark({
   size = 24,
   className = "",
@@ -17,15 +17,14 @@ export default function VajraMark({
       className={className}
       aria-hidden
     >
-      <path d="M7 3.5h10L20.8 9 12 21 3.2 9z" fill="#ffffff" />
-      <path
-        d="M3.2 9h17.6M7 3.5 9.6 9 12 21 14.4 9 17 3.5"
-        stroke="#0a0c12"
-        strokeOpacity="0.22"
-        strokeWidth="1.1"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
+      {/* flared grip (top) */}
+      <rect x="8.7" y="2.6" width="6.6" height="3" rx="1.5" fill="#ffffff" />
+      {/* handle */}
+      <rect x="10.7" y="5.2" width="2.6" height="7.2" rx="1.3" fill="#ffffff" />
+      {/* mace head — the dominant bulb (bottom) */}
+      <circle cx="12" cy="16.4" r="5.1" fill="#ffffff" />
+      {/* finial tip */}
+      <circle cx="12" cy="22" r="1.4" fill="#ffffff" />
     </svg>
   );
 }

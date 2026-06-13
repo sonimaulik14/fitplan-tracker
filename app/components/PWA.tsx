@@ -46,7 +46,7 @@ export default function PWA() {
   return (
     <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 z-50 w-[min(92vw,26rem)] card p-4 shadow-2xl flex items-center gap-3 animate-fade-up">
       <span className="grid place-items-center w-10 h-10 rounded-xl brand-bg shrink-0">
-        <VajraMark size={24} />
+        <VajraMark size={28} />
       </span>
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-sm">Install Vajra</div>
