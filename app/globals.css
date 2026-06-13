@@ -463,10 +463,23 @@ h1 {
 .animate-scale-in {
   animation: scaleIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+@keyframes pulseSoft {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+.animate-pulse-soft {
+  animation: pulseSoft 2.4s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
-  .animate-scale-in {
+  .animate-scale-in,
+  .animate-pulse-soft {
     animation: none;
   }
 }

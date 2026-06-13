@@ -55,6 +55,9 @@ export default async function DashboardPage({
   // Not enrolled yet → offer the available plans to choose from.
   const plans = p?.enrolled ? [] : await getAllPlans();
   const firstName = user.name.split(" ")[0];
+  // Enrolled but nothing logged yet — show an inviting first-run hero instead
+  // of a wall of zeros.
+  const fresh = !!p?.enrolled && hasWorkouts && p.completedWorkouts === 0;
 
   // "Up next" = first not-completed training day (skip rest days if possible).
   const nextDay =
@@ -215,8 +218,43 @@ export default async function DashboardPage({
               </Reveal>
             )}
 
+            {/* First-run hero — nothing logged yet */}
+            {fresh && (
+              <section
+                className="card p-6 sm:p-8 mt-4 animate-fade-up relative overflow-hidden"
+                style={{ background: "var(--grad-brand-soft)" }}
+              >
+                <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 text-center sm:text-left">
+                  <div className="relative grid place-items-center w-[132px] h-[132px] shrink-0">
+                    <div className="absolute inset-0 rounded-full border-[6px] border-dashed border-accent/30" />
+                    <span className="text-5xl animate-pulse-soft">🔥</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs uppercase tracking-[0.18em] font-semibold text-accent">
+                      Day one
+                    </p>
+                    <h2 className="display-hero text-2xl sm:text-3xl mt-1">
+                      Your stats start <span className="num-brand">here</span>
+                    </h2>
+                    <p className="text-muted text-sm mt-2 max-w-md">
+                      Log your first session and your adherence, volume and
+                      streak come alive. Every rep counts from here.
+                    </p>
+                    <Link
+                      href="/workout/next"
+                      className="btn-primary inline-flex w-fit mt-4 !px-5"
+                    >
+                      Start your first workout →
+                    </Link>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Hero: adherence ring + stats */}
-            <section className="card p-6 sm:p-8 mt-4 animate-fade-up">
+            <section
+              className={`card p-6 sm:p-8 mt-4 animate-fade-up ${fresh ? "hidden" : ""}`}
+            >
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <AnimatedRing pct={p.workoutAdherence} size={150} stroke={14}>
                   <div>
