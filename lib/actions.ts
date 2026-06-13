@@ -14,7 +14,9 @@ import {
 } from "./auth";
 import { rateLimit } from "./rate-limit";
 import { storeImage } from "./storage";
+import { sendEmail, emailConfigured, passwordResetEmail } from "./email";
 import { todayKey } from "./date";
+import { headers } from "next/headers";
 
 const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
@@ -181,11 +183,24 @@ export async function requestPasswordResetAction(
         expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       },
     });
-    const link = `/reset/${raw}`;
-    // SECURITY: never hand a reset token to the client in production — anyone who
-    // knows a registered email could request it and take over the account. Until
-    // an email provider is wired up, log it server-side (owner can read it from
-    // Vercel logs) and expose it directly only in development.
+    // Build an absolute link (emails can't use relative URLs). Prefer the real
+    // request origin so it works on any domain; fall back to the configured URL.
+    const h = await headers();
+    const host = h.get("host");
+    const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
+    const origin = host
+      ? `${proto}://${host}`
+      : process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const link = `${origin}/reset/${raw}`;
+
+    // If an email provider is configured, email the link. Otherwise fall back:
+    // log it server-side in production (owner reads it from logs), and expose it
+    // to the client only in development. SECURITY: never return the token to the
+    // client in production — anyone knowing an email could then take over.
+    if (emailConfigured()) {
+      await sendEmail({ to: email, ...passwordResetEmail(link) });
+      return { sent: true };
+    }
     if (process.env.NODE_ENV === "production") {
       console.log(`[password-reset] ${email} -> ${link}`);
       return { sent: true };
