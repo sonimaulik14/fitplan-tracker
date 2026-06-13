@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; error?: string };
+
+// Sentinel the server prefixes to a mid-stream error (see /api/coach).
+const ERR_MARK = "[[FITPLAN_ERROR]]";
 
 export default function CoachChat({ starters }: { starters: string[] }) {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -27,10 +30,10 @@ export default function CoachChat({ starters }: { starters: string[] }) {
     setInput("");
     setBusy(true);
 
-    const setLast = (content: string) =>
+    const setLast = (content: string, error?: string) =>
       setMessages((m) => {
         const c = [...m];
-        c[c.length - 1] = { role: "assistant", content };
+        c[c.length - 1] = { role: "assistant", content, error };
         return c;
       });
 
@@ -54,7 +57,9 @@ export default function CoachChat({ starters }: { starters: string[] }) {
         const { done, value } = await reader.read();
         if (done) break;
         acc += dec.decode(value, { stream: true });
-        setLast(acc);
+        const i = acc.indexOf(ERR_MARK);
+        if (i >= 0) setLast(acc.slice(0, i), acc.slice(i + ERR_MARK.length));
+        else setLast(acc);
       }
     } catch {
       setLast("Network hiccup — check your connection and try again.");
@@ -156,7 +161,16 @@ function Bubble({ msg, busy, last }: { msg: Msg; busy: boolean; last: boolean })
         ) : isUser ? (
           msg.content
         ) : (
-          <Markdown text={msg.content} />
+          <>
+            {msg.content && <Markdown text={msg.content} />}
+            {msg.error && (
+              <p
+                className={`text-xs text-danger ${msg.content ? "mt-2 pt-2 border-t border-border" : ""}`}
+              >
+                ⚠ {msg.error}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -90,9 +90,11 @@ export async function POST(req: Request) {
         await ms.finalMessage();
       } catch (err) {
         console.error("coach stream error", err);
+        // Sentinel so the client can render this as an error (not as answer
+        // content) even when the failure happens mid-stream.
         controller.enqueue(
           encoder.encode(
-            "\n\n_The coach hit a snag answering that. Please try again._"
+            "[[FITPLAN_ERROR]]The coach hit a snag answering that. Please try again."
           )
         );
       } finally {

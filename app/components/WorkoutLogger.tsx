@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useTransition, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   restChime,
@@ -656,11 +657,12 @@ export default function WorkoutLogger({
             <div className="flex items-start justify-between gap-3 pl-1">
               <div className="flex items-start gap-3 min-w-0">
                 {ex.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={ex.photoUrl}
                     alt={ex.muscle}
-                    loading="lazy"
+                    width={56}
+                    height={56}
+                    sizes="56px"
                     className="w-14 h-14 rounded-xl object-cover border border-border duotone shrink-0"
                   />
                 ) : (
