@@ -559,6 +559,18 @@ h1 {
   );
   animation: shimmer 1.4s infinite;
 }
+/* Light theme: the white sweep is invisible, so darken the base + shimmer. */
+:root[data-theme="light"] .skeleton {
+  background: rgba(15, 20, 35, 0.07);
+}
+:root[data-theme="light"] .skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(15, 20, 35, 0.06),
+    transparent
+  );
+}
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

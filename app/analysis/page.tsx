@@ -38,7 +38,7 @@ export default async function AnalysisPage() {
     return (
       <>
         <NavBar user={user} />
-        <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28">
+        <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
           <h1 className="text-2xl font-bold">Analysis</h1>
           <div className="card p-8 mt-6 text-center">
             <BarChart3 className="w-9 h-9 mx-auto mb-3 text-muted" strokeWidth={1.75} />

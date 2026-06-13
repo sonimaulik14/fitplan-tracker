@@ -18,7 +18,7 @@ export default async function AchievementsPage() {
     return (
       <>
         <NavBar user={user} />
-        <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28">
+        <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
           <h1 className="display-hero text-3xl">Achievements</h1>
           <div className="card p-8 mt-6 text-center text-muted">
             Start the plan and log a workout to begin earning badges.

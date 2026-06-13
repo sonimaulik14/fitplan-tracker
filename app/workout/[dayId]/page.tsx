@@ -106,7 +106,7 @@ export default async function WorkoutPage({
   return (
     <>
       <NavBar user={user} />
-      <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28">
+      <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-solid py-1.5 pl-2 pr-3.5 text-sm font-medium text-foreground/80 hover:text-foreground hover:border-border-strong transition-colors"
