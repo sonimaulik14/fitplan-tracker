@@ -262,12 +262,17 @@ export default function WorkoutLogger({
   // Clear any running interval on unmount.
   useEffect(() => stopRest, [stopRest]);
 
+  // Latest-value refs so the debounced/async save reads current state without
+  // re-subscribing. Synced in an effect (not during render) to stay pure under
+  // React 19 concurrency; save() also sets statusRef eagerly when needed.
   const statusRef = useRef(status);
-  statusRef.current = status;
   const exRef = useRef(exercises);
-  exRef.current = exercises;
   const metaRef = useRef(meta);
-  metaRef.current = meta;
+  useEffect(() => {
+    statusRef.current = status;
+    exRef.current = exercises;
+    metaRef.current = meta;
+  }, [status, exercises, meta]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Tracks unsaved edits (for the beforeunload guard) and serializes writes so
@@ -388,6 +393,10 @@ export default function WorkoutLogger({
       )
     );
     startTransition(async () => {
+      // Flush any pending/in-flight set edits first so router.refresh() (which
+      // remounts the logger with fresh server props) can't drop unsaved sets.
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      await runSave(statusRef.current);
       await swapExerciseAction(exId, n);
       router.refresh();
     });
