@@ -35,8 +35,6 @@ model User {
   nutrition    NutritionEntry[]
   dailyLogs    DailyLog[]
   photos       ProgressPhoto[]
-  following    Follow[]        @relation("follower")
-  followers    Follow[]        @relation("following")
   resetTokens  PasswordResetToken[]
   pushSubscriptions PushSubscription[]
 }
@@ -62,18 +60,6 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
-}
-
-model Follow {
-  id          String   @id @default(cuid())
-  followerId  String
-  followingId String
-  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-
-  @@unique([followerId, followingId])
-  @@index([followingId])
 }
 
 model NutritionEntry {

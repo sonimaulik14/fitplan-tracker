@@ -22,7 +22,6 @@ const NAV: Item[] = [
   { label: "Personal records", href: "/records", icon: "🏅" },
   { label: "Achievements", href: "/achievements", icon: "🎖️" },
   { label: "12-Week Wrapped", href: "/wrapped", icon: "🎬" },
-  { label: "Leaderboard", href: "/leaderboard", icon: "🏆" },
   { label: "Analysis", href: "/analysis", icon: "📊" },
   { label: "Account", href: "/account", icon: "👤" },
   { label: "Training preferences", href: "/onboarding", icon: "⚙️" },

@@ -11,7 +11,6 @@ const LINKS = [
   { href: "/plan", label: "Plan", icon: ListIcon },
   { href: "/coach", label: "Coach", icon: CoachIcon },
   { href: "/progress", label: "Progress", icon: FireIcon },
-  { href: "/leaderboard", label: "Ranks", icon: TrophyIcon },
   { href: "/analysis", label: "Stats", icon: ChartIcon },
 ];
 
@@ -120,7 +119,7 @@ export default function NavBar({ user }: { user: NavUser }) {
 
       {/* Mobile bottom tab bar */}
       <div className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-5">
           {LINKS.map((l) => {
             const Icon = l.icon;
             const active = isActive(l.href);
@@ -207,19 +206,6 @@ function FireIcon({ active }: { active?: boolean }) {
         d="M12 3c.5 3-2 4.5-2 7a2 2 0 1 0 4 0c0-.6-.2-1.2-.5-1.7C16 10 18 12.5 18 15a6 6 0 1 1-12 0c0-3.5 3-5.5 4-9 .6.8 1.4 1.2 2-3Z"
         stroke="currentColor"
         strokeWidth={active ? 2.2 : 1.7}
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function TrophyIcon({ active }: { active?: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M7 4h10v3a5 5 0 0 1-10 0V4ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M9 14h6M12 14v3M9 20h6M10 17h4v3h-4z"
-        stroke="currentColor"
-        strokeWidth={active ? 2.2 : 1.7}
-        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>

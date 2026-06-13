@@ -547,33 +547,6 @@ export async function swapExerciseAction(
   return { ok: true };
 }
 
-export async function followAction(targetUserId: string) {
-  const user = await getCurrentUser();
-  if (!user || user.id === targetUserId) return { ok: false };
-  await prisma.follow.upsert({
-    where: {
-      followerId_followingId: {
-        followerId: user.id,
-        followingId: targetUserId,
-      },
-    },
-    update: {},
-    create: { followerId: user.id, followingId: targetUserId },
-  });
-  revalidatePath("/leaderboard");
-  return { ok: true };
-}
-
-export async function unfollowAction(targetUserId: string) {
-  const user = await getCurrentUser();
-  if (!user) return { ok: false };
-  await prisma.follow.deleteMany({
-    where: { followerId: user.id, followingId: targetUserId },
-  });
-  revalidatePath("/leaderboard");
-  return { ok: true };
-}
-
 export async function logBodyweightAction(weightKg: number) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };

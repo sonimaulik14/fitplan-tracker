@@ -21,7 +21,6 @@ const PAGE_FALLBACK: Record<string, string> = {
   "page:records": "chest",
   "page:history": "calves",
   "page:achievements": "hero",
-  "page:leaderboard": "cardio",
   "page:library": "arms",
 };
 function fallbackKey(queryKey: string): string {
@@ -53,7 +52,6 @@ export const PHOTO_QUERIES: Record<string, string> = {
   "page:history": "gym training workout dark",
   "page:achievements": "athlete victory strong gym",
   "page:library": "dumbbells gym equipment dark",
-  "page:leaderboard": "competition athletes gym",
   "hero:legs": "barbell squat legs gym",
   "hero:chest": "bench press chest workout",
   "hero:back": "pull up back workout gym",

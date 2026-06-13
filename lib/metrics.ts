@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 
 const PLAN_INCLUDE = {
@@ -453,66 +452,6 @@ export async function getActivity(userId: string, days = 119) {
 
 export type ActivitySummary = Awaited<ReturnType<typeof getActivity>>;
 
-/** Cross-user leaderboard ranked by completed workouts, then sets, then volume.
- *  Aggregated in SQL (one indexed pass, top 100) rather than loading every
- *  user's full session/set history into memory. */
-export async function getLeaderboard() {
-  const agg = await prisma.$queryRaw<
-    {
-      id: string;
-      name: string;
-      completedWorkouts: bigint;
-      doneSets: bigint;
-      volume: number | null;
-    }[]
-  >`
-    SELECT u."id",
-           u."name",
-           COUNT(DISTINCT s."id") FILTER (WHERE s."status" = 'completed') AS "completedWorkouts",
-           COUNT(se."id") FILTER (WHERE se."done") AS "doneSets",
-           COALESCE(SUM(se."weight" * se."reps")
-             FILTER (WHERE se."done" AND se."weight" IS NOT NULL AND se."reps" IS NOT NULL), 0) AS "volume"
-    FROM "User" u
-    JOIN "Enrollment" e ON e."userId" = u."id"
-    JOIN "WorkoutSession" s ON s."enrollmentId" = e."id"
-    LEFT JOIN "SetEntry" se ON se."sessionId" = s."id"
-    GROUP BY u."id", u."name"
-    HAVING COUNT(se."id") FILTER (WHERE se."done") > 0
-        OR COUNT(DISTINCT s."id") FILTER (WHERE s."status" = 'completed') > 0
-    ORDER BY "completedWorkouts" DESC, "doneSets" DESC, "volume" DESC
-    LIMIT 100
-  `;
-  if (agg.length === 0) return [];
-
-  // Streak is display-only (not used for ranking), so compute it for just the
-  // ranked users — distinct active dates pulled in one grouped query.
-  const ids = agg.map((r) => r.id);
-  const dateRows = await prisma.$queryRaw<{ userId: string; d: Date }[]>`
-    SELECT e."userId" AS "userId", DATE(s."performedDate") AS "d"
-    FROM "WorkoutSession" s
-    JOIN "Enrollment" e ON e."id" = s."enrollmentId"
-    JOIN "SetEntry" se ON se."sessionId" = s."id" AND se."done" = true
-    WHERE e."userId" IN (${Prisma.join(ids)})
-    GROUP BY e."userId", DATE(s."performedDate")
-  `;
-
-  const datesByUser = new Map<string, Set<string>>();
-  for (const r of dateRows) {
-    const set = datesByUser.get(r.userId) ?? new Set<string>();
-    set.add(ymd(new Date(r.d)));
-    datesByUser.set(r.userId, set);
-  }
-
-  return agg.map((r) => ({
-    id: r.id,
-    name: r.name,
-    completedWorkouts: Number(r.completedWorkouts),
-    doneSets: Number(r.doneSets),
-    volume: Math.round(Number(r.volume ?? 0)),
-    streak: computeStreak(datesByUser.get(r.id) ?? new Set<string>()),
-  }));
-}
-
 /** Logged sessions, newest first, with per-session totals. Bounded by `take`
  *  (covers multi-year history while capping memory) and selects only the
  *  columns the summary needs. */
@@ -556,15 +495,6 @@ export async function getWorkoutHistory(userId: string, take = 200) {
       mood: s.mood,
     };
   });
-}
-
-/** Set of user ids the given user follows. */
-export async function getFollowing(userId: string) {
-  const rows = await prisma.follow.findMany({
-    where: { followerId: userId },
-    select: { followingId: true },
-  });
-  return new Set(rows.map((r) => r.followingId));
 }
 
 /** Bodyweight over time, merging standalone weigh-ins and workout-day weights. */
