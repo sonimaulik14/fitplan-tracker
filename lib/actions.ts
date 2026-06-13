@@ -171,8 +171,16 @@ export async function requestPasswordResetAction(
         expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       },
     });
-    // TODO: email this link. Until an email provider is configured we surface it.
-    return { sent: true, link: `/reset/${raw}` };
+    const link = `/reset/${raw}`;
+    // SECURITY: never hand a reset token to the client in production — anyone who
+    // knows a registered email could request it and take over the account. Until
+    // an email provider is wired up, log it server-side (owner can read it from
+    // Vercel logs) and expose it directly only in development.
+    if (process.env.NODE_ENV === "production") {
+      console.log(`[password-reset] ${email} -> ${link}`);
+      return { sent: true };
+    }
+    return { sent: true, link };
   }
   return { sent: true };
 }
@@ -264,7 +272,7 @@ export async function saveWorkoutAction(
 
   const day = await prisma.workoutDay.findUnique({
     where: { id: workoutDayId },
-    include: { week: true },
+    include: { week: true, exercises: { select: { id: true } } },
   });
   if (!day) return { ok: false, error: "Workout not found." };
 
@@ -272,6 +280,25 @@ export async function saveWorkoutAction(
     where: { userId: user.id, planId: day.week.planId },
   });
   if (!enrollment) return { ok: false, error: "You haven't started this plan." };
+
+  // Sanitize client input: drop sets whose exercise doesn't belong to this day
+  // (prevents cross-plan pollution), and clamp the numeric fields to sane ranges.
+  const validIds = new Set(day.exercises.map((e) => e.id));
+  const clamp = (v: number | null, min: number, max: number): number | null =>
+    v == null || !Number.isFinite(v) ? null : Math.min(max, Math.max(min, v));
+  const clean = sets
+    .filter((s) => validIds.has(s.planExerciseId))
+    .map((s) => ({
+      planExerciseId: s.planExerciseId,
+      setNumber: Number.isFinite(s.setNumber)
+        ? Math.min(100, Math.max(1, Math.trunc(s.setNumber)))
+        : 1,
+      setType: s.setType === "warmup" ? "warmup" : "work",
+      weight: clamp(s.weight, 0, 2000),
+      reps: clamp(s.reps, 0, 1000),
+      rpe: clamp(s.rpe, 0, 10),
+      done: !!s.done,
+    }));
 
   const session = await prisma.workoutSession.upsert({
     where: {
@@ -297,22 +324,16 @@ export async function saveWorkoutAction(
     },
   });
 
-  // Replace all set entries for this session with the incoming ones.
-  await prisma.setEntry.deleteMany({ where: { sessionId: session.id } });
-  if (sets.length) {
-    await prisma.setEntry.createMany({
-      data: sets.map((s) => ({
-        sessionId: session.id,
-        planExerciseId: s.planExerciseId,
-        setNumber: s.setNumber,
-        setType: s.setType,
-        weight: s.weight,
-        reps: s.reps,
-        rpe: s.rpe,
-        done: s.done,
-      })),
-    });
-  }
+  // Replace all set entries for this session with the incoming ones — atomically,
+  // so a crash between delete and re-create can never wipe the logged sets.
+  await prisma.$transaction(async (tx) => {
+    await tx.setEntry.deleteMany({ where: { sessionId: session.id } });
+    if (clean.length) {
+      await tx.setEntry.createMany({
+        data: clean.map((s) => ({ sessionId: session.id, ...s })),
+      });
+    }
+  });
 
   // Did finishing this complete the whole week (all training days done)?
   let weekCompleted = false;

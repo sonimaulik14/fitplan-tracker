@@ -189,7 +189,9 @@ export default function WorkoutLogger({
         : weightNum(initialMeta.bodyweight, unit),
   });
   const [status, setStatus] = useState(initialStatus);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveState, setSaveState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<{
     week: number | null;
@@ -267,6 +269,49 @@ export default function WorkoutLogger({
   metaRef.current = meta;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks unsaved edits (for the beforeunload guard) and serializes writes so
+  // two saves can never race — important so a late autosave can't overwrite the
+  // "completed" status set by an explicit Mark-complete.
+  const dirtyRef = useRef(false);
+  type SaveResult = {
+    ok: boolean;
+    error?: string;
+    weekCompleted?: boolean;
+    weekNumber?: number;
+    programComplete?: boolean;
+  };
+  const saveChainRef = useRef<Promise<SaveResult>>(Promise.resolve({ ok: true }));
+
+  // Persist current state with `status`, chained after any in-flight save.
+  const runSave = (status: "in_progress" | "completed"): Promise<SaveResult> => {
+    dirtyRef.current = true;
+    const next = saveChainRef.current
+      .catch(() => ({ ok: false as const }))
+      .then(async (): Promise<SaveResult> => {
+        const { sets, meta: m } = buildPayload();
+        try {
+          const res = await saveWorkoutAction(dayId, sets, status, m);
+          if (res.ok) dirtyRef.current = false;
+          return res;
+        } catch {
+          return { ok: false, error: "Network error — check your connection." };
+        }
+      });
+    saveChainRef.current = next;
+    return next;
+  };
+
+  // Warn before leaving with unsaved (or failed-to-save) edits.
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
 
   // Build the kg payload from current state.
   const buildPayload = () => ({
@@ -289,16 +334,16 @@ export default function WorkoutLogger({
   // Debounced silent auto-save — preserves current status, no page refresh.
   const queueAutosave = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    dirtyRef.current = true;
     setSaveState("saving");
     debounceRef.current = setTimeout(async () => {
-      const { sets, meta: m } = buildPayload();
-      const res = await saveWorkoutAction(dayId, sets, statusRef.current, m);
+      const res = await runSave(statusRef.current);
       if (res.ok) {
         setSaveState("saved");
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
         savedTimerRef.current = setTimeout(() => setSaveState("idle"), 1500);
       } else {
-        setSaveState("idle");
+        setSaveState("error");
         toast(res.error ?? "Could not save.", "error");
       }
     }, 700);
@@ -509,9 +554,12 @@ export default function WorkoutLogger({
   // Explicit save (Complete / Reopen) — refreshes so dashboard/analysis update.
   const save = (finalStatus: "in_progress" | "completed") => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const { sets, meta: m } = buildPayload();
+    // Set eagerly so any autosave that fires before this write commits also
+    // carries the final status (belt-and-braces with the serialized chain).
+    statusRef.current = finalStatus;
+    setSaveState("saving");
     startTransition(async () => {
-      const res = await saveWorkoutAction(dayId, sets, finalStatus, m);
+      const res = await runSave(finalStatus);
       if (res.ok) {
         setStatus(finalStatus);
         setSaveState("saved");
@@ -555,6 +603,7 @@ export default function WorkoutLogger({
         }
         router.refresh();
       } else {
+        setSaveState("error");
         toast(res.error ?? "Could not save.", "error");
       }
     });
@@ -644,12 +693,18 @@ export default function WorkoutLogger({
             <span className="text-foreground font-bold text-base">{doneRows}</span>{" "}
             / {totalRows} sets logged
           </span>
-          <span className="shrink-0 text-xs font-semibold text-muted tabular-nums">
+          <span
+            className={`shrink-0 text-xs font-semibold tabular-nums ${
+              saveState === "error" ? "text-danger" : "text-muted"
+            }`}
+          >
             {saveState === "saving"
               ? "Saving…"
               : saveState === "saved"
                 ? "Saved ✓"
-                : `${pct}%`}
+                : saveState === "error"
+                  ? "⚠ Not saved"
+                  : `${pct}%`}
           </span>
         </div>
         <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-2.5">
@@ -1058,12 +1113,18 @@ export default function WorkoutLogger({
       {/* Sticky action bar (sits above mobile tab bar) */}
       <div className="fixed bottom-[calc(66px+env(safe-area-inset-bottom))] sm:bottom-0 left-0 right-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-5 py-3 flex items-center gap-3">
-          <span className="text-xs text-muted">
+          <span
+            className={`text-xs ${
+              saveState === "error" ? "text-danger font-semibold" : "text-muted"
+            }`}
+          >
             {saveState === "saving"
               ? "Saving…"
               : saveState === "saved"
                 ? "All changes saved ✓"
-                : "Changes save automatically"}
+                : saveState === "error"
+                  ? "⚠ Not saved — keep this page open"
+                  : "Changes save automatically"}
           </span>
           <div className="ml-auto flex gap-2">
             {status === "completed" ? (

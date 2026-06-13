@@ -196,6 +196,8 @@ model PlanExercise {
   repTarget    String
   isCardio     Boolean    @default(false)
   setEntries   SetEntry[]
+
+  @@index([workoutDayId])
 }
 
 model Enrollment {
@@ -236,6 +238,7 @@ model WorkoutSession {
   setEntries    SetEntry[]
 
   @@unique([enrollmentId, workoutDayId])
+  @@index([enrollmentId, performedDate])
 }
 
 model SetEntry {
@@ -252,4 +255,5 @@ model SetEntry {
   done           Boolean        @default(false)
 
   @@unique([sessionId, planExerciseId, setNumber])
+  @@index([planExerciseId])
 }
