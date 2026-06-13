@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 const HOST = "exercisedb.p.rapidapi.com";
 
@@ -51,6 +52,9 @@ async function fetchGif(query: string, key: string): Promise<string | null> {
 export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Cap lookups: this proxies a metered third-party API and writes a shared cache.
+  if (!(await rateLimit("exercise-demo", 30, 60_000)))
+    return NextResponse.json({ found: false }, { status: 429 });
 
   const name = new URL(req.url).searchParams.get("name")?.trim();
   if (!name) return NextResponse.json({ found: false });

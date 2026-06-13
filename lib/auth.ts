@@ -22,7 +22,7 @@ const MAX_AGE = 60 * 60 * 24 * 30; // 30 days (default)
 const REMEMBER_AGE = 60 * 60 * 24 * 365 * 10; // 10 years — effectively "always signed in"
 
 export async function hashPassword(password: string) {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, 12);
 }
 
 export async function verifyPassword(password: string, hash: string) {

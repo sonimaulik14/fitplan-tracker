@@ -16,6 +16,11 @@ import { rateLimit } from "./rate-limit";
 
 const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
+// Only accept raster image data URLs. Rejects SVG (which can carry inline
+// script) and anything that isn't a base64 PNG/JPEG/WebP/GIF.
+const isSafeImageDataUrl = (s: string) =>
+  /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(s);
+
 export type AuthState = { error?: string; ok?: boolean } | undefined;
 
 export async function signupAction(
@@ -30,8 +35,8 @@ export async function signupAction(
 
   if (!name || !email || !password)
     return { error: "All fields are required." };
-  if (password.length < 6)
-    return { error: "Password must be at least 6 characters." };
+  if (password.length < 8)
+    return { error: "Password must be at least 8 characters." };
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return { error: "An account with this email already exists." };
@@ -126,8 +131,11 @@ export async function changePasswordAction(
 
   const sessionUser = await getCurrentUser();
   if (!sessionUser) return { error: "Not signed in." };
-  if (next.length < 6)
-    return { error: "New password must be at least 6 characters." };
+  // Throttle online guessing of the current password.
+  if (!(await rateLimit("change-password", 8, 60_000)))
+    return { error: "Too many attempts — try again in a minute." };
+  if (next.length < 8)
+    return { error: "New password must be at least 8 characters." };
   if (next !== confirm) return { error: "New passwords don't match." };
 
   const user = await prisma.user.findUnique({
@@ -189,12 +197,15 @@ export async function resetPasswordAction(
   _prev: AuthState,
   formData: FormData
 ): Promise<AuthState> {
+  // Throttle token-guessing attempts (tokens are 256-bit, but defense in depth).
+  if (!(await rateLimit("reset-confirm", 10, 15 * 60_000)))
+    return { error: "Too many attempts — try again later." };
   const token = String(formData.get("token") ?? "");
   const next = String(formData.get("next") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
 
-  if (next.length < 6)
-    return { error: "Password must be at least 6 characters." };
+  if (next.length < 8)
+    return { error: "Password must be at least 8 characters." };
   if (next !== confirm) return { error: "Passwords don't match." };
 
   const row = await prisma.passwordResetToken.findUnique({
@@ -436,7 +447,7 @@ export async function completeOnboardingAction(input: OnboardingInput) {
 export async function setAvatarAction(dataUrl: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  if (!dataUrl.startsWith("data:image/"))
+  if (!isSafeImageDataUrl(dataUrl))
     return { ok: false, error: "Invalid image." };
   if (dataUrl.length > 1_500_000)
     return { ok: false, error: "Image too large." };
@@ -753,7 +764,7 @@ export async function resetPhotoCacheAction() {
 export async function addProgressPhotoAction(dataUrl: string, note?: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  if (!dataUrl.startsWith("data:image/"))
+  if (!isSafeImageDataUrl(dataUrl))
     return { ok: false, error: "Invalid image." };
   if (dataUrl.length > 3_500_000)
     return { ok: false, error: "Image too large — try a smaller photo." };

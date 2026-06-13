@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,8 @@ type Body = {
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
+  if (!(await rateLimit("push-subscribe", 20, 60_000)))
+    return new Response("Too many requests", { status: 429 });
 
   let body: Body;
   try {
