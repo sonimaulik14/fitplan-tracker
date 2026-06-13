@@ -638,7 +638,7 @@ export default function WorkoutLogger({
       )}
       {/* Progress header */}
       {!isLightDay && (
-      <div className="card !bg-surface-solid p-4 sticky top-[calc(64px+env(safe-area-inset-top))] z-20">
+      <div className="card !bg-surface-solid p-4">
         <div className="flex items-center justify-between gap-3 text-sm">
           <span className="text-muted">
             <span className="text-foreground font-bold text-base">{doneRows}</span>{" "}
