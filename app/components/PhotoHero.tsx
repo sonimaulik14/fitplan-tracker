@@ -30,17 +30,17 @@ export default async function PhotoHero({
         sizes="(max-width: 768px) 100vw, 768px"
         className="object-cover duotone kenburns"
       />
-      <div className="absolute inset-0 z-10 p-6 flex flex-col justify-end">
+      <div className="absolute inset-0 z-10 p-6 sm:p-7 flex flex-col justify-end">
         {eyebrow && (
-          <span className="chip w-fit mb-2 !bg-black/30 !border-white/20 text-white backdrop-blur">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75 mb-2.5 drop-shadow">
             {eyebrow}
           </span>
         )}
-        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white drop-shadow-lg">
+        <h1 className="display-hero text-4xl sm:text-5xl text-white drop-shadow-lg">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-white/85 text-sm mt-1.5 max-w-xl drop-shadow">
+          <p className="text-white/85 text-sm mt-2.5 max-w-xl leading-relaxed drop-shadow">
             {subtitle}
           </p>
         )}
