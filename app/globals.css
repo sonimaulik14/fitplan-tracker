@@ -79,14 +79,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  /* ambient glows */
-  background-image:
-    radial-gradient(60rem 60rem at 110% -10%, rgba(47,107,255, 0.12), transparent 60%),
-    radial-gradient(50rem 50rem at -10% 10%, rgba(124, 140, 255, 0.1), transparent 55%),
-    radial-gradient(40rem 40rem at 50% 120%, rgba(47, 230, 168, 0.08), transparent 60%);
-  /* No background-attachment: fixed — it forces a full repaint every scroll
-     frame (major jank, esp. mobile). The fixed aurora + ambient photo already
-     provide the persistent ambient lighting. */
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Ambient glow comes from the single .aurora layer — keep body flat. */
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
@@ -440,40 +437,28 @@ h1 {
   overflow: hidden;
   pointer-events: none;
 }
-.aurora::before,
-.aurora::after {
+.aurora::before {
   content: "";
   position: absolute;
   width: 55vw;
   height: 55vw;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.5;
-  will-change: transform;
-}
-.aurora::before {
-  top: -15%;
-  right: -10%;
-  background: radial-gradient(circle, rgba(47,107,255, 0.55), transparent 65%);
-  animation: drift1 22s ease-in-out infinite alternate;
-}
-.aurora::after {
-  bottom: -20%;
-  left: -10%;
-  background: radial-gradient(circle, rgba(124, 140, 255, 0.5), transparent 65%);
-  animation: drift2 26s ease-in-out infinite alternate;
-}
-.aurora-blob {
-  position: absolute;
-  top: 40%;
-  left: 35%;
-  width: 40vw;
-  height: 40vw;
-  border-radius: 50%;
   filter: blur(100px);
-  opacity: 0.35;
-  background: radial-gradient(circle, rgba(47, 230, 168, 0.5), transparent 65%);
-  animation: drift3 30s ease-in-out infinite alternate;
+  opacity: 0.22;
+  will-change: transform;
+  top: -18%;
+  right: -12%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    transparent 65%
+  );
+  animation: drift1 26s ease-in-out infinite alternate;
+}
+/* Second blob and the green blob removed — one restrained glow, single hue. */
+.aurora::after,
+.aurora-blob {
+  display: none;
 }
 @keyframes drift1 {
   to {
@@ -503,7 +488,7 @@ h1 {
   border-radius: inherit;
   background: radial-gradient(
     18rem 18rem at var(--mx, 50%) var(--my, 0%),
-    rgba(24,169,255, 0.16),
+    color-mix(in srgb, var(--accent) 14%, transparent),
     transparent 60%
   );
   opacity: 0;
