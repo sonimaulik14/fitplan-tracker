@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CheckCircle2, Dumbbell, Flame, Moon, Bell } from "lucide-react";
 
 export default function ReminderNudge({
   trainingToday,
@@ -46,7 +47,7 @@ export default function ReminderNudge({
     if (sessionStorage.getItem(key)) return;
     sessionStorage.setItem(key, "1");
     try {
-      new Notification("Time to train 💪", {
+      new Notification("Time to train", {
         body: focus ? `${focus} is on the plan today.` : "Today's a training day.",
       });
     } catch {}
@@ -57,15 +58,21 @@ export default function ReminderNudge({
   if (loggedToday) {
     content = (
       <Banner tone="done">
-        ✅ You&apos;ve logged today — great work keeping it up.
+        <span className="flex items-center gap-2">
+          <CheckCircle2 size={16} className="shrink-0 text-accent-2" aria-hidden />
+          You&apos;ve logged today — great work keeping it up.
+        </span>
       </Banner>
     );
   } else if (trainingToday && dayId) {
     content = (
       <Banner tone="go">
-        <span>
-          💪 Today&apos;s a training day —{" "}
-          <span className="font-semibold">{focus}</span> is up.
+        <span className="flex items-center gap-2 min-w-0">
+          <Dumbbell size={16} className="shrink-0 text-accent" aria-hidden />
+          <span className="truncate">
+            Today&apos;s a training day —{" "}
+            <span className="font-semibold">{focus}</span> is up.
+          </span>
         </span>
         <Link href={`/workout/${dayId}`} className="btn-primary !py-1.5 !px-4 shrink-0">
           Start
@@ -75,12 +82,20 @@ export default function ReminderNudge({
   } else if (streak >= 2) {
     content = (
       <Banner tone="streak">
-        🔥 Keep your {streak}-day streak alive — get a session in today.
+        <span className="flex items-center gap-2">
+          <Flame size={16} className="shrink-0 text-amber-400" aria-hidden />
+          Keep your {streak}-day streak alive — get a session in today.
+        </span>
       </Banner>
     );
   } else {
     content = (
-      <Banner tone="rest">🧘 No session scheduled today — recover well.</Banner>
+      <Banner tone="rest">
+        <span className="flex items-center gap-2">
+          <Moon size={16} className="shrink-0 text-muted" aria-hidden />
+          No session scheduled today — recover well.
+        </span>
+      </Banner>
     );
   }
 
@@ -90,9 +105,9 @@ export default function ReminderNudge({
       {remindersOn && perm !== "granted" && perm !== "unsupported" && (
         <Link
           href="/account"
-          className="inline-block text-xs text-accent font-semibold hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs text-accent font-semibold hover:underline"
         >
-          🔔 Turn on reminders for this device →
+          <Bell size={13} aria-hidden /> Turn on reminders for this device →
         </Link>
       )}
     </div>

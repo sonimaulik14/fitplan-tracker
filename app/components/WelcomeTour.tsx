@@ -1,25 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Dumbbell, Target, BarChart3, Command, type LucideIcon } from "lucide-react";
 
-const SLIDES = [
+const SLIDES: { Icon: LucideIcon; title: string; body: string }[] = [
   {
-    icon: "🏋️",
+    Icon: Dumbbell,
     title: "Log every set",
     body: "Open a workout and type your weight × reps. Everything auto-saves as you go — no Save button needed.",
   },
   {
-    icon: "🎯",
+    Icon: Target,
     title: "Your coach, built in",
     body: "Get progressive-overload suggestions, plate math, and tap any term (Superset, drop set…) for a quick explainer.",
   },
   {
-    icon: "📊",
+    Icon: BarChart3,
     title: "See your proof",
     body: "Track adherence, rep quality, streaks, PRs and volume. Finish a week to unlock the next.",
   },
   {
-    icon: "⌘",
+    Icon: Command,
     title: "Move fast",
     body: "Press ⌘K (Ctrl+K) anytime to jump to any page, week, or exercise. Pick your theme & accent from your profile menu.",
   },
@@ -56,7 +57,9 @@ export default function WelcomeTour() {
         onClick={close}
       />
       <div className="relative w-full max-w-md card p-7 text-center shadow-2xl animate-scale-in">
-        <div className="text-5xl mb-3">{s.icon}</div>
+        <span className="grid place-items-center w-14 h-14 mx-auto mb-4 rounded-2xl bg-accent/12 text-accent">
+          <s.Icon size={26} strokeWidth={1.75} aria-hidden />
+        </span>
         <h2 className="font-display text-2xl font-bold">{s.title}</h2>
         <p className="text-muted mt-2 leading-relaxed">{s.body}</p>
 
@@ -79,7 +82,7 @@ export default function WelcomeTour() {
             onClick={() => (last ? close() : setI((n) => n + 1))}
             className="btn-primary flex-1"
           >
-            {last ? "Let's go 💪" : "Next"}
+            {last ? "Let's go" : "Next"}
           </button>
         </div>
       </div>

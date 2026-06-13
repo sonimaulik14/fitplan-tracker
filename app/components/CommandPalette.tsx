@@ -2,8 +2,27 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Home,
+  ClipboardList,
+  Target,
+  BookOpen,
+  Flame,
+  Ruler,
+  Apple,
+  CalendarDays,
+  Medal,
+  Award,
+  Film,
+  BarChart3,
+  User,
+  Settings,
+  Dumbbell,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 
-type Item = { label: string; sub?: string; href: string; icon: string };
+type Item = { label: string; sub?: string; href: string; Icon: LucideIcon };
 type Index = {
   exercises: { name: string; muscle: string }[];
   days: { id: string; focus: string; week: number; day: number }[];
@@ -11,20 +30,20 @@ type Index = {
 };
 
 const NAV: Item[] = [
-  { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-  { label: "Plan", href: "/plan", icon: "📋" },
-  { label: "This week's targets", href: "/targets", icon: "🎯" },
-  { label: "Exercise library", href: "/library", icon: "📚" },
-  { label: "Progress", href: "/progress", icon: "🔥" },
-  { label: "Measurements & goals", href: "/measurements", icon: "📐" },
-  { label: "Nutrition", href: "/nutrition", icon: "🍎" },
-  { label: "Workout history", href: "/history", icon: "🗓️" },
-  { label: "Personal records", href: "/records", icon: "🏅" },
-  { label: "Achievements", href: "/achievements", icon: "🎖️" },
-  { label: "12-Week Wrapped", href: "/wrapped", icon: "🎬" },
-  { label: "Analysis", href: "/analysis", icon: "📊" },
-  { label: "Account", href: "/account", icon: "👤" },
-  { label: "Training preferences", href: "/onboarding", icon: "⚙️" },
+  { label: "Dashboard", href: "/dashboard", Icon: Home },
+  { label: "Plan", href: "/plan", Icon: ClipboardList },
+  { label: "This week's targets", href: "/targets", Icon: Target },
+  { label: "Exercise library", href: "/library", Icon: BookOpen },
+  { label: "Progress", href: "/progress", Icon: Flame },
+  { label: "Measurements & goals", href: "/measurements", Icon: Ruler },
+  { label: "Nutrition", href: "/nutrition", Icon: Apple },
+  { label: "Workout history", href: "/history", Icon: CalendarDays },
+  { label: "Personal records", href: "/records", Icon: Medal },
+  { label: "Achievements", href: "/achievements", Icon: Award },
+  { label: "12-Week Wrapped", href: "/wrapped", Icon: Film },
+  { label: "Analysis", href: "/analysis", Icon: BarChart3 },
+  { label: "Account", href: "/account", Icon: User },
+  { label: "Training preferences", href: "/onboarding", Icon: Settings },
 ];
 
 export default function CommandPalette() {
@@ -78,21 +97,21 @@ export default function CommandPalette() {
           label: `Week ${w.number}${w.style ? ` : ${w.style}` : ""}`,
           sub: "Jump to week",
           href: `/dashboard?week=${w.number}`,
-          icon: "🗓️",
+          Icon: CalendarDays,
         });
       for (const d of index.days)
         items.push({
           label: `Day ${d.day} — ${d.focus}`,
           sub: `Week ${d.week}`,
           href: `/workout/${d.id}`,
-          icon: "🏋️",
+          Icon: Dumbbell,
         });
       for (const ex of index.exercises)
         items.push({
           label: ex.name,
           sub: `${ex.muscle} · history`,
           href: `/exercise/${encodeURIComponent(ex.name)}`,
-          icon: "📈",
+          Icon: TrendingUp,
         });
     }
     const term = q.trim().toLowerCase();
@@ -169,7 +188,7 @@ export default function CommandPalette() {
                 i === active ? "bg-accent/10" : "hover:bg-surface-2"
               }`}
             >
-              <span className="text-lg shrink-0">{item.icon}</span>
+              <item.Icon size={17} className="shrink-0 text-muted" aria-hidden />
               <span className="min-w-0">
                 <span className="block text-sm font-medium truncate">
                   {item.label}
