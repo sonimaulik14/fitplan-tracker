@@ -85,13 +85,13 @@ export default function ReminderNudge({
   return (
     <div className="mt-6 space-y-2">
       {content}
-      {remindersOn && perm === "default" && (
-        <button
-          onClick={() => Notification.requestPermission().then(setPerm)}
-          className="text-xs text-accent font-semibold"
+      {remindersOn && perm !== "granted" && perm !== "unsupported" && (
+        <Link
+          href="/account"
+          className="inline-block text-xs text-accent font-semibold hover:underline"
         >
-          🔔 Enable browser notifications for reminders
-        </button>
+          🔔 Turn on reminders for this device →
+        </Link>
       )}
     </div>
   );
