@@ -7,7 +7,6 @@ import { getLastTimeByExercise, getSwaps } from "@/lib/metrics";
 import { termInfo, muscleStyle, type Unit } from "@/lib/ui";
 import { getPhoto } from "@/lib/unsplash";
 import NavBar from "@/app/components/NavBar";
-import InfoTip from "@/app/components/InfoTip";
 import { FocusGlyph } from "@/app/components/icons";
 import WorkoutLogger, { type LoggerExercise } from "@/app/components/WorkoutLogger";
 
@@ -102,6 +101,8 @@ export default async function WorkoutPage({
   );
   for (const e of exercises) e.photoUrl = photoByKey.get(muscleStyle(e.muscle).key);
 
+  const weekStyleInfo = day.week.style ? termInfo(day.week.style) : null;
+
   return (
     <>
       <NavBar user={user} />
@@ -118,35 +119,25 @@ export default async function WorkoutPage({
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1.5 text-sm">
-              <span className="font-semibold text-muted">
+              <span className="font-semibold text-foreground/85">
                 Week {day.week.number}
               </span>
-              {day.week.style &&
-                (() => {
-                  const info = termInfo(day.week.style!);
-                  const chip = (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-surface-solid px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent">
-                      {day.week.style}
-                    </span>
-                  );
-                  return info ? (
-                    <InfoTip
-                      title={info.title}
-                      desc={info.desc}
-                      className="text-accent"
-                    >
-                      {chip}
-                    </InfoTip>
-                  ) : (
-                    chip
-                  );
-                })()}
-              <span className="text-muted">·</span>
-              <span className="font-semibold text-muted">
+              {day.week.style && (
+                <span className="inline-flex items-center rounded-md border border-accent/40 bg-surface-solid px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent">
+                  {day.week.style}
+                </span>
+              )}
+              <span className="text-border-strong">·</span>
+              <span className="font-semibold text-foreground/85">
                 Day {(day.week.number - 1) * 7 + day.dayNumber}
               </span>
             </div>
             <h1 className="text-2xl font-bold leading-tight">{day.focus}</h1>
+            {weekStyleInfo && (
+              <p className="text-xs text-muted mt-1.5 leading-snug max-w-md">
+                {weekStyleInfo.desc}
+              </p>
+            )}
           </div>
         </div>
 
