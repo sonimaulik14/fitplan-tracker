@@ -14,6 +14,7 @@ import {
 } from "./auth";
 import { rateLimit } from "./rate-limit";
 import { storeImage } from "./storage";
+import { todayKey } from "./date";
 
 const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
@@ -606,12 +607,6 @@ export async function setGoalWeightAction(goalWeightKg: number | null) {
   return { ok: true };
 }
 
-function todayStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
 
 export async function addNutritionEntryAction(input: {
   label: string;
@@ -629,7 +624,7 @@ export async function addNutritionEntryAction(input: {
   await prisma.nutritionEntry.create({
     data: {
       userId: user.id,
-      day: todayStr(),
+      day: todayKey(),
       label: label.slice(0, 80),
       calories: num(input.calories),
       proteinG: num(input.proteinG),
@@ -652,7 +647,7 @@ export async function deleteNutritionEntryAction(id: string) {
 export async function adjustWaterAction(deltaMl: number) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  const day = todayStr();
+  const day = todayKey();
   const existing = await prisma.dailyLog.findUnique({
     where: { userId_day: { userId: user.id, day } },
   });
@@ -669,7 +664,7 @@ export async function adjustWaterAction(deltaMl: number) {
 export async function toggleSupplementAction(name: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  const day = todayStr();
+  const day = todayKey();
   const existing = await prisma.dailyLog.findUnique({
     where: { userId_day: { userId: user.id, day } },
   });

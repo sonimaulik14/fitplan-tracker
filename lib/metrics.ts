@@ -1,4 +1,7 @@
 import { prisma } from "./prisma";
+import { ymd, streakLength, todayKey } from "./date";
+
+export { todayKey };
 
 const PLAN_INCLUDE = {
   weeks: {
@@ -292,7 +295,7 @@ export async function getProgress(userId: string) {
   for (const s of enrollment?.sessions ?? [])
     if (s.setEntries.some((e) => e.done)) activeDates.add(ymd(s.performedDate));
   const loggedToday = activeDates.has(ymd(new Date()));
-  const currentStreak = computeStreak(activeDates);
+  const currentStreak = streakLength(activeDates);
 
   return {
     plan,
@@ -320,30 +323,6 @@ export async function getProgress(userId: string) {
   };
 }
 
-function ymd(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
-
-// Current streak: consecutive calendar days (ending today, or yesterday so an
-// unlogged "today" doesn't break it) present in `activeDates` ("YYYY-MM-DD").
-// Steps by calendar day so DST transitions can't silently drop a day.
-function computeStreak(activeDates: Set<string>): number {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  if (!activeDates.has(ymd(d))) d.setDate(d.getDate() - 1);
-  let streak = 0;
-  while (activeDates.has(ymd(d))) {
-    streak += 1;
-    d.setDate(d.getDate() - 1);
-  }
-  return streak;
-}
-
-export function todayKey(): string {
-  return ymd(new Date());
-}
 
 /** Today's food entries, macro totals, water + supplement state, and goals. */
 export async function getNutritionToday(userId: string) {
@@ -427,7 +406,7 @@ export async function getActivity(userId: string, days = 119) {
   // current streak (consecutive days ending today or yesterday), DST-safe
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const current = computeStreak(new Set(byDate.keys()));
+  const current = streakLength(new Set(byDate.keys()));
 
   // this week (last 7 days) active count
   let thisWeek = 0;
