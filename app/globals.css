@@ -36,8 +36,10 @@
   --border-strong: rgba(15, 20, 35, 0.18);
   --foreground: #161a24;
   --muted: #515a6b;
-  --accent: #2f6bff;
-  --accent-hi: #4f86f5;
+  /* Darker than the dark-theme accent so small accent text/links clear WCAG
+     AA (4.5:1) on the light background — #2f6bff only reaches 3.9:1 here. */
+  --accent: #2456e6;
+  --accent-hi: #2f6bff;
   /* darker semantic tones so they stay legible on the light background */
   --success: #0a9d6b;
   --warn: #b67c0a;
