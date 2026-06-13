@@ -77,7 +77,7 @@ const week8: Day[] = [
       ex("Incline Dumbbell Press", "Chest", 6, "30, 25, 20, 15, 10, 5"),
       ex("Decline Dumbbell Fly", "Chest", 6, "5, 10, 15, 20, 25, 30"),
       ex("Leverage Chest Press", "Chest", 6, "30, 25, 20, 15, 10, 5", "Superset"),
-      ex("Single Leg Calf Raise", "Calves", 6, "30, 25, 20, 15, 10, 5", "Superset"),
+      ex("Single-Leg Calf Raise", "Calves", 6, "30, 25, 20, 15, 10, 5", "Superset"),
       ex("Butterfly", "Chest", 6, "5, 10, 15, 20, 25, 30"),
       ex("Calf Raise", "Calves", 6, "5, 10, 15, 20, 25, 30"),
       intervalCardio,

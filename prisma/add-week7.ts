@@ -104,7 +104,7 @@ const week7: Day[] = [
     exercises: [
       ex("Close-Grip Barbell Bench Press", "Arms", 6, "30, 25, 20, 15, 10, 5", "Superset"),
       ex("Seated Calf Raise", "Calves", 6, "30, 25, 20, 15, 10, 5", "Superset"),
-      ex("Barbell Incline Bench Press Medium-Grip", "Chest", 6, "5, 10, 15, 20, 25, 30"),
+      ex("Barbell Incline Bench Press — Medium Grip", "Chest", 6, "5, 10, 15, 20, 25, 30"),
       ex("Seated Calf Raise", "Calves", 6, "5, 10, 15, 20, 25, 30"),
       ex("Triceps Pushdown", "Arms", 6, "30, 25, 20, 15, 10, 5"),
       ex("Lying Dumbbell Triceps Extension", "Arms", 6, "5, 10, 15, 20, 25, 30"),
