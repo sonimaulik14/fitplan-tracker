@@ -19,10 +19,7 @@ design system.
   + progressive-overload suggestions, RPE, supersets/giant sets, and a
   tap-to-explain training-term glossary.
 - **Equipment-aware swaps** — substitute any exercise from a curated list
-  filtered to the gear you have, or **adapt the whole workout** to your
-  equipment in one tap (perfect for a hotel/home gym).
-- **Guided Focus mode** — full-screen, set-by-set flow that interleaves
-  supersets/giant sets round-by-round.
+  filtered to the gear you have (perfect for a hotel/home gym).
 - **Coach** — surfaces stalled lifts and suggests deload / rep-range / swap
   options to break plateaus.
 - **Analysis** — a plain-language highlights band, adherence rings, weekly

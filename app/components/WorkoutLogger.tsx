@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useRef, useTransition, useMemo, useEffect, useCallback } from "react";
+import { useState, useRef, useTransition, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import {
   X,
   Check,
-  ChevronLeft,
   ArrowLeftRight,
-  Zap,
-  Wand2,
   Target as TargetIcon,
 } from "lucide-react";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
@@ -26,7 +23,6 @@ import {
 import {
   EQUIPMENT,
   alternativesFor,
-  computeAdaptations,
   type Equipment,
 } from "@/lib/alternatives";
 import ExImage from "./ExImage";
@@ -195,8 +191,6 @@ export default function WorkoutLogger({
   const [status, setStatus] = useState(initialStatus);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [focus, setFocus] = useState(false);
-  const [focusIdx, setFocusIdx] = useState(0);
   const [summary, setSummary] = useState<{
     week: number | null;
     sets: number;
@@ -353,29 +347,6 @@ export default function WorkoutLogger({
     });
   };
 
-  // Apply many swaps at once (the "adapt whole workout to my equipment" flow).
-  const applyAdaptations = (changes: { exId: string; to: string }[]) => {
-    if (!changes.length) return;
-    setExercises((prev) =>
-      prev.map((ex) => {
-        const ch = changes.find((c) => c.exId === ex.id);
-        return ch
-          ? {
-              ...ex,
-              name: ch.to,
-              swapped: ch.to.toLowerCase() !== ex.originalName.toLowerCase(),
-            }
-          : ex;
-      })
-    );
-    startTransition(async () => {
-      for (const ch of changes) await swapExerciseAction(ch.exId, ch.to);
-      router.refresh();
-    });
-    toast(
-      `Adapted ${changes.length} exercise${changes.length === 1 ? "" : "s"} to your equipment`
-    );
-  };
 
   // Clear every logged set for this day, locally + on the server, so it's fresh.
   const resetDay = async () => {
@@ -589,36 +560,6 @@ export default function WorkoutLogger({
     });
   };
 
-  // Focus-mode step sequence: walk set-by-set, interleaving consecutive
-  // same-label groups (supersets / giant sets) round by round.
-  const steps = useMemo(() => {
-    const out: { exId: string; setNumber: number; group: string[] | null }[] = [];
-    let i = 0;
-    while (i < exercises.length) {
-      const g = exercises[i].groupLabel;
-      let j = i + 1;
-      if (g) while (j < exercises.length && exercises[j].groupLabel === g) j++;
-      const grp = exercises.slice(i, j);
-      const rounds = Math.max(0, ...grp.map((e) => e.rows.length));
-      const mates = g ? grp.map((e) => e.name) : null;
-      for (let r = 0; r < rounds; r++)
-        for (const e of grp) {
-          const row = e.rows[r];
-          if (row) out.push({ exId: e.id, setNumber: row.setNumber, group: mates });
-        }
-      i = j;
-    }
-    return out;
-  }, [exercises]);
-
-  const openFocus = () => {
-    const firstUndone = steps.findIndex((s) => {
-      const ex = exercises.find((e) => e.id === s.exId);
-      return !ex?.rows.find((r) => r.setNumber === s.setNumber)?.done;
-    });
-    setFocusIdx(firstUndone >= 0 ? firstUndone : 0);
-    setFocus(true);
-  };
 
   const totalRows = exercises.reduce((n, ex) => n + ex.rows.length, 0);
   const doneRows = exercises.reduce(
@@ -695,23 +636,6 @@ export default function WorkoutLogger({
           onClose={() => setSummary(null)}
         />
       )}
-      {focus && steps.length > 0 && (
-        <FocusMode
-          steps={steps}
-          idx={focusIdx}
-          setIdx={setFocusIdx}
-          exercises={exercises}
-          unit={unit}
-          update={update}
-          onWeightInput={onWeightInput}
-          toggleDone={toggleDone}
-          onClose={() => setFocus(false)}
-          onFinish={() => {
-            setFocus(false);
-            if (status !== "completed") save("completed");
-          }}
-        />
-      )}
       {/* Progress header */}
       {!isLightDay && (
       <div className="card !bg-surface-solid p-4 sticky top-[calc(64px+env(safe-area-inset-top))] z-20">
@@ -734,32 +658,11 @@ export default function WorkoutLogger({
             style={{ width: `${pct}%` }}
           />
         </div>
-        {status === "completed" ? (
+        {status === "completed" && (
           <div className="mt-3">
             <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
               <span className="w-1.5 h-1.5 rounded-full bg-accent-2" /> Workout complete
             </span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 mt-3">
-            <AdaptControl
-              exercises={exercises.map((e) => ({
-                id: e.id,
-                name: e.name,
-                muscle: e.muscle,
-                isCardio: e.isCardio,
-              }))}
-              onApply={applyAdaptations}
-            />
-            {steps.length > 0 && (
-              <button
-                type="button"
-                onClick={openFocus}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm font-semibold text-accent hover:bg-accent/20 active:scale-[0.98] transition-all"
-              >
-                <Zap size={15} /> Focus mode
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -1454,178 +1357,6 @@ function SwapControl({
 
 // "Adapt the whole workout to my equipment" — pick the gear you have, preview
 // every lift that will change, and apply them all at once.
-function AdaptControl({
-  exercises,
-  onApply,
-}: {
-  exercises: { id: string; name: string; muscle: string; isCardio: boolean }[];
-  onApply: (changes: { exId: string; to: string }[]) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [have, setHave] = useEquipment();
-
-  useEffect(() => setMounted(true), []);
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  const toggleEquip = (id: Equipment) => {
-    const next = new Set(have);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setHave(next);
-  };
-
-  const { changes, alreadyFit, stuck } = computeAdaptations(exercises, have);
-
-  const apply = () => {
-    onApply(changes.map((c) => ({ exId: c.exId, to: c.to })));
-    setOpen(false);
-  };
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-accent-2/30 bg-accent-2/10 px-3 py-2 text-sm font-semibold text-accent-2 hover:bg-accent-2/20 active:scale-[0.98] transition-all"
-      >
-        <Wand2 size={15} /> Adapt
-      </button>
-
-      {open && mounted && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Adapt workout to your equipment"
-          className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center sm:p-4"
-        >
-          <button
-            type="button"
-            aria-label="Close"
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
-          <div className="relative z-10 flex max-h-[88vh] w-full flex-col rounded-t-3xl border border-border-strong bg-surface-solid shadow-2xl animate-fade-up sm:max-w-md sm:rounded-2xl">
-            <div className="sm:hidden mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-border-strong" />
-
-            {/* header */}
-            <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
-              <div className="min-w-0">
-                <h2 className="font-display text-lg font-bold">
-                  🧰 Adapt to your equipment
-                </h2>
-                <p className="text-xs text-muted mt-0.5">
-                  Swap every lift you can&apos;t do for one you can.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close"
-                className="grid place-items-center w-8 h-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-2 transition-colors shrink-0"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* equipment chips */}
-            <div className="px-5 pb-3">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted mb-2">
-                Equipment you have
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {EQUIPMENT.map((e) => {
-                  const on = have.has(e.id);
-                  return (
-                    <button
-                      key={e.id}
-                      type="button"
-                      onClick={() => toggleEquip(e.id)}
-                      aria-pressed={on}
-                      className={`text-xs rounded-full px-3 py-1.5 border transition-colors ${
-                        on
-                          ? "border-accent/50 bg-accent/15 text-accent font-semibold"
-                          : "border-border bg-surface-2 text-muted hover:text-foreground"
-                      }`}
-                    >
-                      {e.icon} {e.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* preview */}
-            <div className="flex-1 overflow-y-auto px-5 pb-2 border-t border-border pt-3">
-              {have.size === 0 ? (
-                <p className="text-sm text-muted py-6 text-center">
-                  Pick the equipment you have to see what changes.
-                </p>
-              ) : changes.length === 0 ? (
-                <p className="text-sm text-muted py-6 text-center">
-                  ✅ Your whole workout already fits your equipment.
-                </p>
-              ) : (
-                <>
-                  <p className="text-xs text-muted mb-3">
-                    <span className="text-foreground font-semibold">
-                      {changes.length}
-                    </span>{" "}
-                    will change · {alreadyFit} already fit
-                    {stuck.length > 0 && ` · ${stuck.length} can't be adapted`}
-                  </p>
-                  <div className="space-y-2">
-                    {changes.map((c) => (
-                      <div
-                        key={c.exId}
-                        className="flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-3.5 py-2.5"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs text-muted line-through truncate">
-                            {c.from}
-                          </div>
-                          <div className="text-sm font-medium truncate">
-                            {c.to}
-                          </div>
-                        </div>
-                        <span className="text-[10px] uppercase tracking-wide text-accent shrink-0">
-                          {c.equipment}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* footer */}
-            <div className="px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border bg-surface-solid rounded-b-2xl">
-              <button
-                type="button"
-                className="btn-primary w-full"
-                onClick={apply}
-                disabled={changes.length === 0}
-              >
-                {changes.length === 0
-                  ? "Nothing to adapt"
-                  : `Adapt ${changes.length} exercise${changes.length === 1 ? "" : "s"}`}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
-  );
-}
 
 function WorkoutSummary({
   summary,
@@ -1739,160 +1470,4 @@ function WorkoutSummary({
   );
 }
 
-function FocusMode({
-  steps,
-  idx,
-  setIdx,
-  exercises,
-  unit,
-  update,
-  onWeightInput,
-  toggleDone,
-  onClose,
-  onFinish,
-}: {
-  steps: { exId: string; setNumber: number; group: string[] | null }[];
-  idx: number;
-  setIdx: (n: number) => void;
-  exercises: LoggerExercise[];
-  unit: Unit;
-  update: (exId: string, setNumber: number, patch: Partial<Row>) => void;
-  onWeightInput: (exId: string, setNumber: number, raw: string) => void;
-  toggleDone: (exId: string, setNumber: number, currentlyDone: boolean) => void;
-  onClose: () => void;
-  onFinish: () => void;
-}) {
-  const step = steps[Math.min(idx, steps.length - 1)];
-  const ex = exercises.find((e) => e.id === step.exId);
-  const row = ex?.rows.find((r) => r.setNumber === step.setNumber);
-  if (!ex || !row) return null;
-
-  const st = muscleStyle(ex.muscle);
-  const rowPos = ex.rows.findIndex((r) => r.setNumber === step.setNumber) + 1;
-  const sug = overloadSuggestion(ex.lastTime, ex.repTarget, ex.isCardio);
-  const sgWeight = sug ? weightNum(sug.weight, unit) : 0;
-  const doneCount = steps.filter((s) => {
-    const e = exercises.find((x) => x.id === s.exId);
-    return e?.rows.find((r) => r.setNumber === s.setNumber)?.done;
-  }).length;
-  const isLast = idx >= steps.length - 1;
-
-  const next = () => (isLast ? onFinish() : setIdx(idx + 1));
-  const completeSet = () => {
-    if (!row.done) toggleDone(ex.id, row.setNumber, false);
-    next();
-  };
-
-  return (
-    <div className="fixed inset-0 z-[85] bg-background flex flex-col">
-      <div className="flex gap-1 p-3">
-        {steps.map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full ${
-              i < idx ? "bg-accent" : i === idx ? "bg-accent/60" : "bg-surface-2"
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between px-4">
-        <span className="text-xs text-muted">
-          Set {doneCount} of {steps.length} done
-        </span>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Exit focus mode"
-          className="grid place-items-center w-9 h-9 rounded-full bg-surface-2 border border-border"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 max-w-md mx-auto w-full">
-        {step.group && (
-          <div className="chip text-accent-2 border-accent-2/30 bg-accent-2/10 mb-4">
-            {ex.groupLabel} ·{" "}
-            {step.group.filter((n) => n !== ex.name).length > 0
-              ? `with ${step.group.filter((n) => n !== ex.name).join(", ")}`
-              : "no rest between"}
-          </div>
-        )}
-        <div style={{ color: st.color }}>
-          <MuscleGlyph muscle={ex.muscle} size={40} tint />
-        </div>
-        <h2 className="font-display text-3xl font-bold mt-3">{ex.name}</h2>
-        <div className="text-muted mt-1">
-          {row.setType === "warmup"
-            ? "Warm-up set"
-            : `Set ${rowPos} of ${ex.rows.length}`}{" "}
-          · target {ex.repTarget}
-          {ex.isCardio ? "" : " reps"}
-        </div>
-
-        {sug && (
-          <div className="mt-3 text-sm">
-            <span className="chip text-accent border-accent/30 bg-accent/10">
-              🎯 Aim for {sgWeight} {unit} × {sug.reps} — {sug.label}
-            </span>
-          </div>
-        )}
-
-        {!ex.isCardio ? (
-          <div className="flex items-end gap-3 mt-8 w-full justify-center">
-            <label className="text-left">
-              <span className="text-xs text-muted">Weight ({unit})</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                defaultValue={row.weight ?? ""}
-                key={`w-${ex.id}-${row.setNumber}`}
-                onChange={(e) => onWeightInput(ex.id, row.setNumber, e.target.value)}
-                placeholder={sug ? String(sgWeight) : "wt"}
-                className="input mt-1 text-center text-lg !w-28"
-              />
-            </label>
-            <span className="text-muted pb-3">×</span>
-            <label className="text-left">
-              <span className="text-xs text-muted">Reps</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                defaultValue={row.reps ?? ""}
-                key={`r-${ex.id}-${row.setNumber}`}
-                onChange={(e) =>
-                  update(ex.id, row.setNumber, {
-                    reps: e.target.value ? Number(e.target.value) : null,
-                  })
-                }
-                placeholder={sug ? String(sug.reps) : "reps"}
-                className="input mt-1 text-center text-lg !w-24"
-              />
-            </label>
-          </div>
-        ) : (
-          <div className="mt-8 text-muted text-sm">{ex.repTarget}</div>
-        )}
-
-        <button
-          type="button"
-          onClick={completeSet}
-          className="btn-primary w-full mt-8 !py-3.5 text-base"
-        >
-          <Check size={18} /> {row.done ? "Next" : "Done"}
-          {isLast ? " · finish" : ""}
-        </button>
-        <button
-          type="button"
-          onClick={() => setIdx(Math.max(0, idx - 1))}
-          disabled={idx === 0}
-          className="mt-3 text-sm text-muted hover:text-foreground disabled:opacity-40 inline-flex items-center gap-1"
-        >
-          <ChevronLeft size={15} /> Previous set
-        </button>
-      </div>
-    </div>
-  );
-}
 
