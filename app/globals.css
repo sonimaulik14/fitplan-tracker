@@ -305,8 +305,24 @@ h1 {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   }
+  /* ---------- Type scale (roles, not ad-hoc sizes) ----------
+     display-hero  hero moments        var size, 700, tight
+     h1 / page     30px (text-3xl)     display, 700
+     section-title 17px                display, 600   ← card/section headers
+     h3 / item     16px (text-base)    600
+     body          15–16px             400/500
+     .label        12px upper          form field labels
+     .eyebrow      11px upper +tracked kicker above a title
+     caption       12px (text-xs)      muted
+     ----------------------------------------------------------- */
   .label {
-    @apply block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5;
+    @apply block text-xs font-semibold uppercase text-muted mb-1.5;
+    letter-spacing: 0.08em;
+  }
+  /* Small uppercase kicker that sits above a heading. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase text-muted;
+    letter-spacing: 0.14em;
   }
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
@@ -314,7 +330,9 @@ h1 {
     background: var(--surface-2);
   }
   .section-title {
-    @apply font-bold flex items-center gap-2.5;
+    @apply flex items-center gap-2.5 font-semibold;
+    font-size: 1.0625rem;
+    line-height: 1.3;
   }
   .section-title::before {
     content: "";

@@ -98,9 +98,7 @@ export default async function DashboardPage({
       <WelcomeTour />
       <main className="flex-1 max-w-5xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <div className="animate-fade-up">
-          <p className="text-muted text-xs uppercase tracking-[0.18em] font-semibold">
-            Welcome back
-          </p>
+          <p className="eyebrow">Welcome back</p>
           <h1 className="display-hero text-4xl sm:text-5xl mt-1">
             Hi <span className="num-brand">{firstName}</span>{" "}
             <span className="inline-block">👋</span>
@@ -224,9 +222,7 @@ export default async function DashboardPage({
                     <span className="text-5xl animate-pulse-soft">🔥</span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-[0.18em] font-semibold text-accent">
-                      Day one
-                    </p>
+                    <p className="eyebrow text-accent">Day one</p>
                     <h2 className="display-hero text-2xl sm:text-3xl mt-1">
                       Your stats start <span className="num-brand">here</span>
                     </h2>
