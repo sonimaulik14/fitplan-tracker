@@ -108,7 +108,7 @@ export default async function WorkoutPage({
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 py-1.5 pl-2 pr-3.5 text-sm font-medium text-muted hover:text-foreground hover:border-border-strong transition-colors"
+          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-solid py-1.5 pl-2 pr-3.5 text-sm font-medium text-foreground/80 hover:text-foreground hover:border-border-strong transition-colors"
         >
           <ChevronLeft size={16} /> Dashboard
         </Link>
@@ -125,7 +125,7 @@ export default async function WorkoutPage({
                 (() => {
                   const info = termInfo(day.week.style!);
                   const chip = (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-accent/30 bg-accent/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-surface-solid px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent">
                       {day.week.style}
                     </span>
                   );

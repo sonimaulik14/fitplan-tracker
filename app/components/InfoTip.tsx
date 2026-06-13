@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+// Tap-to-open explainer. On mobile it's a bottom sheet, on desktop a small
+// centered card — solid (not glassy) and it doesn't vanish when you scroll,
+// which the old hover/positioned tooltip did.
 export default function InfoTip({
   title,
   desc,
@@ -14,47 +17,26 @@ export default function InfoTip({
   children: React.ReactNode;
   className?: string;
 }) {
-  const ref = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
-
-  const show = () => {
-    const r = ref.current?.getBoundingClientRect();
-    if (!r) return;
-    const W = 248;
-    const x = Math.min(Math.max(8, r.left), window.innerWidth - W - 8);
-    setPos({ x, y: r.bottom + 6 });
-    setOpen(true);
-  };
-  const hide = () => setOpen(false);
-
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && hide();
-    const onScroll = () => hide();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", onScroll, true);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", onScroll, true);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
   return (
     <>
       <button
-        ref={ref}
         type="button"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          if (open) hide();
-          else show();
+          setOpen(true);
         }}
-        onMouseEnter={show}
         aria-label={`What is ${title}?`}
         className={`inline-flex items-center gap-1 align-middle ${className}`}
       >
@@ -74,27 +56,42 @@ export default function InfoTip({
 
       {mounted &&
         open &&
-        pos &&
         createPortal(
-          <>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center sm:p-4"
+          >
             <div
-              className="fixed inset-0 z-[55]"
-              onClick={hide}
-              onMouseDown={hide}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setOpen(false)}
               aria-hidden
             />
-            <div
-              role="tooltip"
-              onMouseLeave={hide}
-              style={{ position: "fixed", left: pos.x, top: pos.y, width: 240 }}
-              className="z-[56] card p-3 shadow-2xl animate-scale-in text-left normal-case tracking-normal"
-            >
-              <div className="font-semibold text-sm text-foreground">{title}</div>
-              <div className="text-xs text-muted mt-1 leading-relaxed font-normal">
-                {desc}
+            <div className="relative z-10 w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-up text-left normal-case tracking-normal">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-bold text-base text-foreground">{title}</h3>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close"
+                  className="-mr-1 -mt-1 grid place-items-center w-8 h-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-2 transition-colors shrink-0"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M6 6l12 12M18 6L6 18"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
               </div>
+              <p className="text-sm text-muted mt-2 leading-relaxed font-normal">
+                {desc}
+              </p>
             </div>
-          </>,
+          </div>,
           document.body
         )}
     </>
