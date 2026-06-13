@@ -17,7 +17,7 @@ export default function OgImage() {
           justifyContent: "center",
           padding: "80px",
           background:
-            "radial-gradient(120% 120% at 0% 0%, #15235e 0%, #07080c 55%)",
+            "radial-gradient(110% 110% at 100% 0%, rgba(47,107,255,0.16), #07080c 55%)",
           color: "#f4f6fb",
           fontFamily: "sans-serif",
         }}
@@ -39,7 +39,7 @@ export default function OgImage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "linear-gradient(135deg, #18a9ff, #2f6bff)",
+              background: "#2f6bff",
               color: "#fff",
               fontSize: 34,
             }}
@@ -61,15 +61,7 @@ export default function OgImage() {
           }}
         >
           <span>Train the plan.</span>
-          <span
-            style={{
-              background: "linear-gradient(135deg, #18a9ff, #2fe6a8)",
-              backgroundClip: "text",
-              color: "transparent",
-            }}
-          >
-            Track the proof.
-          </span>
+          <span style={{ color: "#5c8dff" }}>Track the proof.</span>
         </div>
         <div style={{ fontSize: 34, color: "#a8b1c2", marginTop: 36 }}>
           A 12-week transformation tracker — sets, PRs, streaks & volume.

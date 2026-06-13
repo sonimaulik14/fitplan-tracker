@@ -160,8 +160,8 @@ export function AchievementBadge({
         width: size,
         height: size,
         background:
-          "linear-gradient(135deg, var(--accent-hi), var(--accent) 55%, #7c5cff)",
-        boxShadow: "0 6px 16px -6px rgba(47,107,255,0.6)",
+          "linear-gradient(135deg, var(--accent-hi), var(--accent))",
+        boxShadow: "0 6px 16px -8px rgba(0,0,0,0.5)",
       }}
     >
       <Icon size={inner} strokeWidth={2.2} />
