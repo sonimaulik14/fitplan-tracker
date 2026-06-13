@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Download } from "lucide-react";
 import { fmtVolume, type Unit } from "@/lib/ui";
 
 export default function ShareCard({
@@ -44,7 +45,7 @@ export default function ShareCard({
   };
 
   const share = async () => {
-    const text = `My ${planName} progress: ${adherence}% adherence, ${completedWorkouts} workouts, ${streak}-day streak 💪 #FitPlan`;
+    const text = `My ${planName} progress: ${adherence}% adherence, ${completedWorkouts} workouts, ${streak}-day streak. #FitPlan`;
     if (navigator.share) {
       try {
         await navigator.share({ title: "FitPlan progress", text });
@@ -55,10 +56,10 @@ export default function ShareCard({
   };
 
   const stats = [
-    { k: "Sets", v: `${setAdherence}%`, c: "#2fe6a8" },
-    { k: "Rep quality", v: `${repQuality}%`, c: "#7c8cff" },
-    { k: "Streak", v: `${streak}d`, c: "#18a9ff" },
-    { k: "PRs", v: `${prs}`, c: "#ff5b8a" },
+    { k: "Sets", v: `${setAdherence}%` },
+    { k: "Rep quality", v: `${repQuality}%` },
+    { k: "Streak", v: `${streak}d` },
+    { k: "PRs", v: `${prs}` },
   ];
 
   return (
@@ -69,7 +70,7 @@ export default function ShareCard({
           ref={ref}
           style={{
             background:
-              "linear-gradient(135deg, #14101a 0%, #1a1320 55%, #241018 100%)",
+              "radial-gradient(120% 120% at 100% 0%, rgba(47,107,255,0.18), #0a0c12 58%)",
             padding: "28px",
             color: "#f4f6fb",
             fontFamily: "Inter, system-ui, sans-serif",
@@ -105,7 +106,7 @@ export default function ShareCard({
                   width: 86,
                   height: 86,
                   borderRadius: "50%",
-                  background: "#14101a",
+                  background: "#0a0c12",
                   display: "grid",
                   placeItems: "center",
                 }}
@@ -118,7 +119,7 @@ export default function ShareCard({
               <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.1 }}>
                 {completedWorkouts} workouts done
               </div>
-              <div style={{ fontSize: 13, color: "#18a9ff", marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: "#99a1b3", marginTop: 4 }}>
                 {fmtVolume(volume, unit)} {unit} total volume lifted
               </div>
             </div>
@@ -137,7 +138,7 @@ export default function ShareCard({
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontSize: 20, fontWeight: 800, color: s.c }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#f4f6fb" }}>
                   {s.v}
                 </div>
                 <div style={{ fontSize: 10, color: "#99a1b3", marginTop: 2 }}>
@@ -151,7 +152,13 @@ export default function ShareCard({
 
       <div className="flex gap-2 mt-3">
         <button className="btn-primary !py-2" onClick={download} disabled={busy}>
-          {busy ? "Rendering…" : "⬇ Download image"}
+          {busy ? (
+            "Rendering…"
+          ) : (
+            <>
+              <Download size={15} aria-hidden /> Download image
+            </>
+          )}
         </button>
         <button className="btn-ghost !py-2" onClick={share}>
           Share
