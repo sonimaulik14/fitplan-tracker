@@ -32,7 +32,7 @@ export default function NavBar({ user }: { user: NavUser }) {
     <>
       {/* Top bar — solid so scrolling content never shows through it */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-2xl shadow-[0_8px_30px_-24px_rgba(0,0,0,0.8)] pt-[env(safe-area-inset-top)]">
-        <nav className="max-w-5xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-3">
+        <nav className="max-w-5xl mx-auto px-4 sm:px-5 h-[72px] sm:h-16 flex items-center justify-between gap-3">
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
             <span className="grid place-items-center w-8 h-8 rounded-xl bg-gradient-to-br from-accent-hi to-accent text-[#ffffff] font-black text-lg shadow-lg shadow-accent/30">
               F
@@ -107,7 +107,7 @@ export default function NavBar({ user }: { user: NavUser }) {
       <Link
         href="/workout/next"
         aria-label="Start today's workout"
-        className="md:hidden fixed left-1/2 -translate-x-1/2 bottom-[calc(52px+env(safe-area-inset-bottom))] z-40 grid place-items-center w-14 h-14 rounded-full text-white active:scale-95 transition-transform ring-4 ring-background"
+        className="md:hidden fixed left-1/2 -translate-x-1/2 bottom-[calc(60px+env(safe-area-inset-bottom))] z-40 grid place-items-center w-14 h-14 rounded-full text-white active:scale-95 transition-transform ring-4 ring-background"
         style={{
           background: "linear-gradient(135deg, var(--accent-hi), var(--accent))",
           boxShadow:
@@ -128,7 +128,7 @@ export default function NavBar({ user }: { user: NavUser }) {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold transition-colors ${
+                className={`flex flex-col items-center justify-center gap-1 py-3.5 text-[11px] font-semibold transition-colors ${
                   active ? "text-accent" : "text-muted"
                 }`}
               >
@@ -158,7 +158,7 @@ function DumbbellIcon() {
 }
 function HomeIcon({ active }: { active?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path
         d="M3 10.5 12 4l9 6.5M5 9.5V20h14V9.5"
         stroke="currentColor"
@@ -171,7 +171,7 @@ function HomeIcon({ active }: { active?: boolean }) {
 }
 function ListIcon({ active }: { active?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path
         d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"
         stroke="currentColor"
@@ -184,7 +184,7 @@ function ListIcon({ active }: { active?: boolean }) {
 }
 function CoachIcon({ active }: { active?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path
         d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z"
         stroke="currentColor"
@@ -202,7 +202,7 @@ function CoachIcon({ active }: { active?: boolean }) {
 }
 function FireIcon({ active }: { active?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path
         d="M12 3c.5 3-2 4.5-2 7a2 2 0 1 0 4 0c0-.6-.2-1.2-.5-1.7C16 10 18 12.5 18 15a6 6 0 1 1-12 0c0-3.5 3-5.5 4-9 .6.8 1.4 1.2 2-3Z"
         stroke="currentColor"
@@ -214,7 +214,7 @@ function FireIcon({ active }: { active?: boolean }) {
 }
 function TrophyIcon({ active }: { active?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path
         d="M7 4h10v3a5 5 0 0 1-10 0V4ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M9 14h6M12 14v3M9 20h6M10 17h4v3h-4z"
         stroke="currentColor"
@@ -227,7 +227,7 @@ function TrophyIcon({ active }: { active?: boolean }) {
 }
 function ChartIcon({ active }: { active?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path
         d="M4 20V10M10 20V4M16 20v-7M22 20H2"
         stroke="currentColor"

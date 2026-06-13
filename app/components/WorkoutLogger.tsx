@@ -1056,7 +1056,7 @@ export default function WorkoutLogger({
       </div>
 
       {/* Sticky action bar (sits above mobile tab bar) */}
-      <div className="fixed bottom-[calc(60px+env(safe-area-inset-bottom))] sm:bottom-0 left-0 right-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
+      <div className="fixed bottom-[calc(66px+env(safe-area-inset-bottom))] sm:bottom-0 left-0 right-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-5 py-3 flex items-center gap-3">
           <span className="text-xs text-muted">
             {saveState === "saving"
