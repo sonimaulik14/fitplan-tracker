@@ -13,6 +13,7 @@ import {
   revokeSessions,
 } from "./auth";
 import { rateLimit } from "./rate-limit";
+import { storeImage } from "./storage";
 
 const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
@@ -453,7 +454,7 @@ export async function setAvatarAction(dataUrl: string) {
     return { ok: false, error: "Image too large." };
   await prisma.user.update({
     where: { id: user.id },
-    data: { avatarUrl: dataUrl },
+    data: { avatarUrl: await storeImage(dataUrl, "avatars") },
   });
   revalidatePath("/", "layout");
   return { ok: true };
@@ -742,7 +743,7 @@ export async function addProgressPhotoAction(dataUrl: string, note?: string) {
   if (dataUrl.length > 3_500_000)
     return { ok: false, error: "Image too large — try a smaller photo." };
   await prisma.progressPhoto.create({
-    data: { userId: user.id, dataUrl, note: note || null },
+    data: { userId: user.id, dataUrl: await storeImage(dataUrl, "photos"), note: note || null },
   });
   revalidatePath("/progress");
   return { ok: true };
