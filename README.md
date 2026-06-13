@@ -20,14 +20,18 @@ design system.
   tap-to-explain training-term glossary.
 - **Equipment-aware swaps** — substitute any exercise from a curated list
   filtered to the gear you have (perfect for a hotel/home gym).
-- **Coach** — surfaces stalled lifts and suggests deload / rep-range / swap
-  options to break plateaus.
+- **AI Coach** — chat with a coach (Claude) that reads your real logged history
+  — program, current week, adherence, per-muscle volume, PRs and stalled lifts —
+  for deload / rep-range / swap advice, plus an at-a-glance plateau watch on the
+  dashboard.
 - **Analysis** — a plain-language highlights band, adherence rings, weekly
   trend, per-style breakdown, volume landmarks (MEV→MRV), PRs, per-muscle volume.
 - **Progress** — streak heatmap, achievements, bodyweight chart, progress photos
   with a **before/after slider**, body measurements & goals, and a **Wrapped**
   story recap.
 - **Nutrition** — calories/macros, water, supplement checklist.
+- **Reminders** — opt-in web-push workout reminders on your training days
+  (works on iOS once added to the Home Screen).
 - **Resets** — clear a single day or restart the whole program (keeps your body
   metrics, nutrition and photos).
 - **Accounts** — sign up / sign in, "keep me signed in", password reset with
@@ -39,7 +43,8 @@ design system.
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 ·
 Prisma 6 + PostgreSQL · custom JWT cookie auth (`jose` + `bcryptjs`) ·
-Framer Motion · `next/image` · deployed on **Vercel** + **Neon**.
+Anthropic SDK (AI coach) · `web-push` (reminders) · `motion` · `next/image` ·
+Vitest · deployed on **Vercel** + **Neon**.
 
 ## Getting started (local)
 
@@ -55,15 +60,29 @@ npm run db:seed          # load the training programs
 npm run dev              # http://localhost:3000
 ```
 
-Optional API keys (in `.env`) unlock live gym photography
-(`PEXELS_API_KEY` or `UNSPLASH_ACCESS_KEY`) and per-exercise demo clips
-(`EXERCISEDB_API_KEY`). The app works without them via local fallbacks.
+`npm run db:seed` also creates a demo login: **demo@fitplan.com / demo123**.
+
+Optional keys (in `.env`, each enabling one feature — the app degrades
+gracefully without them):
+
+- `ANTHROPIC_API_KEY` — the **AI Coach** (defaults to `claude-sonnet-4-6`;
+  override with `ANTHROPIC_MODEL`).
+- `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` /
+  `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + `CRON_SECRET` — **push reminders**
+  (`npx web-push generate-vapid-keys`).
+- `PEXELS_API_KEY` or `UNSPLASH_ACCESS_KEY` — live gym photography;
+  `EXERCISEDB_API_KEY` — per-exercise demo clips.
 
 ## Deployment
 
 See **[DEPLOY.md](DEPLOY.md)** for the full Vercel + Neon runbook. In short:
 push to `main` → Vercel auto-builds and deploys; run `npm run db:deploy` against
 the database only when you change the Prisma schema.
+
+## Testing
+
+`npm test` runs the Vitest unit suite (pure domain logic — unit conversion,
+rep-range parsing, exercise alternatives, 1RM estimation).
 
 ## Notes
 
