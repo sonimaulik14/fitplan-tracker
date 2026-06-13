@@ -100,15 +100,23 @@ export default function ReminderNudge({
   }
 
   return (
-    <div className="mt-6 space-y-2">
+    <div className="mt-6 space-y-2.5">
       {content}
       {remindersOn && perm !== "granted" && perm !== "unsupported" && (
-        <Link
-          href="/account"
-          className="inline-flex items-center gap-1.5 text-xs text-accent font-semibold hover:underline"
-        >
-          <Bell size={13} aria-hidden /> Turn on reminders for this device →
-        </Link>
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2/60 px-4 py-2.5">
+          <span className="grid place-items-center w-8 h-8 rounded-lg bg-accent/12 text-accent shrink-0">
+            <Bell size={15} aria-hidden />
+          </span>
+          <span className="text-sm text-muted flex-1 min-w-0">
+            Get a nudge on training days so you never miss one.
+          </span>
+          <Link
+            href="/account"
+            className="btn-primary !py-1.5 !px-3.5 text-xs shrink-0"
+          >
+            Turn on
+          </Link>
+        </div>
       )}
     </div>
   );
