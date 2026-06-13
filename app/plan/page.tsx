@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BookOpen, RefreshCw } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress } from "@/lib/metrics";
@@ -45,18 +46,18 @@ export default async function PlanPage() {
           title={plan?.name ?? "Your plan"}
           subtitle={plan?.description ?? undefined}
         />
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="mt-6 flex items-center gap-2 flex-wrap">
           <Link
             href="/library"
-            className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
+            className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3.5 py-2 text-sm font-semibold text-accent hover:bg-accent/20 active:scale-[0.98] transition-all"
           >
-            📚 Browse exercise library →
+            <BookOpen size={15} /> Browse exercise library
           </Link>
           <Link
             href="/plans"
-            className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3.5 py-2 text-sm font-medium text-muted hover:text-foreground hover:border-border-strong transition-colors"
           >
-            🔄 Change program
+            <RefreshCw size={15} /> Change program
           </Link>
         </div>
 
