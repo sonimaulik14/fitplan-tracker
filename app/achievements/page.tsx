@@ -19,7 +19,7 @@ export default async function AchievementsPage() {
       <>
         <NavBar user={user} />
         <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28">
-          <h1 className="text-2xl font-bold">Achievements</h1>
+          <h1 className="display-hero text-3xl">Achievements</h1>
           <div className="card p-8 mt-6 text-center text-muted">
             Start the plan and log a workout to begin earning badges.
           </div>
@@ -83,8 +83,9 @@ export default async function AchievementsPage() {
                 </div>
                 <div className="h-2 rounded-full bg-surface-2 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hi"
+                    className="h-full rounded-full"
                     style={{
+                      background: "var(--grad-brand)",
                       width: `${
                         p.prescribedWorkouts
                           ? Math.round(

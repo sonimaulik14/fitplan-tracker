@@ -42,7 +42,7 @@ export default async function LibraryPage() {
       <NavBar user={user} />
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <div className="animate-fade-up">
-          <h1 className="text-3xl font-bold">Exercise library</h1>
+          <h1 className="display-hero text-3xl sm:text-4xl">Exercise library</h1>
           <p className="text-muted mt-1">
             Every movement in your program — {byName.size} exercises across{" "}
             {muscles.length} muscle groups.
