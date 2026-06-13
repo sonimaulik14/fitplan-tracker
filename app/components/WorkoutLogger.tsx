@@ -556,10 +556,11 @@ export default function WorkoutLogger({
                 </div>
                 <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-1.5">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hi"
+                    className="h-full rounded-full"
                     style={{
                       width: `${(rest.remaining / rest.total) * 100}%`,
                       transition: "width 1s linear",
+                      background: "var(--grad-brand)",
                     }}
                   />
                 </div>
@@ -622,8 +623,8 @@ export default function WorkoutLogger({
         </div>
         <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-2.5">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hi transition-all"
-            style={{ width: `${pct}%` }}
+            className="h-full rounded-full transition-all"
+            style={{ width: `${pct}%`, background: "var(--grad-brand)" }}
           />
         </div>
         {status === "completed" && (

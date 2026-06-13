@@ -47,22 +47,17 @@ export default function WorkoutSummary({
       panelClassName="w-full max-w-md card overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl"
     >
       <div
-        className={`text-white px-6 py-7 text-center ${
-          programDone ? "" : "bg-gradient-to-br from-accent to-accent-hi"
-        }`}
-        style={
-          programDone
-            ? {
-                background:
-                  "linear-gradient(135deg, #ff6a3d 0%, var(--accent) 55%, #7c8cff 100%)",
-              }
-            : undefined
-        }
+        className="text-white px-6 py-8 text-center relative overflow-hidden"
+        style={{
+          background: programDone
+            ? "linear-gradient(135deg, #ff6a3d 0%, var(--accent) 55%, #7c8cff 100%)"
+            : "var(--grad-brand)",
+        }}
       >
-        <div className="text-5xl">
+        <div className="text-5xl drop-shadow-lg">
           {programDone ? "🎓" : weekDone ? "🏆" : "🎉"}
         </div>
-        <h2 className="text-2xl font-bold mt-2">
+        <h2 className="display-hero text-3xl mt-2 text-white">
           {programDone
             ? "12 weeks complete!"
             : weekDone
@@ -86,7 +81,13 @@ export default function WorkoutSummary({
             className="rounded-xl border border-border bg-surface-2 p-4"
           >
             <div className="text-lg">{s.icon}</div>
-            <div className="font-display font-bold text-xl mt-1">{s.value}</div>
+            <div
+              className={`font-display font-bold text-xl mt-1 ${
+                s.label === "Total volume" ? "num-brand" : ""
+              }`}
+            >
+              {s.value}
+            </div>
             <div className="text-xs text-muted">{s.label}</div>
           </div>
         ))}

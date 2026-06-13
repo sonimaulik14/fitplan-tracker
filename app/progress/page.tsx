@@ -383,14 +383,23 @@ function StreakStat({
   big?: boolean;
 }) {
   return (
-    <div className="card p-4">
+    <div
+      className="card p-4 relative overflow-hidden"
+      style={
+        big
+          ? { background: "var(--grad-brand-soft)" }
+          : undefined
+      }
+    >
       <div className="text-2xl">{icon}</div>
       <div
-        className={`font-display font-bold num-gradient mt-1 ${big ? "text-3xl" : "text-2xl"}`}
+        className={`font-display font-bold mt-1 ${
+          big ? "num-brand text-4xl sm:text-5xl leading-none" : "num-gradient text-2xl"
+        }`}
       >
         {value}
       </div>
-      <div className="text-xs text-muted">{label}</div>
+      <div className="text-xs text-muted mt-0.5">{label}</div>
     </div>
   );
 }
