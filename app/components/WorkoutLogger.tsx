@@ -28,7 +28,6 @@ import ExImage from "./ExImage";
 import InfoTip from "./InfoTip";
 import { MuscleGlyph } from "./icons";
 import { ExerciseDemoInline } from "./ExerciseDemo";
-import WorkoutTools from "./WorkoutTools";
 import { toast } from "@/lib/toast";
 
 // weight values in Row state are in the user's DISPLAY unit; converted to kg on save.
@@ -636,8 +635,6 @@ export default function WorkoutLogger({
         )}
       </div>
       )}
-
-      {!isLightDay && <WorkoutTools unit={unit} />}
 
       {exercises.map((ex, idx) => {
         const st = muscleStyle(ex.muscle);
