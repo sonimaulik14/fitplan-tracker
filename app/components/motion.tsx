@@ -55,16 +55,14 @@ export function AnimatedNumber({
 
   useEffect(() => {
     if (!inView) return;
-    // Respect reduced-motion — jump straight to the final value.
-    if (
+    // Respect reduced-motion by jumping to the final value (duration 0) rather
+    // than setting state synchronously here — onUpdate fires via the animation
+    // loop, so no cascading-render lint issue either way.
+    const reduce =
       typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-    ) {
-      setDisplay(value);
-      return;
-    }
+      !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const controls = animate(0, value, {
-      duration,
+      duration: reduce ? 0 : duration,
       ease: [0.22, 1, 0.36, 1],
       onUpdate: (v) => setDisplay(v),
     });
