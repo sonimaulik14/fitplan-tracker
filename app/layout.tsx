@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { headers } from "next/headers";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Toaster from "./components/Toaster";
@@ -49,12 +48,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html
       lang="en"
@@ -62,9 +60,8 @@ export default async function RootLayout({
       className={`${inter.variable} h-full`}
     >
       <head>
-        {/* Anti-flash theme init — runs before paint. Carries the CSP nonce so
-            it's allowed under the strict policy. */}
-        <Script id="theme-init" strategy="beforeInteractive" nonce={nonce}>
+        {/* Anti-flash theme init — runs before paint. */}
+        <Script id="theme-init" strategy="beforeInteractive">
           {`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'dark';if(t==='system'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();`}
         </Script>
       </head>
