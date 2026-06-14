@@ -744,10 +744,40 @@ export async function setNutritionGoalsAction(input: {
   return { ok: true };
 }
 
-/** Begin the active plan: stamp Day 1 as today (local). */
-export async function startProgramAction() {
+// Parse a local "YYYY-MM-DD" to a Date at local noon (so the stored UTC instant
+// lands on the intended calendar day regardless of zone). A future start is
+// allowed (scheduling ahead); just keep it within a sane window.
+function parseStartDate(dateStr: string): { date: Date } | { error: string } {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
+  if (!m) return { error: "Invalid date." };
+  const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+  if (Number.isNaN(date.getTime())) return { error: "Invalid date." };
+  const now = Date.now();
+  const YEAR = 365 * 86_400_000;
+  if (date.getTime() > now + YEAR)
+    return { error: "That start date is too far in the future." };
+  if (date.getTime() < now - 3 * YEAR)
+    return { error: "That start date is too far in the past." };
+  return { date };
+}
+
+/**
+ * Begin the active plan. With no date, Day 1 is today; pass a "YYYY-MM-DD" to
+ * schedule a start (past or future).
+ */
+export async function startProgramAction(dateStr?: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
+
+  let date: Date;
+  if (dateStr) {
+    const parsed = parseStartDate(dateStr);
+    if ("error" in parsed) return { ok: false, error: parsed.error };
+    date = parsed.date;
+  } else {
+    const now = new Date();
+    date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+  }
 
   const enrollment = await prisma.enrollment.findFirst({
     where: { userId: user.id, status: "active" },
@@ -756,19 +786,9 @@ export async function startProgramAction() {
   });
   if (!enrollment) return { ok: false, error: "No active plan." };
 
-  // Anchor to local noon so the stored UTC instant lands on today's date.
-  const now = new Date();
-  const today = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    12,
-    0,
-    0
-  );
   await prisma.enrollment.update({
     where: { id: enrollment.id },
-    data: { startedAt: today },
+    data: { startedAt: date },
   });
   revalidatePath("/timeline");
   revalidatePath("/dashboard");
@@ -780,21 +800,9 @@ export async function setStartDateAction(dateStr: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
 
-  // Expect a local "YYYY-MM-DD" from the date input; anchor to local noon so the
-  // stored UTC instant lands on the intended calendar day regardless of zone.
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
-  if (!m) return { ok: false, error: "Invalid date." };
-  const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
-  if (Number.isNaN(date.getTime())) return { ok: false, error: "Invalid date." };
-
-  // Guard against fat-finger dates far outside any real program. A future
-  // start is allowed (scheduling ahead); just keep it within a year.
-  const now = Date.now();
-  const YEAR = 365 * 86_400_000;
-  if (date.getTime() > now + YEAR)
-    return { ok: false, error: "That start date is too far in the future." };
-  if (date.getTime() < now - 3 * YEAR)
-    return { ok: false, error: "That start date is too far in the past." };
+  const parsed = parseStartDate(dateStr);
+  if ("error" in parsed) return { ok: false, error: parsed.error };
+  const date = parsed.date;
 
   const enrollment = await prisma.enrollment.findFirst({
     where: { userId: user.id, status: "active" },

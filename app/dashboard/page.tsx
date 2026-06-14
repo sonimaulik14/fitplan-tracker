@@ -10,7 +10,7 @@ import ReminderNudge from "@/app/components/ReminderNudge";
 import WeekSwitcher from "@/app/components/WeekSwitcher";
 import WelcomeTour from "@/app/components/WelcomeTour";
 import PlanTimelineCard from "@/app/components/PlanTimelineCard";
-import StartProgramButton from "@/app/components/StartProgramButton";
+import StartProgram from "@/app/components/StartProgram";
 import PlanPicker from "@/app/components/PlanPicker";
 import {
   Reveal,
@@ -162,7 +162,7 @@ export default async function DashboardPage({
                   timeline.
                 </p>
               </div>
-              <StartProgramButton className="!px-6 !py-3 shrink-0" />
+              <StartProgram className="shrink-0 sm:w-56" />
             </section>
           ))}
 

@@ -7,7 +7,7 @@ import { ymd } from "@/lib/date";
 import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
 import StartDateEditor from "@/app/components/StartDateEditor";
-import StartProgramButton from "@/app/components/StartProgramButton";
+import StartProgram from "@/app/components/StartProgram";
 
 export const metadata = { title: "Timeline" };
 
@@ -128,7 +128,7 @@ export default async function TimelinePage() {
                 below is a preview.
               </p>
             </div>
-            <StartProgramButton className="mt-4 sm:mt-0 !px-6 !py-3 shrink-0" />
+            <StartProgram className="mt-4 sm:mt-0 shrink-0 sm:w-56" />
           </section>
         )}
 
