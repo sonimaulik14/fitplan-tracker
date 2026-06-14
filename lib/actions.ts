@@ -198,7 +198,11 @@ export async function requestPasswordResetAction(
     // to the client only in development. SECURITY: never return the token to the
     // client in production — anyone knowing an email could then take over.
     if (emailConfigured()) {
-      await sendEmail({ to: email, ...passwordResetEmail(link) });
+      const ok = await sendEmail({ to: email, ...passwordResetEmail(link) });
+      // Safety net: if the send fails (e.g. unverified-domain restriction),
+      // log the link server-side so a stranded user can still be helped
+      // manually instead of failing silently.
+      if (!ok) console.log(`[password-reset] email send FAILED — link for ${email}: ${link}`);
       return { sent: true };
     }
     if (process.env.NODE_ENV === "production") {
