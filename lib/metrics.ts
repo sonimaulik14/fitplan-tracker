@@ -1,6 +1,6 @@
 import { prisma } from "./prisma";
 import { ymd, streakLength, todayKey } from "./date";
-import { slugify } from "./ui";
+import { slugify, parseSupplements } from "./ui";
 
 export { todayKey };
 
@@ -352,10 +352,7 @@ export async function getNutritionToday(userId: string) {
     { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 }
   );
 
-  const supplements = (user?.supplements ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const supplements = parseSupplements(user?.supplements);
   const taken = new Set(
     (log?.supplementsTaken ?? "")
       .split(",")
@@ -370,7 +367,61 @@ export async function getNutritionToday(userId: string) {
     waterMl: log?.waterMl ?? 0,
     calorieGoal: user?.calorieGoal ?? null,
     proteinGoal: user?.proteinGoal ?? null,
-    supplements: supplements.map((name) => ({ name, taken: taken.has(name) })),
+    supplements: supplements.map((s) => ({ ...s, taken: taken.has(s.name) })),
+  };
+}
+
+/**
+ * Cumulative supplement intake over the active program window (enrollment
+ * start → today). Per supplement: days taken, days elapsed, adherence, and
+ * total amount (days taken × dose). Powers the "how much did I take" metrics.
+ */
+export async function getSupplementTotals(userId: string) {
+  const [user, enrollment] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { supplements: true },
+    }),
+    prisma.enrollment.findFirst({
+      where: { userId, status: "active" },
+      orderBy: { startDate: "desc" },
+      select: { startDate: true },
+    }),
+  ]);
+  const defs = parseSupplements(user?.supplements);
+  if (defs.length === 0) return { supplements: [], daysElapsed: 0 };
+
+  const start = enrollment?.startDate ?? new Date(Date.now() - 84 * 86400000);
+  const startKey = ymd(start);
+  const logs = await prisma.dailyLog.findMany({
+    where: { userId, day: { gte: startKey }, supplementsTaken: { not: "" } },
+    select: { supplementsTaken: true },
+  });
+
+  const counts = new Map<string, number>();
+  for (const l of logs)
+    for (const name of l.supplementsTaken.split(",").map((s) => s.trim()))
+      if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+
+  const daysElapsed = Math.max(
+    1,
+    Math.floor((Date.now() - start.getTime()) / 86400000) + 1
+  );
+
+  return {
+    daysElapsed,
+    supplements: defs.map((d) => {
+      const daysTaken = counts.get(d.name) ?? 0;
+      return {
+        name: d.name,
+        dose: d.dose,
+        unit: d.unit,
+        daysTaken,
+        daysElapsed,
+        adherence: Math.round((daysTaken / daysElapsed) * 100),
+        totalAmount: d.dose ? +(daysTaken * d.dose).toFixed(2) : null,
+      };
+    }),
   };
 }
 

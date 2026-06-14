@@ -13,6 +13,7 @@ import {
   revokeSessions,
 } from "./auth";
 import { rateLimit } from "./rate-limit";
+import { serializeSupplements } from "./ui";
 import { storeImage } from "./storage";
 import { sendEmail, emailConfigured, passwordResetEmail } from "./email";
 import { todayKey } from "./date";
@@ -708,19 +709,23 @@ export async function toggleSupplementAction(name: string) {
 export async function setNutritionGoalsAction(input: {
   calorieGoal: number | null;
   proteinGoal: number | null;
-  supplements: string | null;
+  supplements: { name: string; dose: number | null; unit: string }[] | null;
 }) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
   const clampInt = (v: number | null, max: number) =>
     v == null || Number.isNaN(v) || v <= 0 ? null : Math.min(Math.round(v), max);
-  const supplements =
-    input.supplements
-      ?.split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 20)
-      .join(",") || null;
+  const supplements = serializeSupplements(
+    (input.supplements ?? []).map((s) => ({
+      name: s.name,
+      // clamp dose to a sane range; null if not a positive number
+      dose:
+        typeof s.dose === "number" && isFinite(s.dose) && s.dose > 0
+          ? Math.min(s.dose, 100000)
+          : null,
+      unit: s.unit,
+    }))
+  );
   await prisma.user.update({
     where: { id: user.id },
     data: {

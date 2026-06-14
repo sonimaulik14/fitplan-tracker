@@ -83,6 +83,58 @@ export function slugify(s: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+// ---------- supplements ----------
+// Stored in User.supplements as a JSON array of {name,dose,unit}. Falls back to
+// parsing the legacy comma-separated names format (dose/unit unknown).
+export type Supplement = { name: string; dose: number | null; unit: string };
+
+export function parseSupplements(raw: string | null | undefined): Supplement[] {
+  if (!raw) return [];
+  const s = raw.trim();
+  if (s.startsWith("[")) {
+    try {
+      const arr = JSON.parse(s);
+      if (Array.isArray(arr))
+        return arr
+          .filter((x) => x && typeof x.name === "string" && x.name.trim())
+          .slice(0, 20)
+          .map((x) => ({
+            name: String(x.name).trim().slice(0, 40),
+            dose:
+              typeof x.dose === "number" && isFinite(x.dose) && x.dose > 0
+                ? x.dose
+                : null,
+            unit: (typeof x.unit === "string" ? x.unit : "").trim().slice(0, 8),
+          }));
+    } catch {
+      /* fall through to legacy parse */
+    }
+  }
+  return s
+    .split(",")
+    .map((n) => n.trim())
+    .filter(Boolean)
+    .slice(0, 20)
+    .map((name) => ({ name: name.slice(0, 40), dose: null, unit: "" }));
+}
+
+export function serializeSupplements(list: Supplement[]): string | null {
+  const clean = list
+    .filter((x) => x.name && x.name.trim())
+    .slice(0, 20)
+    .map((x) => ({
+      name: x.name.trim().slice(0, 40),
+      dose: x.dose && x.dose > 0 ? x.dose : null,
+      unit: (x.unit || "").trim().slice(0, 8),
+    }));
+  return clean.length ? JSON.stringify(clean) : null;
+}
+
+// "Creatine · 5 g" label for a supplement (omits the dose when unknown).
+export function supplementLabel(s: { dose: number | null; unit: string }): string {
+  return s.dose ? `${s.dose}${s.unit ? " " + s.unit : ""}` : "";
+}
+
 // ---------- weight units ----------
 export type Unit = "kg" | "lb";
 export const LB_PER_KG = 2.2046226218;

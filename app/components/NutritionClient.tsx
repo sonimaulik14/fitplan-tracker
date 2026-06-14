@@ -10,7 +10,8 @@ import {
   setNutritionGoalsAction,
 } from "@/lib/actions";
 import { toast } from "@/lib/toast";
-import { UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed, Plus, X } from "lucide-react";
+import type { Supplement } from "@/lib/ui";
 import EmptyState from "./EmptyState";
 
 type Entry = {
@@ -214,7 +215,7 @@ export function WaterTracker({
 export function SupplementChecklist({
   supplements,
 }: {
-  supplements: { name: string; taken: boolean }[];
+  supplements: { name: string; dose: number | null; unit: string; taken: boolean }[];
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
@@ -256,10 +257,16 @@ export function SupplementChecklist({
           >
             ✓
           </span>
-          <span
-            className={`text-sm ${s.taken ? "line-through text-muted" : ""}`}
-          >
-            {s.name}
+          <span className="flex items-baseline gap-2 min-w-0">
+            <span className={`text-sm ${s.taken ? "line-through text-muted" : ""}`}>
+              {s.name}
+            </span>
+            {s.dose ? (
+              <span className="text-xs text-muted shrink-0">
+                {s.dose}
+                {s.unit ? ` ${s.unit}` : ""}
+              </span>
+            ) : null}
           </span>
         </button>
       ))}
@@ -274,66 +281,112 @@ export function NutritionGoals({
 }: {
   calorieGoal: number | null;
   proteinGoal: number | null;
-  supplements: string;
+  supplements: Supplement[];
 }) {
   const router = useRouter();
   const [cal, setCal] = useState(calorieGoal != null ? String(calorieGoal) : "");
   const [pro, setPro] = useState(proteinGoal != null ? String(proteinGoal) : "");
-  const [sup, setSup] = useState(supplements);
+  const [sups, setSups] = useState<Supplement[]>(supplements);
   const [busy, setBusy] = useState(false);
+
+  const patch = (i: number, p: Partial<Supplement>) =>
+    setSups((prev) => prev.map((s, j) => (j === i ? { ...s, ...p } : s)));
+  const add = () => setSups((prev) => [...prev, { name: "", dose: null, unit: "g" }]);
+  const remove = (i: number) => setSups((prev) => prev.filter((_, j) => j !== i));
 
   const save = async () => {
     setBusy(true);
     const res = await setNutritionGoalsAction({
       calorieGoal: cal.trim() ? Number(cal) : null,
       proteinGoal: pro.trim() ? Number(pro) : null,
-      supplements: sup.trim() || null,
+      supplements: sups.filter((s) => s.name.trim()),
     });
     setBusy(false);
     if (res.ok) {
-      toast("Goals saved ✓");
+      toast("Goals saved");
       router.refresh();
     } else toast(res.error ?? "Could not save");
   };
 
   return (
-    <div className="grid sm:grid-cols-2 gap-3">
-      <label className="text-sm">
-        <span className="text-muted text-xs">Daily calorie goal</span>
-        <input
-          value={cal}
-          onChange={(e) => setCal(e.target.value)}
-          placeholder="e.g. 2500"
-          inputMode="decimal"
-          className="input mt-1"
-        />
-      </label>
-      <label className="text-sm">
-        <span className="text-muted text-xs">Daily protein goal (g)</span>
-        <input
-          value={pro}
-          onChange={(e) => setPro(e.target.value)}
-          placeholder="e.g. 180"
-          inputMode="decimal"
-          className="input mt-1"
-        />
-      </label>
-      <label className="text-sm sm:col-span-2">
-        <span className="text-muted text-xs">
-          Supplements (comma-separated)
-        </span>
-        <input
-          value={sup}
-          onChange={(e) => setSup(e.target.value)}
-          placeholder="Whey, Creatine, Fish oil, Multivitamin"
-          className="input mt-1"
-        />
-      </label>
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-2 gap-3">
+        <label className="text-sm">
+          <span className="text-muted text-xs">Daily calorie goal</span>
+          <input
+            value={cal}
+            onChange={(e) => setCal(e.target.value)}
+            placeholder="e.g. 2500"
+            inputMode="decimal"
+            className="input mt-1"
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-muted text-xs">Daily protein goal (g)</span>
+          <input
+            value={pro}
+            onChange={(e) => setPro(e.target.value)}
+            placeholder="e.g. 180"
+            inputMode="decimal"
+            className="input mt-1"
+          />
+        </label>
+      </div>
+
+      <div>
+        <div className="label">Supplements & daily dose</div>
+        <div className="space-y-2">
+          {sups.map((s, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                value={s.name}
+                onChange={(e) => patch(i, { name: e.target.value })}
+                placeholder="Creatine"
+                className="input flex-1 !py-2"
+                aria-label="Supplement name"
+              />
+              <input
+                value={s.dose ?? ""}
+                onChange={(e) =>
+                  patch(i, { dose: e.target.value ? Number(e.target.value) : null })
+                }
+                placeholder="5"
+                inputMode="decimal"
+                className="input w-16 !py-2 text-center"
+                aria-label="Dose amount"
+              />
+              <input
+                value={s.unit}
+                onChange={(e) => patch(i, { unit: e.target.value })}
+                placeholder="g"
+                className="input w-14 !py-2 text-center"
+                aria-label="Dose unit"
+              />
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                aria-label="Remove supplement"
+                className="grid place-items-center w-9 h-9 shrink-0 rounded-lg text-muted hover:text-danger hover:bg-surface-2 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/15 transition-colors"
+        >
+          <Plus size={14} /> Add supplement
+        </button>
+      </div>
+
       <button
         type="button"
         onClick={save}
         disabled={busy}
-        className="btn-primary sm:col-span-2 disabled:opacity-60"
+        className="btn-primary w-full disabled:opacity-60"
       >
         {busy ? "Saving…" : "Save goals"}
       </button>
