@@ -787,11 +787,13 @@ export async function setStartDateAction(dateStr: string) {
   const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
   if (Number.isNaN(date.getTime())) return { ok: false, error: "Invalid date." };
 
-  // Guard against fat-finger dates far outside any real program.
+  // Guard against fat-finger dates far outside any real program. A future
+  // start is allowed (scheduling ahead); just keep it within a year.
   const now = Date.now();
-  if (date.getTime() > now + 86_400_000)
-    return { ok: false, error: "Start date can't be in the future." };
-  if (date.getTime() < now - 3 * 365 * 86_400_000)
+  const YEAR = 365 * 86_400_000;
+  if (date.getTime() > now + YEAR)
+    return { ok: false, error: "That start date is too far in the future." };
+  if (date.getTime() < now - 3 * YEAR)
     return { ok: false, error: "That start date is too far in the past." };
 
   const enrollment = await prisma.enrollment.findFirst({

@@ -41,7 +41,6 @@ export default function StartDateEditor({ startDate }: { startDate: string }) {
       <input
         type="date"
         value={val}
-        max={new Date().toISOString().slice(0, 10)}
         onChange={(e) => setVal(e.target.value)}
         className="input !py-1.5 !w-auto text-sm"
         aria-label="Plan start date"
