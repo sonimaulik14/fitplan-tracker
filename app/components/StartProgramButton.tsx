@@ -20,12 +20,17 @@ export default function StartProgramButton({
 
   const start = async () => {
     setBusy(true);
-    const res = await startProgramAction();
-    setBusy(false);
-    if (res.ok) {
-      toast("Day 1 starts today — let's go 💪");
-      router.refresh();
-    } else toast(res.error ?? "Could not start");
+    try {
+      const res = await startProgramAction();
+      if (res.ok) {
+        toast("Day 1 starts today — let's go 💪");
+        router.refresh();
+      } else toast(res.error ?? "Could not start");
+    } catch {
+      toast("Something went wrong — please try again");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
