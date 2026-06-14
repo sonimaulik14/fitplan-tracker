@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Droplet, Pill } from "lucide-react";
+import { Droplet } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getNutritionToday, getSupplementTotals } from "@/lib/metrics";
 import NavBar from "@/app/components/NavBar";
@@ -8,7 +8,6 @@ import { AnimatedRing } from "@/app/components/motion";
 import {
   FoodLog,
   WaterTracker,
-  SupplementChecklist,
   NutritionGoals,
 } from "@/app/components/NutritionClient";
 
@@ -51,8 +50,6 @@ export default async function NutritionPage() {
       unit: "g",
     },
   ];
-
-  const suppDone = n.supplements.filter((s) => s.taken).length;
 
   return (
     <>
@@ -123,21 +120,6 @@ export default async function NutritionPage() {
             <Droplet size={17} className="text-accent" aria-hidden /> Water
           </h2>
           <WaterTracker waterMl={n.waterMl} />
-        </section>
-
-        {/* Supplements */}
-        <section className="card p-6 animate-fade-up">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="section-title">
-              <Pill size={17} className="text-accent" aria-hidden /> Supplements
-            </h2>
-            {n.supplements.length > 0 && (
-              <span className="text-xs text-muted">
-                {suppDone}/{n.supplements.length} taken today
-              </span>
-            )}
-          </div>
-          <SupplementChecklist supplements={n.supplements} />
         </section>
 
         {/* Supplement totals over the program */}

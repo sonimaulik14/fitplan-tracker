@@ -6,7 +6,6 @@ import {
   addNutritionEntryAction,
   deleteNutritionEntryAction,
   adjustWaterAction,
-  toggleSupplementAction,
   setNutritionGoalsAction,
 } from "@/lib/actions";
 import { toast } from "@/lib/toast";
@@ -208,68 +207,6 @@ export function WaterTracker({
         ))}
       </div>
       <div className="text-right text-xs text-muted mt-1">{pct}%</div>
-    </div>
-  );
-}
-
-export function SupplementChecklist({
-  supplements,
-}: {
-  supplements: { name: string; dose: number | null; unit: string; taken: boolean }[];
-}) {
-  const router = useRouter();
-  const [pending, setPending] = useState<string | null>(null);
-
-  const toggle = async (name: string) => {
-    setPending(name);
-    await toggleSupplementAction(name);
-    setPending(null);
-    router.refresh();
-  };
-
-  if (supplements.length === 0)
-    return (
-      <p className="text-muted text-sm">
-        No supplements added — set them up in goals below.
-      </p>
-    );
-
-  return (
-    <div className="space-y-2">
-      {supplements.map((s) => (
-        <button
-          key={s.name}
-          type="button"
-          onClick={() => toggle(s.name)}
-          disabled={pending === s.name}
-          className={`w-full flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors ${
-            s.taken
-              ? "border-accent-2/40 bg-accent-2/10"
-              : "border-border hover:bg-surface-2"
-          }`}
-        >
-          <span
-            className={`w-6 h-6 rounded-md grid place-items-center text-sm shrink-0 ${
-              s.taken
-                ? "bg-accent-2 text-white"
-                : "border border-border text-transparent"
-            }`}
-          >
-            ✓
-          </span>
-          <span className="flex items-baseline gap-2 min-w-0">
-            <span className={`text-sm ${s.taken ? "line-through text-muted" : ""}`}>
-              {s.name}
-            </span>
-            {s.dose ? (
-              <span className="text-xs text-muted shrink-0">
-                {s.dose}
-                {s.unit ? ` ${s.unit}` : ""}
-              </span>
-            ) : null}
-          </span>
-        </button>
-      ))}
     </div>
   );
 }

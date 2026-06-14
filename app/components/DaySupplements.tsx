@@ -4,14 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Pill } from "lucide-react";
-import { toggleSupplementAction } from "@/lib/actions";
+import { toggleDaySupplementAction } from "@/lib/actions";
 
 type Supp = { name: string; dose: number | null; unit: string; taken: boolean };
 
-// Per-day supplement logging — a tap-to-toggle grid shown on the workout page,
-// so you log what you took in the context of that day's session. Writes to
-// today's log (same store as the Nutrition page).
-export default function DaySupplements({ supplements }: { supplements: Supp[] }) {
+// Per-day supplement logging — a tap-to-toggle grid shown on the workout page.
+// Logs are scoped to this workout day, so each program day is independent.
+export default function DaySupplements({
+  workoutDayId,
+  supplements,
+}: {
+  workoutDayId: string;
+  supplements: Supp[];
+}) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   // optimistic local state so toggles feel instant
@@ -24,7 +29,7 @@ export default function DaySupplements({ supplements }: { supplements: Supp[] })
       prev.map((s) => (s.name === name ? { ...s, taken: !s.taken } : s))
     );
     setPending(name);
-    await toggleSupplementAction(name);
+    await toggleDaySupplementAction(workoutDayId, name);
     setPending(null);
     router.refresh();
   };

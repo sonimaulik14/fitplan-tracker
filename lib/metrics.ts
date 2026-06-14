@@ -371,13 +371,13 @@ export async function getNutritionToday(userId: string) {
   };
 }
 
-// Today's supplement definitions + whether each has been logged today. Powers
-// the per-day supplement logging UI on the workout page.
-export async function getDaySupplements(userId: string) {
+// Supplement definitions + whether each was logged for a specific WORKOUT DAY.
+// Keyed per workout day (wd:<id>) so each program day logs independently.
+export async function getDaySupplements(userId: string, workoutDayId: string) {
   const [user, log] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { supplements: true } }),
     prisma.dailyLog.findUnique({
-      where: { userId_day: { userId, day: todayKey() } },
+      where: { userId_day: { userId, day: `wd:${workoutDayId}` } },
     }),
   ]);
   const taken = new Set(
@@ -410,9 +410,9 @@ export async function getSupplementTotals(userId: string) {
   if (defs.length === 0) return { supplements: [], daysElapsed: 0 };
 
   const start = enrollment?.startDate ?? new Date(Date.now() - 84 * 86400000);
-  const startKey = ymd(start);
+  // Per-workout-day logs are keyed "wd:<id>" (see toggleDaySupplementAction).
   const logs = await prisma.dailyLog.findMany({
-    where: { userId, day: { gte: startKey }, supplementsTaken: { not: "" } },
+    where: { userId, day: { startsWith: "wd:" }, supplementsTaken: { not: "" } },
     select: { supplementsTaken: true },
   });
 

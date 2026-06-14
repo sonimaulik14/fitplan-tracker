@@ -46,7 +46,7 @@ export default async function WorkoutPage({
   const [lastTime, swaps, daySupplements] = await Promise.all([
     getLastTimeByExercise(user.id, day.week.planId, day.id),
     getSwaps(user.id, day.week.planId),
-    getDaySupplements(user.id),
+    getDaySupplements(user.id, day.id),
   ]);
 
   const entryMap = new Map(
@@ -135,7 +135,7 @@ export default async function WorkoutPage({
         </div>
 
         <div className="mb-5">
-          <DaySupplements supplements={daySupplements} />
+          <DaySupplements workoutDayId={day.id} supplements={daySupplements} />
         </div>
 
         <WorkoutLogger

@@ -681,10 +681,16 @@ export async function adjustWaterAction(deltaMl: number) {
   return { ok: true, waterMl: next };
 }
 
-export async function toggleSupplementAction(name: string) {
+// Toggle a supplement as taken for a specific WORKOUT DAY (not the calendar
+// date), so each program day has its own independent log. Stored in DailyLog
+// under a "wd:<workoutDayId>" key (kept separate from the date-keyed water rows).
+export async function toggleDaySupplementAction(
+  workoutDayId: string,
+  name: string
+) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  const day = todayKey();
+  const day = `wd:${workoutDayId}`;
   const existing = await prisma.dailyLog.findUnique({
     where: { userId_day: { userId: user.id, day } },
   });
@@ -702,7 +708,7 @@ export async function toggleSupplementAction(name: string) {
     create: { userId: user.id, day, supplementsTaken: csv },
     update: { supplementsTaken: csv },
   });
-  revalidatePath("/nutrition");
+  revalidatePath(`/workout/${workoutDayId}`);
   return { ok: true };
 }
 
