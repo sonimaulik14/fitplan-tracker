@@ -10,6 +10,7 @@ import ReminderNudge from "@/app/components/ReminderNudge";
 import WeekSwitcher from "@/app/components/WeekSwitcher";
 import WelcomeTour from "@/app/components/WelcomeTour";
 import PlanTimelineCard from "@/app/components/PlanTimelineCard";
+import StartProgramButton from "@/app/components/StartProgramButton";
 import PlanPicker from "@/app/components/PlanPicker";
 import {
   Reveal,
@@ -146,7 +147,24 @@ export default async function DashboardPage({
         {/* Not enrolled → choose a plan to start */}
         {!p?.enrolled && plans.length > 0 && <PlanPicker plans={plans} />}
 
-        {timeline && <PlanTimelineCard t={timeline} />}
+        {timeline &&
+          (timeline.started ? (
+            <PlanTimelineCard t={timeline} />
+          ) : (
+            <section className="card p-6 mt-6 animate-fade-up flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1">
+                <h2 className="font-display font-bold text-xl">
+                  Ready to begin?
+                </h2>
+                <p className="text-sm text-muted mt-1">
+                  Start the program and Day 1 of your {timeline.totalDays}-day
+                  plan begins today. You can adjust the date later on the
+                  timeline.
+                </p>
+              </div>
+              <StartProgramButton className="!px-6 !py-3 shrink-0" />
+            </section>
+          ))}
 
         {p?.enrolled && hasWorkouts && (
           <>

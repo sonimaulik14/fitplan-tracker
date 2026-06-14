@@ -744,7 +744,38 @@ export async function setNutritionGoalsAction(input: {
   return { ok: true };
 }
 
-/** Set the real start date of the user's active plan (drives the timeline). */
+/** Begin the active plan: stamp Day 1 as today (local). */
+export async function startProgramAction() {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { userId: user.id, status: "active" },
+    orderBy: { startDate: "desc" },
+    select: { id: true },
+  });
+  if (!enrollment) return { ok: false, error: "No active plan." };
+
+  // Anchor to local noon so the stored UTC instant lands on today's date.
+  const now = new Date();
+  const today = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    12,
+    0,
+    0
+  );
+  await prisma.enrollment.update({
+    where: { id: enrollment.id },
+    data: { startedAt: today },
+  });
+  revalidatePath("/timeline");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+/** Adjust the day the user started the plan (drives the timeline). */
 export async function setStartDateAction(dateStr: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
@@ -772,7 +803,7 @@ export async function setStartDateAction(dateStr: string) {
 
   await prisma.enrollment.update({
     where: { id: enrollment.id },
-    data: { startDate: date },
+    data: { startedAt: date },
   });
   revalidatePath("/timeline");
   revalidatePath("/dashboard");

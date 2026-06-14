@@ -193,6 +193,9 @@ model Enrollment {
   planId    String
   plan      Plan             @relation(fields: [planId], references: [id], onDelete: Cascade)
   startDate DateTime         @default(now())
+  // When the user actually pressed "Start program" — Day 1 of the timeline.
+  // Null = enrolled/selected but not started counting yet.
+  startedAt DateTime?
   status    String           @default("active")
   sessions  WorkoutSession[]
   swaps     ExerciseSwap[]

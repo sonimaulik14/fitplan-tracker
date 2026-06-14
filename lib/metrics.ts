@@ -304,6 +304,8 @@ export async function getProgress(userId: string) {
     loggedToday,
     currentStreak,
     startDate: enrollment?.startDate ?? null,
+    startedAt: enrollment?.startedAt ?? null,
+    started: !!enrollment?.startedAt,
     days,
     weeksSeeded: plan.weeks.length,
     totalWeeks: plan.totalWeeks,
@@ -341,6 +343,7 @@ export type TimelineDay = {
 };
 
 export type Timeline = {
+  started: boolean; // user pressed "Start program"
   startDate: Date;
   endDate: Date;
   totalDays: number;
@@ -367,7 +370,9 @@ type ProgressResult = NonNullable<Awaited<ReturnType<typeof getProgress>>>;
  * getProgress() result so no extra DB work.
  */
 export function buildTimeline(p: ProgressResult, today: Date = new Date()): Timeline {
-  const start = startOfDay(p.startDate ?? today);
+  // Day 1 is anchored on when the user pressed "Start program". Before that,
+  // fall back to today so the preview grid starts "now".
+  const start = startOfDay(p.startedAt ?? today);
   const t = startOfDay(today);
   const totalDays = p.days.length;
 
@@ -407,6 +412,7 @@ export function buildTimeline(p: ProgressResult, today: Date = new Date()): Time
   ).length;
 
   return {
+    started: p.started,
     startDate: start,
     endDate,
     totalDays,
@@ -503,13 +509,16 @@ export async function getSupplementTotals(userId: string) {
     prisma.enrollment.findFirst({
       where: { userId, status: "active" },
       orderBy: { startDate: "desc" },
-      select: { startDate: true },
+      select: { startDate: true, startedAt: true },
     }),
   ]);
   const defs = parseSupplements(user?.supplements);
   if (defs.length === 0) return { supplements: [], daysElapsed: 0 };
 
-  const start = enrollment?.startDate ?? new Date(Date.now() - 84 * 86400000);
+  const start =
+    enrollment?.startedAt ??
+    enrollment?.startDate ??
+    new Date(Date.now() - 84 * 86400000);
   // Per-workout-day logs are keyed "wd:<id>" (see toggleDaySupplementAction).
   const logs = await prisma.dailyLog.findMany({
     where: { userId, day: { startsWith: "wd:" }, supplementsTaken: { not: "" } },

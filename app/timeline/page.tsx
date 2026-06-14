@@ -7,6 +7,7 @@ import { ymd } from "@/lib/date";
 import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
 import StartDateEditor from "@/app/components/StartDateEditor";
+import StartProgramButton from "@/app/components/StartProgramButton";
 
 export const metadata = { title: "Timeline" };
 
@@ -86,34 +87,50 @@ export default async function TimelinePage() {
         />
 
         {/* Summary */}
-        <section className="card p-6 animate-fade-up">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 className="font-display font-bold text-2xl">
-              Day {t.currentDayIndex}
-              <span className="text-muted font-medium text-lg"> of {t.totalDays}</span>
-            </h2>
-            <span className="text-sm font-semibold text-muted">
-              Week {t.currentWeek} · {overallPct}% done
-            </span>
-          </div>
-          <p className="text-sm text-muted mt-2 leading-relaxed">{summary}</p>
+        {t.started ? (
+          <section className="card p-6 animate-fade-up">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h2 className="font-display font-bold text-2xl">
+                Day {t.currentDayIndex}
+                <span className="text-muted font-medium text-lg"> of {t.totalDays}</span>
+              </h2>
+              <span className="text-sm font-semibold text-muted">
+                Week {t.currentWeek} · {overallPct}% done
+              </span>
+            </div>
+            <p className="text-sm text-muted mt-2 leading-relaxed">{summary}</p>
 
-          <div className="mt-4 h-2 rounded-full bg-surface-2 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-accent transition-all"
-              style={{
-                width: `${Math.round((t.currentDayIndex / t.totalDays) * 100)}%`,
-              }}
-            />
-          </div>
+            <div className="mt-4 h-2 rounded-full bg-surface-2 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{
+                  width: `${Math.round((t.currentDayIndex / t.totalDays) * 100)}%`,
+                }}
+              />
+            </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="text-muted">
-              {fmtFull(t.startDate)} → {fmtFull(t.endDate)}
-            </span>
-            <StartDateEditor startDate={ymd(t.startDate)} />
-          </div>
-        </section>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="text-muted">
+                {fmtFull(t.startDate)} → {fmtFull(t.endDate)}
+              </span>
+              <StartDateEditor startDate={ymd(t.startDate)} />
+            </div>
+          </section>
+        ) : (
+          <section className="card p-6 animate-fade-up text-center sm:text-left sm:flex sm:items-center sm:gap-5">
+            <div className="flex-1">
+              <h2 className="font-display font-bold text-2xl">
+                Haven&apos;t started yet
+              </h2>
+              <p className="text-sm text-muted mt-1.5 leading-relaxed">
+                Press start whenever you&apos;re ready — Day 1 will be today and
+                the whole {t.totalDays}-day plan lays out from there. The grid
+                below is a preview.
+              </p>
+            </div>
+            <StartProgramButton className="mt-4 sm:mt-0 !px-6 !py-3 shrink-0" />
+          </section>
+        )}
 
         {/* Calendar grid */}
         <section className="card p-5 sm:p-6 animate-fade-up">
