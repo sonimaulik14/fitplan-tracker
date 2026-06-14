@@ -788,7 +788,7 @@ export default function WorkoutLogger({
               <div className="mt-4 ml-2.5 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2">
                 <TargetIcon size={14} className="text-accent shrink-0" aria-hidden />
                 <div className="text-sm flex-1 min-w-0">
-                  <span className="text-muted">Coach: </span>
+                  <span className="text-muted">Tip: </span>
                   <span className="font-semibold">{sg.label}</span>
                   <span className="text-muted">
                     {" "}

@@ -11,8 +11,8 @@ const SLIDES: { Icon: LucideIcon; title: string; body: string }[] = [
   },
   {
     Icon: Target,
-    title: "Your coach, built in",
-    body: "Get progressive-overload suggestions, plate math, and tap any term (Superset, drop set…) for a quick explainer.",
+    title: "Smarter every set",
+    body: "Get progressive-overload suggestions on each lift, and tap any term (superset, drop set…) for a quick explainer.",
   },
   {
     Icon: BarChart3,

@@ -10,10 +10,8 @@ import VajraMark from "./VajraMark";
 const LINKS = [
   { href: "/dashboard", label: "Home", icon: HomeIcon },
   { href: "/plan", label: "Plan", icon: ListIcon },
-  { href: "/coach", label: "Coach", icon: CoachIcon },
   { href: "/progress", label: "Progress", icon: FireIcon },
   { href: "/analysis", label: "Stats", icon: ChartIcon },
-  { href: "/nutrition", label: "Nutrition", icon: NutritionIcon },
 ];
 
 type NavUser = {
@@ -119,7 +117,7 @@ export default function NavBar({ user }: { user: NavUser }) {
 
       {/* Mobile bottom tab bar */}
       <div className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-4">
           {LINKS.map((l) => {
             const Icon = l.icon;
             const active = isActive(l.href);
@@ -181,24 +179,6 @@ function ListIcon({ active }: { active?: boolean }) {
     </svg>
   );
 }
-function CoachIcon({ active }: { active?: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z"
-        stroke="currentColor"
-        strokeWidth={active ? 2.2 : 1.7}
-        strokeLinejoin="round"
-      />
-      <path
-        d="M18.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"
-        stroke="currentColor"
-        strokeWidth={active ? 2 : 1.5}
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 function FireIcon({ active }: { active?: boolean }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -220,24 +200,6 @@ function ChartIcon({ active }: { active?: boolean }) {
         strokeWidth={active ? 2.4 : 1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function NutritionIcon({ active }: { active?: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"
-        stroke="currentColor"
-        strokeWidth={active ? 2.2 : 1.7}
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10 2c1 .5 2 2 2 5"
-        stroke="currentColor"
-        strokeWidth={active ? 2.2 : 1.7}
-        strokeLinecap="round"
       />
     </svg>
   );

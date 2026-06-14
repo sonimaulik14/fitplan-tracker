@@ -2,14 +2,13 @@ import Link from "next/link";
 import { Flame, Target, Trophy, Dumbbell, Hammer } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress, getPlateaus, getAllPlans } from "@/lib/metrics";
+import { getProgress, getAllPlans } from "@/lib/metrics";
 import { focusKey, quoteForDay, fmtVolume, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import MusclePhoto from "@/app/components/MusclePhoto";
 import ReminderNudge from "@/app/components/ReminderNudge";
 import WeekSwitcher from "@/app/components/WeekSwitcher";
 import WelcomeTour from "@/app/components/WelcomeTour";
-import PlateauCoach from "@/app/components/PlateauCoach";
 import PlanPicker from "@/app/components/PlanPicker";
 import {
   Reveal,
@@ -52,7 +51,6 @@ export default async function DashboardPage({
   const p = await getProgress(user.id);
   // A placeholder program (selected but no workouts built yet) has no days.
   const hasWorkouts = (p?.days.length ?? 0) > 0;
-  const plateaus = p?.enrolled && hasWorkouts ? await getPlateaus(user.id) : [];
   // Not enrolled yet → offer the available plans to choose from.
   const plans = p?.enrolled ? [] : await getAllPlans();
   const firstName = user.name.split(" ")[0];
@@ -277,9 +275,6 @@ export default async function DashboardPage({
                 </div>
               </div>
             </section>
-
-            {/* Coach — proactive plateau / deload guidance */}
-            <PlateauCoach plateaus={plateaus} unit={user.unit as Unit} />
 
             {/* Workouts */}
             {(() => {
