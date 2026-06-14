@@ -93,6 +93,95 @@ export const ALTERNATIVES: Record<string, Alternative[]> = {
   ],
 };
 
+// Curated CrossFit / functional movement catalog, grouped by category. Offered
+// as a swap option set independent of the plan's muscle groups — pick any
+// CrossFit movement to replace an exercise.
+export type CrossfitCategory =
+  | "Barbell"
+  | "Gymnastics"
+  | "Kettlebell/DB"
+  | "Odd Object"
+  | "Conditioning";
+
+export type CrossfitMovement = { name: string; category: CrossfitCategory };
+
+export const CROSSFIT: CrossfitMovement[] = [
+  // Barbell (Olympic / power)
+  { name: "Snatch", category: "Barbell" },
+  { name: "Power Snatch", category: "Barbell" },
+  { name: "Hang Power Snatch", category: "Barbell" },
+  { name: "Clean", category: "Barbell" },
+  { name: "Power Clean", category: "Barbell" },
+  { name: "Hang Power Clean", category: "Barbell" },
+  { name: "Squat Clean", category: "Barbell" },
+  { name: "Clean & Jerk", category: "Barbell" },
+  { name: "Push Press", category: "Barbell" },
+  { name: "Push Jerk", category: "Barbell" },
+  { name: "Split Jerk", category: "Barbell" },
+  { name: "Thruster", category: "Barbell" },
+  { name: "Front Squat", category: "Barbell" },
+  { name: "Overhead Squat", category: "Barbell" },
+  { name: "Back Squat", category: "Barbell" },
+  { name: "Deadlift", category: "Barbell" },
+  { name: "Sumo Deadlift High Pull", category: "Barbell" },
+  { name: "Shoulder to Overhead", category: "Barbell" },
+  // Gymnastics / bodyweight
+  { name: "Pull-up", category: "Gymnastics" },
+  { name: "Chest-to-Bar Pull-up", category: "Gymnastics" },
+  { name: "Bar Muscle-up", category: "Gymnastics" },
+  { name: "Ring Muscle-up", category: "Gymnastics" },
+  { name: "Toes-to-Bar", category: "Gymnastics" },
+  { name: "Handstand Push-up", category: "Gymnastics" },
+  { name: "Handstand Walk", category: "Gymnastics" },
+  { name: "Wall Walk", category: "Gymnastics" },
+  { name: "Ring Dip", category: "Gymnastics" },
+  { name: "Burpee", category: "Gymnastics" },
+  { name: "Box Jump", category: "Gymnastics" },
+  { name: "Pistol (Single-Leg Squat)", category: "Gymnastics" },
+  { name: "Air Squat", category: "Gymnastics" },
+  { name: "Push-up", category: "Gymnastics" },
+  { name: "Rope Climb", category: "Gymnastics" },
+  { name: "GHD Sit-up", category: "Gymnastics" },
+  // Kettlebell / dumbbell
+  { name: "Kettlebell Swing", category: "Kettlebell/DB" },
+  { name: "Goblet Squat", category: "Kettlebell/DB" },
+  { name: "Dumbbell Snatch", category: "Kettlebell/DB" },
+  { name: "Dumbbell Thruster", category: "Kettlebell/DB" },
+  { name: "Turkish Get-up", category: "Kettlebell/DB" },
+  { name: "Devil's Press", category: "Kettlebell/DB" },
+  // Odd object
+  { name: "Wall Ball", category: "Odd Object" },
+  { name: "Slam Ball", category: "Odd Object" },
+  { name: "Sandbag Clean", category: "Odd Object" },
+  { name: "D-Ball Over Shoulder", category: "Odd Object" },
+  { name: "Sled Push", category: "Odd Object" },
+  { name: "Farmers Carry", category: "Odd Object" },
+  // Conditioning (monostructural)
+  { name: "Row (Erg)", category: "Conditioning" },
+  { name: "Assault Bike", category: "Conditioning" },
+  { name: "Echo Bike", category: "Conditioning" },
+  { name: "Ski Erg", category: "Conditioning" },
+  { name: "Double-Unders", category: "Conditioning" },
+  { name: "Single-Unders", category: "Conditioning" },
+  { name: "Run", category: "Conditioning" },
+];
+
+// CrossFit movements excluding the current exercise, optionally filtered by a
+// free-text query (matches name or category).
+export function crossfitMovements(
+  current: string,
+  query = ""
+): CrossfitMovement[] {
+  const q = query.trim().toLowerCase();
+  return CROSSFIT.filter(
+    (m) =>
+      m.name.toLowerCase() !== current.toLowerCase() &&
+      (!q ||
+        m.name.toLowerCase().includes(q) ||
+        m.category.toLowerCase().includes(q))
+  );
+}
+
 // Alternatives for a muscle, excluding the current exercise, optionally filtered
 // to a set of available equipment. Returns [] when the muscle isn't mapped.
 export function alternativesFor(

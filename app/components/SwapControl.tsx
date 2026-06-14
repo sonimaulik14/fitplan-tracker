@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, ArrowLeftRight } from "lucide-react";
-import { EQUIPMENT, alternativesFor, type Equipment } from "@/lib/alternatives";
+import { X, Check, ArrowLeftRight, Search } from "lucide-react";
+import {
+  EQUIPMENT,
+  alternativesFor,
+  crossfitMovements,
+  type Equipment,
+} from "@/lib/alternatives";
 import Sheet from "./Sheet";
+
+type Mode = "muscle" | "crossfit";
 
 const EQUIP_STORE = "fitplan-equipment";
 
@@ -36,23 +43,35 @@ export default function SwapControl({
   original,
   muscle,
   onSwap,
+  open: openProp,
+  onOpenChange,
 }: {
   current: string;
   original: string;
   muscle: string;
   onSwap: (name: string) => void;
+  // Optional controlled open state (e.g. opened by a swipe gesture). Falls back
+  // to internal state when omitted.
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (o: boolean) => (onOpenChange ?? setOpenInternal)(o);
   // The pending selection — nothing is applied until Save. `selected` is a
   // chosen alternative; `custom` is free text. Whichever is set wins on Save.
   const [selected, setSelected] = useState<string | null>(null);
   const [custom, setCustom] = useState("");
+  const [mode, setMode] = useState<Mode>("muscle");
+  const [query, setQuery] = useState("");
   const [have, setHave] = useEquipment();
 
   const close = () => {
     setOpen(false);
     setSelected(null);
     setCustom("");
+    setQuery("");
+    setMode("muscle");
   };
 
   const chosen = (custom.trim() || selected || "").trim();
@@ -72,7 +91,12 @@ export default function SwapControl({
     setHave(next);
   };
 
-  const options = alternativesFor(muscle, current, have);
+  const q = query.trim().toLowerCase();
+  const muscleOptions = alternativesFor(muscle, current, have).filter(
+    (a) => !q || a.name.toLowerCase().includes(q)
+  );
+  const crossfitOptions = crossfitMovements(current, query);
+  const options = mode === "muscle" ? muscleOptions : crossfitOptions;
 
   return (
     <>
@@ -126,35 +150,79 @@ export default function SwapControl({
           </button>
         </div>
 
-        {/* equipment filter (persists) */}
+        {/* source tabs: muscle-matched vs CrossFit */}
         <div className="px-5 pb-3">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted mb-2">
-            Equipment you have
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-surface-2 p-1">
+            {(["muscle", "crossfit"] as Mode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  setMode(m);
+                  setSelected(null);
+                }}
+                aria-pressed={mode === m}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  mode === m
+                    ? "bg-surface-solid text-foreground shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {m === "muscle" ? `For ${muscle}` : "CrossFit"}
+              </button>
+            ))}
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {EQUIPMENT.map((e) => {
-              const on = have.has(e.id);
-              return (
-                <button
-                  key={e.id}
-                  type="button"
-                  onClick={() => toggleEquip(e.id)}
-                  aria-pressed={on}
-                  className={`text-xs rounded-full px-3 py-1.5 border transition-colors ${
-                    on
-                      ? "border-accent/50 bg-accent/15 text-accent font-semibold"
-                      : "border-border bg-surface-2 text-muted hover:text-foreground"
-                  }`}
-                >
-                  {e.icon} {e.label}
-                </button>
-              );
-            })}
+
+          {/* search */}
+          <div className="relative mt-3">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+            />
+            <input
+              className="input w-full !pl-9"
+              value={query}
+              placeholder={
+                mode === "crossfit"
+                  ? "Search CrossFit movements…"
+                  : "Search alternatives…"
+              }
+              onChange={(e) => setQuery(e.target.value)}
+            />
           </div>
+
+          {/* equipment filter (muscle mode only, persists) */}
+          {mode === "muscle" && (
+            <div className="mt-3">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted mb-2">
+                Equipment you have
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {EQUIPMENT.map((e) => {
+                  const on = have.has(e.id);
+                  return (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => toggleEquip(e.id)}
+                      aria-pressed={on}
+                      className={`text-xs rounded-full px-3 py-1.5 border transition-colors ${
+                        on
+                          ? "border-accent/50 bg-accent/15 text-accent font-semibold"
+                          : "border-border bg-surface-2 text-muted hover:text-foreground"
+                      }`}
+                    >
+                      {e.icon} {e.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <p className="text-[11px] text-muted mt-2">
-            {have.size === 0
-              ? "Showing all — tap the gear you have to narrow it down."
-              : `${options.length} option${options.length === 1 ? "" : "s"} you can do right now.`}
+            {options.length} option{options.length === 1 ? "" : "s"}
+            {mode === "muscle" && have.size > 0 ? " you can do right now." : "."}
           </p>
         </div>
 
@@ -162,14 +230,16 @@ export default function SwapControl({
         <div className="flex-1 overflow-y-auto px-5 pb-2 border-t border-border pt-3">
           {options.length === 0 ? (
             <p className="text-sm text-muted py-6 text-center">
-              No matches for that equipment.
+              No matches.
               <br />
-              Pick more gear above, or type your own below.
+              Try a different search{mode === "muscle" ? " or gear" : ""}, or type
+              your own below.
             </p>
           ) : (
             <div className="grid sm:grid-cols-2 gap-2">
               {options.map((o) => {
                 const isSel = !custom.trim() && selected === o.name;
+                const tag = "equipment" in o ? o.equipment : o.category;
                 return (
                   <button
                     key={o.name}
@@ -194,7 +264,7 @@ export default function SwapControl({
                         isSel ? "text-accent" : "text-muted group-hover:text-accent"
                       }`}
                     >
-                      {o.equipment}
+                      {tag}
                     </span>
                   </button>
                 );

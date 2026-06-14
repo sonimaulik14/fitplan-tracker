@@ -15,6 +15,7 @@ import { ArrowLeftRight, Target as TargetIcon } from "lucide-react";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
 import DangerButton from "./DangerButton";
 import SwapControl from "./SwapControl";
+import SwipeToSwap from "./SwipeToSwap";
 import WorkoutSummary from "./WorkoutSummary";
 import {
   muscleStyle,
@@ -96,6 +97,8 @@ export default function WorkoutLogger({
     "idle" | "saving" | "saved" | "error"
   >("idle");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Which exercise's swap sheet is open (driven by the Swap button or a swipe).
+  const [swapFor, setSwapFor] = useState<string | null>(null);
   const [summary, setSummary] = useState<{
     week: number | null;
     sets: number;
@@ -643,8 +646,12 @@ export default function WorkoutLogger({
         const isCollapsed = collapsed[ex.id] ?? false;
         const exDone = ex.rows.filter((r) => r.done).length;
         return (
-          <div
+          <SwipeToSwap
             key={ex.id}
+            enabled={!ex.isCardio}
+            onSwipe={() => setSwapFor(ex.id)}
+          >
+          <div
             className="card p-5 sm:p-6 relative overflow-hidden animate-fade-up"
             style={{ animationDelay: `${idx * 30}ms` }}
           >
@@ -773,6 +780,8 @@ export default function WorkoutLogger({
                     original={ex.originalName}
                     muscle={ex.muscle}
                     onSwap={(name) => applySwap(ex.id, name)}
+                    open={swapFor === ex.id}
+                    onOpenChange={(o) => setSwapFor(o ? ex.id : null)}
                   />
                 )}
               </div>
@@ -955,6 +964,7 @@ export default function WorkoutLogger({
             </div>
             )}
           </div>
+          </SwipeToSwap>
         );
       })}
 
