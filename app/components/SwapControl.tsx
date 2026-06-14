@@ -150,6 +150,29 @@ export default function SwapControl({
           </button>
         </div>
 
+        {/* one-tap revert when currently swapped (original is often not in the
+            alternatives list, so this is the reliable way back) */}
+        {current.toLowerCase() !== original.toLowerCase() && (
+          <div className="px-5 pb-3">
+            <button
+              type="button"
+              onClick={() => {
+                onSwap(original);
+                close();
+              }}
+              className="flex w-full items-center gap-2.5 rounded-xl border border-accent-2/40 bg-accent-2/10 px-3.5 py-3 text-left transition-colors hover:bg-accent-2/15"
+            >
+              <ArrowLeftRight size={16} className="text-accent-2 shrink-0" />
+              <span className="min-w-0">
+                <span className="block text-xs text-muted">Back to original</span>
+                <span className="block text-sm font-semibold truncate">
+                  {original}
+                </span>
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* source tabs: muscle-matched vs CrossFit */}
         <div className="px-5 pb-3">
           <div className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-surface-2 p-1">
@@ -285,28 +308,14 @@ export default function SwapControl({
             }}
             onKeyDown={(e) => e.key === "Enter" && save()}
           />
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="btn-primary flex-1"
-              onClick={save}
-              disabled={!canSave}
-            >
-              {canSave ? `Save — ${chosen}` : "Select an exercise"}
-            </button>
-            {current !== original && (
-              <button
-                type="button"
-                className="btn-ghost shrink-0"
-                onClick={() => {
-                  onSwap(original);
-                  close();
-                }}
-              >
-                ↺ Reset
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            className="btn-primary w-full"
+            onClick={save}
+            disabled={!canSave}
+          >
+            {canSave ? `Save — ${chosen}` : "Select an exercise"}
+          </button>
         </div>
       </Sheet>
     </>
