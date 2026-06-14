@@ -371,6 +371,24 @@ export async function getNutritionToday(userId: string) {
   };
 }
 
+// Today's supplement definitions + whether each has been logged today. Powers
+// the per-day supplement logging UI on the workout page.
+export async function getDaySupplements(userId: string) {
+  const [user, log] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { supplements: true } }),
+    prisma.dailyLog.findUnique({
+      where: { userId_day: { userId, day: todayKey() } },
+    }),
+  ]);
+  const taken = new Set(
+    (log?.supplementsTaken ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+  );
+  return parseSupplements(user?.supplements).map((d) => ({
+    ...d,
+    taken: taken.has(d.name),
+  }));
+}
+
 /**
  * Cumulative supplement intake over the active program window (enrollment
  * start → today). Per supplement: days taken, days elapsed, adherence, and

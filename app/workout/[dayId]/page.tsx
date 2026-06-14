@@ -3,11 +3,12 @@ import { ChevronLeft } from "lucide-react";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getLastTimeByExercise, getSwaps } from "@/lib/metrics";
+import { getLastTimeByExercise, getSwaps, getDaySupplements } from "@/lib/metrics";
 import { termInfo, muscleStyle, type Unit } from "@/lib/ui";
 import { getPhoto } from "@/lib/unsplash";
 import NavBar from "@/app/components/NavBar";
 import WorkoutLogger, { type LoggerExercise } from "@/app/components/WorkoutLogger";
+import DaySupplements from "@/app/components/DaySupplements";
 
 export default async function WorkoutPage({
   params,
@@ -42,9 +43,10 @@ export default async function WorkoutPage({
     include: { setEntries: true },
   });
 
-  const [lastTime, swaps] = await Promise.all([
+  const [lastTime, swaps, daySupplements] = await Promise.all([
     getLastTimeByExercise(user.id, day.week.planId, day.id),
     getSwaps(user.id, day.week.planId),
+    getDaySupplements(user.id),
   ]);
 
   const entryMap = new Map(
@@ -130,6 +132,10 @@ export default async function WorkoutPage({
               {weekStyleInfo.desc}
             </p>
           )}
+        </div>
+
+        <div className="mb-5">
+          <DaySupplements supplements={daySupplements} />
         </div>
 
         <WorkoutLogger
