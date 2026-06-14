@@ -2,13 +2,14 @@ import Link from "next/link";
 import { Flame, Target, Trophy, Dumbbell, Hammer } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress, getAllPlans } from "@/lib/metrics";
+import { getProgress, getAllPlans, buildTimeline } from "@/lib/metrics";
 import { focusKey, quoteForDay, fmtVolume, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import MusclePhoto from "@/app/components/MusclePhoto";
 import ReminderNudge from "@/app/components/ReminderNudge";
 import WeekSwitcher from "@/app/components/WeekSwitcher";
 import WelcomeTour from "@/app/components/WelcomeTour";
+import PlanTimelineCard from "@/app/components/PlanTimelineCard";
 import PlanPicker from "@/app/components/PlanPicker";
 import {
   Reveal,
@@ -57,6 +58,7 @@ export default async function DashboardPage({
   // Enrolled but nothing logged yet — show an inviting first-run hero instead
   // of a wall of zeros.
   const fresh = !!p?.enrolled && hasWorkouts && p.completedWorkouts === 0;
+  const timeline = p?.enrolled && hasWorkouts ? buildTimeline(p) : null;
 
   // "Up next" = first not-completed training day (skip rest days if possible).
   const nextDay =
@@ -143,6 +145,8 @@ export default async function DashboardPage({
 
         {/* Not enrolled → choose a plan to start */}
         {!p?.enrolled && plans.length > 0 && <PlanPicker plans={plans} />}
+
+        {timeline && <PlanTimelineCard t={timeline} />}
 
         {p?.enrolled && hasWorkouts && (
           <>

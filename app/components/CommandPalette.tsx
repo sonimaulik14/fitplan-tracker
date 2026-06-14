@@ -33,6 +33,7 @@ type Index = {
 const NAV: Item[] = [
   { label: "Dashboard", href: "/dashboard", Icon: Home },
   { label: "Plan", href: "/plan", Icon: ClipboardList },
+  { label: "Plan timeline", href: "/timeline", Icon: CalendarDays },
   { label: "This week's targets", href: "/targets", Icon: Target },
   { label: "Exercise library", href: "/library", Icon: BookOpen },
   { label: "Progress", href: "/progress", Icon: Flame },

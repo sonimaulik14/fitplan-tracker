@@ -744,6 +744,41 @@ export async function setNutritionGoalsAction(input: {
   return { ok: true };
 }
 
+/** Set the real start date of the user's active plan (drives the timeline). */
+export async function setStartDateAction(dateStr: string) {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+
+  // Expect a local "YYYY-MM-DD" from the date input; anchor to local noon so the
+  // stored UTC instant lands on the intended calendar day regardless of zone.
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
+  if (!m) return { ok: false, error: "Invalid date." };
+  const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+  if (Number.isNaN(date.getTime())) return { ok: false, error: "Invalid date." };
+
+  // Guard against fat-finger dates far outside any real program.
+  const now = Date.now();
+  if (date.getTime() > now + 86_400_000)
+    return { ok: false, error: "Start date can't be in the future." };
+  if (date.getTime() < now - 3 * 365 * 86_400_000)
+    return { ok: false, error: "That start date is too far in the past." };
+
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { userId: user.id, status: "active" },
+    orderBy: { startDate: "desc" },
+    select: { id: true },
+  });
+  if (!enrollment) return { ok: false, error: "No active plan." };
+
+  await prisma.enrollment.update({
+    where: { id: enrollment.id },
+    data: { startDate: date },
+  });
+  revalidatePath("/timeline");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
 export async function resetExerciseCacheAction() {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };

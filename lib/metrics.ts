@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { ymd, streakLength, todayKey } from "./date";
+import { ymd, streakLength, todayKey, startOfDay, addDays, daysBetween } from "./date";
 import { slugify, parseSupplements } from "./ui";
 
 export { todayKey };
@@ -321,6 +321,106 @@ export async function getProgress(userId: string) {
     totalVolume,
     weekly,
     prs,
+  };
+}
+
+export type TimelineDay = {
+  dayId: string;
+  index: number; // 1-based plan day number (1..N)
+  weekNumber: number;
+  dayInWeek: number; // 1..7
+  focus: string;
+  isRest: boolean;
+  status: DayProgress["status"];
+  date: Date; // scheduled calendar date
+  performedDate: Date | null;
+  isToday: boolean;
+  isPast: boolean; // scheduled strictly before today
+  isFuture: boolean; // scheduled strictly after today
+  missed: boolean; // a past training day that wasn't completed
+};
+
+export type Timeline = {
+  startDate: Date;
+  endDate: Date;
+  totalDays: number;
+  currentDayIndex: number; // where the schedule says you are today (1..totalDays)
+  currentWeek: number;
+  daysElapsed: number; // calendar days since start (0 on day 1)
+  hasStarted: boolean; // today >= startDate
+  hasFinished: boolean; // today > endDate
+  completedWorkouts: number;
+  totalWorkouts: number; // training (non-rest) days in the plan
+  // schedule vs. actual, measured in workouts that should be done by today
+  dueByToday: number;
+  doneByToday: number;
+  behind: number; // dueByToday - doneByToday, clamped at 0
+  days: TimelineDay[];
+};
+
+type ProgressResult = NonNullable<Awaited<ReturnType<typeof getProgress>>>;
+
+/**
+ * Overlay calendar dates onto the plan: maps each plan day to a real date
+ * (startDate + offset), and compares where the schedule says you are today
+ * against what you've actually completed. Pure — reuses an existing
+ * getProgress() result so no extra DB work.
+ */
+export function buildTimeline(p: ProgressResult, today: Date = new Date()): Timeline {
+  const start = startOfDay(p.startDate ?? today);
+  const t = startOfDay(today);
+  const totalDays = p.days.length;
+
+  const days: TimelineDay[] = p.days.map((d, i) => {
+    const date = addDays(start, i);
+    const isRest = d.focus.toLowerCase().includes("rest");
+    const isPast = +date < +t;
+    const isToday = +date === +t;
+    return {
+      dayId: d.dayId,
+      index: i + 1,
+      weekNumber: d.weekNumber,
+      dayInWeek: (i % 7) + 1,
+      focus: d.focus,
+      isRest,
+      status: d.status,
+      date,
+      performedDate: d.performedDate,
+      isToday,
+      isPast,
+      isFuture: +date > +t,
+      missed: isPast && !isRest && d.status !== "completed",
+    };
+  });
+
+  const daysElapsed = daysBetween(start, t); // can be negative if not started
+  const currentDayIndex = Math.min(Math.max(daysElapsed + 1, 1), totalDays || 1);
+  const endDate = addDays(start, Math.max(totalDays - 1, 0));
+
+  const dueByToday = days.filter((d) => !d.isRest && !d.isFuture).length;
+  const doneByToday = days.filter(
+    (d) => !d.isRest && !d.isFuture && d.status === "completed"
+  ).length;
+  const totalWorkouts = days.filter((d) => !d.isRest).length;
+  const completedWorkouts = days.filter(
+    (d) => !d.isRest && d.status === "completed"
+  ).length;
+
+  return {
+    startDate: start,
+    endDate,
+    totalDays,
+    currentDayIndex,
+    currentWeek: days[currentDayIndex - 1]?.weekNumber ?? 1,
+    daysElapsed,
+    hasStarted: +t >= +start,
+    hasFinished: +t > +endDate,
+    completedWorkouts,
+    totalWorkouts,
+    dueByToday,
+    doneByToday,
+    behind: Math.max(0, dueByToday - doneByToday),
+    days,
   };
 }
 

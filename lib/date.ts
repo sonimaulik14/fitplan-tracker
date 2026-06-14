@@ -13,6 +13,25 @@ export function todayKey(): string {
   return ymd(new Date());
 }
 
+/** A copy of `d` at local midnight (00:00:00.000). */
+export function startOfDay(d: Date): Date {
+  const c = new Date(d);
+  c.setHours(0, 0, 0, 0);
+  return c;
+}
+
+/** `d` plus `n` calendar days (steps by date so DST can't drop a day). */
+export function addDays(d: Date, n: number): Date {
+  const c = new Date(d);
+  c.setDate(c.getDate() + n);
+  return c;
+}
+
+/** Whole calendar days from `a` to `b` (b − a), ignoring time of day. */
+export function daysBetween(a: Date, b: Date): number {
+  return Math.round((+startOfDay(b) - +startOfDay(a)) / 86_400_000);
+}
+
 /**
  * Current streak = consecutive calendar days (ending today, or yesterday so an
  * unlogged "today" doesn't break it) present in `activeDates` ("YYYY-MM-DD").
