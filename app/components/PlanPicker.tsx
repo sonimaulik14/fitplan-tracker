@@ -30,7 +30,7 @@ export default function PlanPicker({
     <div className="mt-6 animate-fade-up">
       <div className="mb-4">
         <span className="chip">
-          <span className="w-1.5 h-1.5 rounded-full bg-accent-2" /> Choose your
+          <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Choose your
           program
         </span>
         <h2 className="font-display text-2xl font-bold mt-3">
@@ -52,10 +52,9 @@ export default function PlanPicker({
               type="button"
               onClick={() => setSelected(p.id)}
               aria-pressed={on}
-              style={on ? { background: "var(--grad-brand-soft)" } : undefined}
-              className={`text-left rounded-2xl border p-5 transition-all ${
+              className={`text-left rounded-xl border p-5 transition-all ${
                 on
-                  ? "border-accent ring-1 ring-accent/40"
+                  ? "border-accent ring-1 ring-accent/40 bg-accent/10"
                   : "border-border bg-surface hover:border-border-strong"
               }`}
             >
@@ -65,7 +64,7 @@ export default function PlanPicker({
                     {p.totalWeeks} weeks
                   </span>
                   {p.id === currentPlanId && (
-                    <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
+                    <span className="chip text-success border-success/30 bg-success/10">
                       Current
                     </span>
                   )}
@@ -76,7 +75,7 @@ export default function PlanPicker({
                   }`}
                 >
                   {on && (
-                    <span className="w-2 h-2 rounded-full bg-white" />
+                    <span className="w-2 h-2 rounded-full bg-accent-ink" />
                   )}
                 </span>
               </div>

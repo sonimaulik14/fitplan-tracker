@@ -12,7 +12,8 @@ import Sheet from "./Sheet";
 
 type Mode = "muscle" | "crossfit";
 
-const EQUIP_STORE = "fitplan-equipment";
+const EQUIP_STORE = "vajra-equipment";
+const EQUIP_STORE_LEGACY = "fitplan-equipment"; // pre-rename key; read-only fallback
 
 // Equipment the user has, persisted across sessions. Empty set = "haven't said".
 function useEquipment(): [Set<Equipment>, (next: Set<Equipment>) => void] {
@@ -21,7 +22,9 @@ function useEquipment(): [Set<Equipment>, (next: Set<Equipment>) => void] {
   useState(() => {
     try {
       const raw =
-        typeof window !== "undefined" && localStorage.getItem(EQUIP_STORE);
+        typeof window !== "undefined" &&
+        (localStorage.getItem(EQUIP_STORE) ??
+          localStorage.getItem(EQUIP_STORE_LEGACY));
       if (raw) setHave(new Set(JSON.parse(raw) as Equipment[]));
     } catch {
       /* ignore */
@@ -111,8 +114,8 @@ export default function SwapControl({
         aria-expanded={open}
         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
           open
-            ? "border-accent-2/50 bg-accent-2/10 text-accent-2"
-            : "border-border bg-surface-2 text-muted hover:text-accent-2 hover:border-accent-2/40"
+            ? "border-success/50 bg-success/10 text-success"
+            : "border-border bg-surface-2 text-muted hover:text-success hover:border-success/40"
         }`}
       >
         <ArrowLeftRight size={13} />
@@ -123,7 +126,7 @@ export default function SwapControl({
         open={open}
         onClose={close}
         ariaLabel={`Swap ${current}`}
-        panelClassName="flex max-h-[88vh] w-full flex-col rounded-t-3xl border border-border-strong bg-surface-solid shadow-2xl sm:max-w-md sm:rounded-2xl"
+        panelClassName="flex max-h-[88vh] w-full flex-col rounded-t-2xl border border-border-strong bg-surface-solid shadow-2xl sm:max-w-md sm:rounded-xl"
       >
         {/* mobile grab handle */}
         <div className="sm:hidden mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-border-strong" />
@@ -132,7 +135,7 @@ export default function SwapControl({
         <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold">
-              <ArrowLeftRight size={17} className="text-accent-2 shrink-0" />
+              <ArrowLeftRight size={17} className="text-success shrink-0" />
               Swap exercise
             </h2>
             <p className="text-xs text-muted mt-0.5 truncate">
@@ -160,9 +163,9 @@ export default function SwapControl({
                 onSwap(original);
                 close();
               }}
-              className="flex w-full items-center gap-2.5 rounded-xl border border-accent-2/40 bg-accent-2/10 px-3.5 py-3 text-left transition-colors hover:bg-accent-2/15"
+              className="flex w-full items-center gap-2.5 rounded-xl border border-success/40 bg-success/10 px-3.5 py-3 text-left transition-colors hover:bg-success/15"
             >
-              <ArrowLeftRight size={16} className="text-accent-2 shrink-0" />
+              <ArrowLeftRight size={16} className="text-success shrink-0" />
               <span className="min-w-0">
                 <span className="block text-xs text-muted">Back to original</span>
                 <span className="block text-sm font-semibold truncate">

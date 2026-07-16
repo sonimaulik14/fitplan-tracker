@@ -77,7 +77,8 @@ export function AnimatedNumber({
   );
 }
 
-/** Card that follows the cursor with a soft glow and lifts on hover. */
+/** @deprecated FORGE has no cursor glow — plain container kept only until the
+ * remaining call sites are swept, then delete. */
 export function GlowCard({
   children,
   className = "",
@@ -85,21 +86,7 @@ export function GlowCard({
   children: React.ReactNode;
   className?: string;
 }) {
-  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
-  };
-  return (
-    <motion.div
-      onMouseMove={onMove}
-      whileHover={{ y: -4 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className={`glow-card ${className}`}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 }
 
 /** Smoothly animated SVG ring (draws on mount). */

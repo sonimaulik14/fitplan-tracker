@@ -38,13 +38,15 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
 
   const slides: Slide[] = [
     {
+      // brand gradient — electric blue into violet
       bg: "linear-gradient(160deg, #2f6bff 0%, #7c5cff 100%)",
       eyebrow: "Your season",
       title: "12-Week Wrapped",
       sub: "Tap through your transformation →",
     },
     {
-      bg: "linear-gradient(160deg, #12c98c 0%, #2f6bff 100%)",
+      // vivid mint flowing into electric blue
+      bg: "linear-gradient(160deg, #2fe6a8 0%, #2f6bff 100%)",
       eyebrow: "Total volume moved",
       big: (
         <>
@@ -56,14 +58,16 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
       sub: "Every rep added up.",
     },
     {
-      bg: "linear-gradient(160deg, #ff6a3d 0%, #ff2d55 100%)",
+      // deep blue into bright cyan
+      bg: "linear-gradient(160deg, #2f6bff 0%, #18a9ff 100%)",
       eyebrow: "Workouts crushed",
       big: <AnimatedNumber value={stats.workouts} />,
       title: `${stats.sets.toLocaleString()} sets logged`,
       sub: `Across ${stats.activeDays} active days.`,
     },
     {
-      bg: "linear-gradient(160deg, #ff8a4c 0%, #ff2d55 100%)",
+      // streak flame — gold into hot orange
+      bg: "linear-gradient(160deg, #ffd25f 0%, #ff6a3d 100%)",
       eyebrow: "Longest streak",
       big: (
         <>
@@ -76,7 +80,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
     ...(stats.topMuscle
       ? [
           {
-            bg: "linear-gradient(160deg, #7c5cff 0%, #ff4d8d 100%)",
+            bg: "linear-gradient(160deg, #7c8cff 0%, #2f6bff 100%)",
             eyebrow: "Most-trained muscle",
             big: stats.topMuscle.name,
             title: "Your signature body part",
@@ -87,7 +91,8 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
     ...(stats.topPR
       ? [
           {
-            bg: "linear-gradient(160deg, #18a9ff 0%, #12c98c 100%)",
+            // molten gold — the PR color
+            bg: "linear-gradient(160deg, #ffd25f 0%, #f0a72e 55%, #a86a00 100%)",
             eyebrow: "Heaviest lift",
             big: (
               <>
@@ -103,7 +108,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
     ...(stats.topStyle
       ? [
           {
-            bg: "linear-gradient(160deg, #2f6bff 0%, #18a9ff 100%)",
+            bg: "linear-gradient(160deg, #2f6bff 0%, #7c5cff 100%)",
             eyebrow: "Favourite protocol",
             big: stats.topStyle.style,
             title: "Your go-to block",
@@ -112,7 +117,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
         ]
       : []),
     {
-      bg: "linear-gradient(160deg, #12c98c 0%, #18a9ff 100%)",
+      bg: "linear-gradient(160deg, #7c5cff 0%, #2f6bff 100%)",
       eyebrow: "Plan adherence",
       big: (
         <>
@@ -124,6 +129,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
       sub: `${stats.weeksDone} of ${stats.totalWeeks} weeks complete.`,
     },
     {
+      // finale — the full electric spectrum
       bg: "linear-gradient(160deg, #ff6a3d 0%, #7c5cff 60%, #2f6bff 100%)",
       eyebrow: "That's a wrap",
       title: "You showed up.",
@@ -199,7 +205,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
       <button
         onClick={close}
         aria-label="Close"
-        className="absolute top-5 right-4 z-20 grid place-items-center w-9 h-9 rounded-full bg-black/20 backdrop-blur"
+        className="absolute top-5 right-4 z-20 grid place-items-center w-9 h-9 rounded-full bg-black/40"
       >
         <X size={18} />
       </button>
@@ -242,7 +248,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
           <div className="flex flex-col items-center gap-3 mt-8 z-20">
             <button
               onClick={share}
-              className="inline-flex items-center gap-2 rounded-xl bg-white text-[#1a1d29] font-semibold px-5 py-2.5 active:scale-95 transition-transform"
+              className="inline-flex items-center gap-2 rounded-lg bg-white text-[#1a1d29] font-semibold px-5 py-2.5 active:scale-95 transition-transform"
             >
               <Share2 size={16} /> Share my Wrapped
             </button>

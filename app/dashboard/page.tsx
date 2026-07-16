@@ -2,8 +2,13 @@ import Link from "next/link";
 import { Flame, Target, Trophy, Dumbbell, Hammer } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress, getAllPlans, buildTimeline } from "@/lib/metrics";
-import { focusKey, quoteForDay, fmtVolume, type Unit } from "@/lib/ui";
+import { getProgress, getAllPlans, buildTimeline, getActiveEnrollment } from "@/lib/metrics";
+import {
+  focusKey,
+  quoteForDay,
+  fmtVolume,
+  type Unit,
+} from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import MusclePhoto from "@/app/components/MusclePhoto";
 import ReminderNudge from "@/app/components/ReminderNudge";
@@ -12,9 +17,9 @@ import WelcomeTour from "@/app/components/WelcomeTour";
 import PlanTimelineCard from "@/app/components/PlanTimelineCard";
 import StartProgram from "@/app/components/StartProgram";
 import PlanPicker from "@/app/components/PlanPicker";
+import ProgramCompleteCard from "@/app/components/ProgramCompleteCard";
 import {
   Reveal,
-  GlowCard,
   AnimatedNumber,
   AnimatedRing,
 } from "@/app/components/motion";
@@ -25,8 +30,8 @@ const statusMeta: Record<
 > = {
   completed: {
     label: "Completed",
-    cls: "text-accent-2 border-accent-2/30 bg-accent-2/10",
-    dot: "bg-accent-2",
+    cls: "text-success border-success/30 bg-success/10",
+    dot: "bg-success",
   },
   in_progress: {
     label: "In progress",
@@ -60,6 +65,16 @@ export default async function DashboardPage({
   // of a wall of zeros.
   const fresh = !!p?.enrolled && hasWorkouts && p.completedWorkouts === 0;
   const timeline = p?.enrolled && hasWorkouts ? buildTimeline(p) : null;
+
+  // Day-85: every training day of the block is complete.
+  const programDone =
+    !!p?.enrolled &&
+    hasWorkouts &&
+    p.days.every(
+      (d) =>
+        d.focus.toLowerCase().includes("rest") || d.status === "completed"
+    );
+  const activeEnrollment = programDone ? await getActiveEnrollment(user.id) : null;
 
   // "Up next" = first not-completed training day (skip rest days if possible).
   const nextDay =
@@ -102,11 +117,17 @@ export default async function DashboardPage({
         <div className="animate-fade-up">
           <p className="eyebrow">Welcome back</p>
           <h1 className="display-hero text-4xl sm:text-5xl mt-1">
-            Hi <span className="num-brand">{firstName}</span>
+            Hi <span className="text-accent">{firstName}</span>
           </h1>
         </div>
 
-        {p?.enrolled && hasWorkouts && (
+        {programDone && (
+          <div className="mt-6">
+            <ProgramCompleteCard cycle={activeEnrollment?.cycle ?? 1} />
+          </div>
+        )}
+
+        {p?.enrolled && hasWorkouts && !programDone && (
           <ReminderNudge
             trainingToday={trainingToday}
             loggedToday={loggedToday}
@@ -168,24 +189,25 @@ export default async function DashboardPage({
 
         {p?.enrolled && hasWorkouts && (
           <>
-            {/* Photo hero — "up next" workout */}
+            {/* Photo hero — the next session over a full-bleed muscle shot */}
             {nextDay && (
               <Reveal>
                 <Link
                   href={`/workout/${nextDay.dayId}`}
-                  className="relative block overflow-hidden rounded-2xl mt-6 img-overlay group h-64 sm:h-72"
+                  className="relative block overflow-hidden rounded-2xl mt-6 img-overlay group h-72 sm:h-80"
                 >
                   <MusclePhoto
                     srcKey={focusKey(nextDay.focus)}
                     alt={nextDay.focus}
+                    sizes="(max-width: 1024px) 100vw, 1024px"
                     className="absolute inset-0 w-full h-full object-cover duotone kenburns"
                   />
-                  {/* Trophy stats — make the hero screenshot-worthy */}
+                  {/* Trophy stats — glass chips, screenshot-worthy */}
                   {(p.currentStreak > 0 || p.totalVolume > 0) && (
                     <div className="absolute top-4 right-4 z-10 flex gap-2">
                       {p.currentStreak > 0 && (
-                        <div className="rounded-2xl bg-black/35 border border-white/15 backdrop-blur px-3.5 py-2 text-center">
-                          <div className="font-display text-2xl font-bold text-white leading-none">
+                        <div className="rounded-xl bg-black/35 border border-white/15 backdrop-blur px-3.5 py-2 text-center">
+                          <div className="stat-num text-2xl text-white leading-none">
                             {p.currentStreak}
                           </div>
                           <div className="text-[10px] uppercase tracking-wide text-white/70 mt-1 flex items-center justify-center gap-1">
@@ -194,8 +216,8 @@ export default async function DashboardPage({
                         </div>
                       )}
                       {p.totalVolume > 0 && (
-                        <div className="rounded-2xl bg-black/35 border border-white/15 backdrop-blur px-3.5 py-2 text-center hidden xs:block">
-                          <div className="font-display text-2xl font-bold text-white leading-none">
+                        <div className="rounded-xl bg-black/35 border border-white/15 backdrop-blur px-3.5 py-2 text-center hidden xs:block">
+                          <div className="stat-num text-2xl text-white leading-none">
                             {fmtVolume(p.totalVolume, user.unit as Unit)}
                           </div>
                           <div className="text-[10px] uppercase tracking-wide text-white/70 mt-1">
@@ -206,20 +228,22 @@ export default async function DashboardPage({
                     </div>
                   )}
                   <div className="absolute inset-0 z-10 p-6 sm:p-8 flex flex-col justify-end">
-                    <span className="chip w-fit mb-3 !bg-black/30 !border-white/20 text-white backdrop-blur">
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    <p className="eyebrow text-white/75 drop-shadow">
                       {nextDay.status === "in_progress"
-                        ? "Continue"
-                        : "Up next"}{" "}
-                      · Day {(currentWeek - 1) * 7 + nextIndex + 1}
-                    </span>
-                    <h2 className="font-display text-3xl sm:text-4xl font-bold text-white drop-shadow">
+                        ? "Continue session"
+                        : "Next session"}
+                    </p>
+                    <h2 className="display-hero text-4xl sm:text-5xl text-white drop-shadow-lg mt-2">
                       {nextDay.focus}
                     </h2>
-                    <p className="text-white/80 text-sm mt-2 max-w-md italic">
+                    <p className="stat-num text-sm text-white/85 mt-3 drop-shadow">
+                      Week {currentWeek} · Day{" "}
+                      {(currentWeek - 1) * 7 + nextIndex + 1}
+                    </p>
+                    <p className="text-white/80 text-sm mt-2 max-w-md italic drop-shadow">
                       “{quoteForDay(nextIndex + p.completedWorkouts)}”
                     </p>
-                    <span className="btn-primary w-fit mt-4 !px-5">
+                    <span className="btn-primary w-fit mt-5 !px-5">
                       {nextDay.status === "in_progress"
                         ? "Continue workout"
                         : "Start workout"}{" "}
@@ -237,13 +261,11 @@ export default async function DashboardPage({
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <AnimatedRing pct={p.workoutAdherence} size={150} stroke={14}>
                   <div>
-                    <div className="text-5xl font-display font-bold num-brand">
+                    <div className="display-num text-5xl">
                       <AnimatedNumber value={p.workoutAdherence} />
                       <span className="text-xl text-muted">%</span>
                     </div>
-                    <div className="text-[11px] uppercase tracking-wide text-muted mt-0.5">
-                      Plan adherence
-                    </div>
+                    <div className="eyebrow mt-0.5">Plan adherence</div>
                   </div>
                 </AnimatedRing>
 
@@ -251,28 +273,28 @@ export default async function DashboardPage({
                   <Stat
                     label="Workouts done"
                     value={`${p.completedWorkouts}/${p.prescribedWorkouts}`}
-                    color="var(--accent)"
+                    tone="border-l-accent"
                   />
                   <Stat
                     label="Sets completed"
                     value={`${p.setAdherence}%`}
                     sub={`${p.doneSetsTotal}/${p.prescribedSetsTotal}`}
-                    color="var(--accent-2)"
+                    tone="border-l-success"
                   />
                   <Stat
                     label="Rep quality"
                     value={`${p.repQuality}%`}
-                    color="var(--accent-3)"
+                    tone="border-l-steel"
                   />
                   <Stat
                     label={`Total volume (${user.unit})`}
                     value={fmtVolume(p.totalVolume, user.unit as Unit)}
-                    color="var(--accent-hi)"
+                    tone="border-l-accent"
                   />
                   <Stat
                     label="Weeks loaded"
                     value={`${p.weeksSeeded}/${p.totalWeeks}`}
-                    color="var(--accent)"
+                    tone="border-l-accent"
                   />
                   <Link
                     href="/targets"
@@ -307,9 +329,9 @@ export default async function DashboardPage({
                 <>
                   {wk?.completed && (
                     <Reveal>
-                      <div className="relative overflow-hidden card p-5 mt-10 flex items-center gap-4 border-accent-2/30 bg-accent-2/5">
-                        <span className="grid place-items-center w-12 h-12 rounded-2xl bg-accent-2/20 shrink-0">
-                          <Trophy className="w-6 h-6 text-accent-2" />
+                      <div className="relative overflow-hidden card p-5 mt-10 flex items-center gap-4 border-success/30 bg-success/5">
+                        <span className="grid place-items-center w-12 h-12 rounded-xl bg-success/20 shrink-0">
+                          <Trophy className="w-6 h-6 text-success" />
                         </span>
                         <div>
                           <div className="font-display font-bold text-lg">
@@ -336,8 +358,8 @@ export default async function DashboardPage({
                       current={currentWeek}
                     />
                     {wk?.completed ? (
-                      <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent-2" />
+                      <span className="chip text-success border-success/30 bg-success/10">
+                        <span className="w-1.5 h-1.5 rounded-full bg-success" />
                         Done
                       </span>
                     ) : (
@@ -361,13 +383,13 @@ export default async function DashboardPage({
                 const isToday = nextDay?.dayId === d.dayId;
                 return (
                   <Reveal key={d.dayId} delay={i * 0.05}>
-                  <GlowCard>
                   <Link
                     href={`/workout/${d.dayId}`}
-                    className={`card p-0 group block h-full overflow-hidden ${
+                    className={`card card-hover glow-card p-0 group block h-full overflow-hidden ${
                       isToday ? "ring-2 ring-accent/70" : ""
                     }`}
                   >
+                    {/* Photographic card top — the muscle group, in pictures */}
                     <div className="relative h-36 img-overlay">
                       <MusclePhoto
                         srcKey={focusKey(d.focus)}
@@ -376,20 +398,20 @@ export default async function DashboardPage({
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 duotone"
                       />
                       {isToday && (
-                        <span className="absolute top-3 left-3 z-10 chip !bg-accent !border-accent text-[#ffffff] font-bold">
+                        <span className="absolute top-3 left-3 z-10 chip !bg-accent !border-accent text-accent-ink !py-0 text-[10px] font-bold">
                           {d.status === "in_progress" ? "CONTINUE" : "TODAY"}
                         </span>
                       )}
                       <div className="absolute inset-0 z-10 p-4 flex items-end justify-between gap-2">
-                        <div>
-                          <div className="text-[11px] uppercase tracking-wide text-white/70">
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
                             Day {(selectedWeek - 1) * 7 + i + 1}
                           </div>
                           <div className="font-display font-bold text-white text-xl leading-tight drop-shadow">
                             {d.focus}
                           </div>
                         </div>
-                        <span className={`chip ${meta.cls} border shrink-0`}>
+                        <span className={`chip ${meta.cls} border shrink-0 backdrop-blur`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
                           {meta.label}
                         </span>
@@ -397,34 +419,33 @@ export default async function DashboardPage({
                     </div>
 
                     <div className="p-4">
-                      {!isRest && (
-                        <div className="flex items-center gap-3 text-xs text-muted mb-3">
-                          <span className="flex items-center gap-1.5">
-                            <Dumbbell size={13} /> {d.exerciseCount} exercises
-                          </span>
+                      {!isRest ? (
+                        <div>
+                          <div className="flex items-center justify-between gap-3 text-xs text-muted mb-1.5">
+                            <span className="flex items-center gap-1.5">
+                              <Dumbbell size={13} /> {d.exerciseCount} exercises
+                            </span>
+                            <span className="stat-num">
+                              {d.doneSets}/{d.prescribedSets} sets · {pct}%
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-sm bg-surface-2 overflow-hidden">
+                            <div
+                              className="h-full transition-all"
+                              style={{
+                                width: `${pct}%`,
+                                background: "var(--grad-brand)",
+                              }}
+                            />
+                          </div>
                         </div>
+                      ) : (
+                        <p className="text-sm text-muted">
+                          Active recovery · light cardio
+                        </p>
                       )}
-                    {!isRest ? (
-                      <div>
-                        <div className="flex justify-between text-xs text-muted mb-1.5">
-                          <span>{d.doneSets} / {d.prescribedSets} sets</span>
-                          <span>{pct}%</span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hi transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted">
-                        Active recovery · light cardio
-                      </p>
-                    )}
                     </div>
                   </Link>
-                  </GlowCard>
                   </Reveal>
                 );
               })}
@@ -440,23 +461,17 @@ function Stat({
   label,
   value,
   sub,
-  color,
+  tone,
 }: {
   label: string;
   value: string;
   sub?: string;
-  color: string;
+  tone: string; // border-l-<token> — semantic left rule instead of a dot
 }) {
   return (
-    <div className="card p-4">
-      <div className="flex items-center gap-2">
-        <span
-          className="w-2 h-2 rounded-full"
-          style={{ background: color }}
-        />
-        <span className="text-xs text-muted">{label}</span>
-      </div>
-      <div className="text-2xl font-display font-bold num-gradient mt-1.5">{value}</div>
+    <div className={`card p-4 border-l-2 ${tone}`}>
+      <div className="eyebrow">{label}</div>
+      <div className="stat-num text-2xl mt-1.5">{value}</div>
       {sub && <div className="text-xs text-muted mt-0.5">{sub}</div>}
     </div>
   );

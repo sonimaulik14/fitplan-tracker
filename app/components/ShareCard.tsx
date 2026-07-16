@@ -65,15 +65,15 @@ export default function ShareCard({
   return (
     <div>
       {/* The capturable card */}
-      <div className="overflow-hidden rounded-2xl">
+      <div className="overflow-hidden rounded-xl">
         <div
           ref={ref}
           style={{
             background:
-              "radial-gradient(120% 120% at 100% 0%, rgba(47,107,255,0.18), #0a0c12 58%)",
+              "radial-gradient(120% 120% at 100% 0%, rgba(47,107,255,0.2), #07080c 58%)",
             padding: "28px",
             color: "#f4f6fb",
-            fontFamily: "Inter, system-ui, sans-serif",
+            fontFamily: "var(--font-barlow), system-ui, sans-serif",
           }}
         >
           <div
@@ -86,7 +86,7 @@ export default function ShareCard({
             <div style={{ fontWeight: 800, letterSpacing: "-0.5px" }}>
               Vajra
             </div>
-            <div style={{ fontSize: 12, color: "#99a1b3" }}>{planName}</div>
+            <div style={{ fontSize: 12, color: "#a8b1c2" }}>{planName}</div>
           </div>
 
           <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 20 }}>
@@ -106,7 +106,7 @@ export default function ShareCard({
                   width: 86,
                   height: 86,
                   borderRadius: "50%",
-                  background: "#0a0c12",
+                  background: "#07080c",
                   display: "grid",
                   placeItems: "center",
                 }}
@@ -115,11 +115,11 @@ export default function ShareCard({
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 13, color: "#99a1b3" }}>{name}</div>
+              <div style={{ fontSize: 13, color: "#a8b1c2" }}>{name}</div>
               <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.1 }}>
                 {completedWorkouts} workouts done
               </div>
-              <div style={{ fontSize: 13, color: "#99a1b3", marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: "#a8b1c2", marginTop: 4 }}>
                 {fmtVolume(volume, unit)} {unit} total volume lifted
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function ShareCard({
                 <div style={{ fontSize: 20, fontWeight: 800, color: "#f4f6fb" }}>
                   {s.v}
                 </div>
-                <div style={{ fontSize: 10, color: "#99a1b3", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "#a8b1c2", marginTop: 2 }}>
                   {s.k}
                 </div>
               </div>

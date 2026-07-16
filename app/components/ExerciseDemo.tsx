@@ -44,7 +44,7 @@ export function ExerciseDemoHero({
 
   if (status === "gif" && gif) {
     return (
-      <div className="rounded-2xl overflow-hidden border border-border bg-white animate-fade-up">
+      <div className="rounded-xl overflow-hidden border border-border bg-white animate-fade-up">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={gif}
@@ -65,11 +65,11 @@ export function ExerciseDemoHero({
 
   // Loading or no GIF → muscle visual + watch button (still motivational).
   return (
-    <div className="relative overflow-hidden rounded-2xl img-overlay group h-52 sm:h-60 animate-fade-up">
+    <div className="relative overflow-hidden rounded-xl img-overlay group h-52 sm:h-60 animate-fade-up">
       <ExImage
         srcKey={st.key}
         alt={muscle}
-        className="absolute inset-0 w-full h-full object-cover duotone transition-transform duration-700 group-hover:scale-105"
+        className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 z-10 p-5 flex flex-col justify-end">
         <a

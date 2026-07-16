@@ -50,7 +50,7 @@ export default function InfoTip({
         open={open}
         onClose={() => setOpen(false)}
         ariaLabel={title}
-        panelClassName="w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-left normal-case tracking-normal"
+        panelClassName="w-full sm:max-w-xs rounded-t-2xl sm:rounded-xl border border-border-strong bg-surface-solid shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-left normal-case tracking-normal"
       >
         <div className="flex items-start justify-between gap-3">
           <h3 className="font-bold text-base text-foreground">{title}</h3>

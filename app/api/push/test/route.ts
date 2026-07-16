@@ -16,7 +16,7 @@ export async function POST() {
     title: "Vajra reminders are on",
     body: "This is a test notification — you'll get nudges on your training days.",
     url: "/dashboard",
-    tag: "fitplan-test",
+    tag: "vajra-test",
   });
 
   if (sent === 0)

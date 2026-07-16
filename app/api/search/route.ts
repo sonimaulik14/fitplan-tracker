@@ -5,7 +5,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const plan = await getActivePlan();
+  const plan = await getActivePlan(user.id);
   if (!plan) return Response.json({ exercises: [], days: [], weeks: [] });
 
   const exMap = new Map<string, string>(); // name -> muscle

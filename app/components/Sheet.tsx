@@ -61,7 +61,7 @@ export default function Sheet({
         type="button"
         aria-label="Close"
         tabIndex={-1}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60"
         onClick={() => dismissible && onClose()}
       />
       <div

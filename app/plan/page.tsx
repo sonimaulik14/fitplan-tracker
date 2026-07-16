@@ -83,9 +83,9 @@ export default async function PlanPage() {
                       const rest = day.focus.toLowerCase().includes("rest");
                       const cls =
                         status === "completed"
-                          ? "bg-accent-2 border-accent-2 text-[#05231a]"
+                          ? "bg-success border-success text-background"
                           : status === "in_progress"
-                            ? "bg-amber-400/20 border-amber-400/40 text-amber-300"
+                            ? "bg-warn/15 border-warn/40 text-warn"
                             : rest
                               ? "bg-surface-2 border-border text-muted/50"
                               : nextDay?.dayId === day.id
@@ -189,7 +189,7 @@ export default async function PlanPage() {
                             className="w-12 h-12 rounded-xl object-cover border border-border"
                           />
                           {done && (
-                            <span className="absolute -top-1.5 -right-1.5 grid place-items-center w-5 h-5 rounded-full bg-accent-2 text-[#05231a] text-[11px] font-bold border-2 border-background">
+                            <span className="absolute -top-1.5 -right-1.5 grid place-items-center w-5 h-5 rounded-full bg-success text-background text-[11px] font-bold border-2 border-background">
                               ✓
                             </span>
                           )}
@@ -201,7 +201,7 @@ export default async function PlanPage() {
                               <span className="text-accent font-bold">· TODAY</span>
                             )}
                             {done && (
-                              <span className="text-accent-2 font-bold">
+                              <span className="text-success font-bold">
                                 · DONE
                               </span>
                             )}
@@ -234,7 +234,7 @@ export default async function PlanPage() {
                               />
                               <span className="truncate">
                                 {ex.groupLabel && (
-                                  <span className="text-accent-2 text-xs mr-1.5">
+                                  <span className="text-success text-xs mr-1.5">
                                     [{ex.groupLabel}]
                                   </span>
                                 )}

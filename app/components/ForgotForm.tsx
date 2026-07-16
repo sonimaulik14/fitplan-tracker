@@ -14,7 +14,7 @@ export default function ForgotForm() {
   return (
     <div className="w-full max-w-sm animate-fade-up">
       <div className="flex items-center gap-2 mb-6">
-        <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg shadow-lg shadow-accent/30">
+        <span className="grid place-items-center w-9 h-9 rounded-lg brand-bg">
           <VajraMark size={26} />
         </span>
         <span className="font-display font-bold text-xl">
@@ -28,7 +28,7 @@ export default function ForgotForm() {
 
       {state?.sent ? (
         <div className="mt-6 space-y-4">
-          <div className="rounded-xl border border-accent-2/30 bg-accent-2/10 px-4 py-3 text-sm">
+          <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm">
             If an account exists for that email, a reset link is on its way.
           </div>
           {state.link && (

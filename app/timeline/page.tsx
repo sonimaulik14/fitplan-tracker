@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarDays } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress, buildTimeline, type TimelineDay } from "@/lib/metrics";
+import { getProgress, buildTimeline, getActiveEnrollment, type TimelineDay } from "@/lib/metrics";
+import ProgramCompleteCard from "@/app/components/ProgramCompleteCard";
 import { ymd } from "@/lib/date";
 import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
@@ -27,9 +28,9 @@ const WD = ["1", "2", "3", "4", "5", "6", "7"];
 function cellClass(d: TimelineDay): string {
   if (d.isToday) return "border-accent bg-accent/10 ring-2 ring-accent/40";
   if (d.isRest) return "border-border bg-surface-2/60 text-muted";
-  if (d.status === "completed") return "border-accent-2/45 bg-accent-2/10";
+  if (d.status === "completed") return "border-success/45 bg-success/10";
   if (d.status === "in_progress") return "border-accent/40 bg-accent/5";
-  if (d.missed) return "border-amber-500/40 bg-amber-500/10";
+  if (d.missed) return "border-warn/40 bg-warn/10";
   return "border-border bg-surface-2 text-muted"; // upcoming
 }
 
@@ -59,6 +60,9 @@ export default async function TimelinePage() {
   }
 
   const t = buildTimeline(p);
+  const enrollmentCycle = t.hasFinished
+    ? ((await getActiveEnrollment(user.id))?.cycle ?? 1)
+    : 1;
 
   // Group days into weeks of 7 for the calendar grid.
   const weeks: TimelineDay[][] = [];
@@ -82,27 +86,35 @@ export default async function TimelinePage() {
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
         <PhotoHero
           queryKey="page:timeline"
+          eyebrow="Your program"
           title="Timeline"
           subtitle="Your whole 12-week plan, mapped to real dates."
         />
+
+        {t.hasFinished && (
+          <ProgramCompleteCard
+            cycle={enrollmentCycle}
+            allLogged={t.completedWorkouts >= t.totalWorkouts}
+          />
+        )}
 
         {/* Summary */}
         {t.started ? (
           <section className="card p-6 animate-fade-up">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <h2 className="font-display font-bold text-2xl">
-                Day {t.currentDayIndex}
+                Day <span className="display-num">{t.currentDayIndex}</span>
                 <span className="text-muted font-medium text-lg"> of {t.totalDays}</span>
               </h2>
-              <span className="text-sm font-semibold text-muted">
+              <span className="stat-num text-sm text-muted">
                 Week {t.currentWeek} · {overallPct}% done
               </span>
             </div>
             <p className="text-sm text-muted mt-2 leading-relaxed">{summary}</p>
 
-            <div className="mt-4 h-2 rounded-full bg-surface-2 overflow-hidden">
+            <div className="mt-4 h-1 rounded-sm bg-surface-2 overflow-hidden">
               <div
-                className="h-full rounded-full bg-accent transition-all"
+                className="h-full bg-accent transition-all"
                 style={{
                   width: `${Math.round((t.currentDayIndex / t.totalDays) * 100)}%`,
                 }}
@@ -153,8 +165,8 @@ export default async function TimelinePage() {
 
           {/* legend */}
           <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-muted">
-            <Legend className="bg-accent-2/30 border-accent-2/45" label="Done" />
-            <Legend className="bg-amber-500/20 border-amber-500/40" label="Missed" />
+            <Legend className="bg-success/30 border-success/45" label="Done" />
+            <Legend className="bg-warn/20 border-warn/40" label="Missed" />
             <Legend className="bg-accent/15 border-accent/50" label="Today" />
             <Legend className="bg-surface-2 border-border" label="Upcoming" />
             <Legend className="bg-surface-2/60 border-border" label="Rest" />

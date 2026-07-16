@@ -60,7 +60,7 @@ export async function GET() {
   return new Response(lines.join("\n"), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="fitplan-export.csv"`,
+      "Content-Disposition": `attachment; filename="vajra-export.csv"`,
     },
   });
 }

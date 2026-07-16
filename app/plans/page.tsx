@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getAllPlans } from "@/lib/metrics";
+import { getAllPlans, getActiveEnrollment } from "@/lib/metrics";
 import { resetProgramAction } from "@/lib/actions";
-import { prisma } from "@/lib/prisma";
 import NavBar from "@/app/components/NavBar";
 import PlanPicker from "@/app/components/PlanPicker";
 import DangerButton from "@/app/components/DangerButton";
@@ -16,11 +15,7 @@ export default async function PlansPage() {
 
   const [plans, active] = await Promise.all([
     getAllPlans(),
-    prisma.enrollment.findFirst({
-      where: { userId: user.id, status: "active" },
-      orderBy: { startDate: "desc" },
-      select: { planId: true },
-    }),
+    getActiveEnrollment(user.id),
   ]);
 
   return (

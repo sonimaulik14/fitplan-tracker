@@ -17,7 +17,7 @@ export function vajraIcon(px: number, opts?: { pad?: number; radius?: number }) 
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#2f6bff",
+          background: "linear-gradient(135deg, #2f6bff 0%, #7c5cff 100%)",
           borderRadius: radius,
         }}
       >

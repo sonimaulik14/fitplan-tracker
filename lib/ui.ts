@@ -2,6 +2,12 @@
 // Images are local files under /public/kris/<key>.(jpg|svg) — see that folder's
 // README. ExImage resolves the real photo and falls back to the placeholder.
 
+import { parseRepRange } from "./reps";
+
+// parseRepRange moved to lib/reps.ts; re-exported so existing importers (and
+// overloadSuggestion below) keep working unchanged.
+export { parseRepRange };
+
 export type MuscleStyle = { icon: string; color: string; key: string };
 
 export const MUSCLE_STYLE: Record<string, MuscleStyle> = {
@@ -172,17 +178,6 @@ export function cmToLen(cm: number, unit: Unit): number {
 }
 export function lenToCm(value: number, unit: Unit): number {
   return unit === "lb" ? value * CM_PER_IN : value;
-}
-
-/** Parse "8-12", "20", "12-15 (to failure)" -> {min,max}. null for cardio/steps/min. */
-export function parseRepRange(target: string): { min: number; max: number } | null {
-  const t = target.toLowerCase();
-  if (t.includes("min") || t.includes("step")) return null;
-  const range = t.match(/(\d+)\s*-\s*(\d+)/);
-  if (range) return { min: Number(range[1]), max: Number(range[2]) };
-  const single = t.match(/\d+/);
-  if (single) return { min: Number(single[0]), max: Number(single[0]) };
-  return null;
 }
 
 export type Suggestion = {

@@ -158,15 +158,16 @@ model Week {
 }
 
 model WorkoutDay {
-  id         String           @id @default(cuid())
-  weekId     String
-  week       Week             @relation(fields: [weekId], references: [id], onDelete: Cascade)
-  dayNumber  Int
-  label      String
-  focus      String
-  orderIndex Int
-  exercises  PlanExercise[]
-  sessions   WorkoutSession[]
+  id             String                    @id @default(cuid())
+  weekId         String
+  week           Week                      @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  dayNumber      Int
+  label          String
+  focus          String
+  orderIndex     Int
+  exercises      PlanExercise[]
+  sessions       WorkoutSession[]
+  supplementLogs WorkoutDaySupplementLog[]
 }
 
 model PlanExercise {
@@ -197,10 +198,29 @@ model Enrollment {
   // Null = enrolled/selected but not started counting yet.
   startedAt DateTime?
   status    String           @default("active")
+  // Which run through the program this is. Completing a program and going
+  // again creates a fresh enrollment with cycle+1; history stays on the old
+  // row. Resolve "the" enrollment via getActiveEnrollment (status=active,
+  // highest cycle) — never a bare findFirst.
+  cycle     Int              @default(1)
   sessions  WorkoutSession[]
   swaps     ExerciseSwap[]
+  supplementLogs WorkoutDaySupplementLog[]
 
-  @@unique([userId, planId])
+  @@unique([userId, planId, cycle])
+}
+
+// Per-workout-day supplement checklist, scoped to an enrollment so a new
+// cycle starts fresh. Replaces the old DailyLog "wd:<id>" key hack.
+model WorkoutDaySupplementLog {
+  id               String     @id @default(cuid())
+  enrollmentId     String
+  enrollment       Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  workoutDayId     String
+  workoutDay       WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+  supplementsTaken String     @default("")
+
+  @@unique([enrollmentId, workoutDayId])
 }
 
 model ExerciseSwap {

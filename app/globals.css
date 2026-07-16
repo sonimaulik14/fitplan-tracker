@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* ============================================================
+   VOLT — vibrant premium.
+   Rich photographic depth: glassy translucent panels over an
+   ambient photo backdrop, aurora glow, film grain, and bright
+   electric color — blue→violet brand gradient, mint, gold.
+   Display type stays condensed (Barlow Condensed) with mono
+   digits for everything that ticks.
+   ============================================================ */
+
 :root {
   --background: #07080c;
   --surface: rgba(255, 255, 255, 0.035);
@@ -9,41 +18,50 @@
   --border-strong: rgba(255, 255, 255, 0.16);
   --foreground: #f4f6fb;
   --muted: #a8b1c2;
-  --accent: #2f6bff;
+  --accent: #2f6bff; /* electric blue */
   --accent-hi: #4f86f5;
-  --accent-2: #2fe6a8;
-  --accent-3: #7c8cff;
+  --accent-ink: #ffffff; /* text on accent fills */
   /* semantic palette — consistent meaning across the app */
-  --success: #2fe6a8;
+  --success: #2fe6a8; /* vivid mint */
   --warn: #f5c451;
   --danger: #ff6a3d;
   --pr: #ffd25f; /* gold — personal records & milestones */
-  /* Single solid accent — restraint over decoration. (Names kept for the
-     call sites that still reference them; both resolve to flat color now.) */
-  --grad-brand: var(--accent);
-  --grad-brand-soft: color-mix(in srgb, var(--accent) 10%, transparent);
+  --steel: #7c8cff; /* bright periwinkle — secondary data series */
+  /* the brand gradient — used on primary fills, bars, rings */
+  --grad-brand: linear-gradient(135deg, #2f6bff 0%, #7c5cff 100%);
+  --grad-brand-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  /* deprecated aliases — a few call sites still reference them */
+  --accent-2: var(--success);
+  --accent-3: var(--steel);
+  /* layout chrome */
+  --tabbar-h: 64px;
 }
 
+/* Light — the default. "AERO": airy cool white with electric blue→violet
+   energy and pastel glow. Refreshing, bright, premium-fitness. */
 :root[data-theme="light"] {
-  --background: #eef1f7;
-  --surface: rgba(255, 255, 255, 0.85);
-  --surface-2: rgba(15, 20, 35, 0.045);
+  --background: #f4f7fd; /* cool sky-tinted white */
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-2: rgba(23, 37, 84, 0.05);
   --surface-solid: #ffffff;
-  --border: rgba(15, 20, 35, 0.1);
-  --border-strong: rgba(15, 20, 35, 0.18);
-  --foreground: #161a24;
-  --muted: #515a6b;
+  --border: rgba(23, 37, 84, 0.1);
+  --border-strong: rgba(23, 37, 84, 0.18);
+  --foreground: #10162a; /* cool navy ink */
+  --muted: #55617c;
   /* Darker than the dark-theme accent so small accent text/links clear WCAG
-     AA (4.5:1) on the light background — #2f6bff only reaches 3.9:1 here. */
+     AA (4.5:1) on the light background. */
   --accent: #2456e6;
   --accent-hi: #2f6bff;
-  /* darker semantic tones so they stay legible on the light background */
+  --accent-ink: #ffffff;
   --success: #0a9d6b;
-  --warn: #b67c0a;
-  --danger: #e0521f;
-  --pr: #c79200;
-  --grad-brand: var(--accent);
-  --grad-brand-soft: color-mix(in srgb, var(--accent) 8%, transparent);
+  --warn: #a97408;
+  --danger: #dd4a1b;
+  --pr: #b8860b;
+  --steel: #4c5fd7;
+  --grad-brand: linear-gradient(135deg, #2f6bff 0%, #7c3aed 100%);
+  --grad-brand-soft: color-mix(in srgb, var(--accent) 10%, transparent);
+  --accent-2: var(--success);
+  --accent-3: var(--steel);
 }
 
 @theme inline {
@@ -57,16 +75,18 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-hi: var(--accent-hi);
+  --color-accent-ink: var(--accent-ink);
   --color-accent-2: var(--accent-2);
   --color-accent-3: var(--accent-3);
   --color-success: var(--success);
   --color-warn: var(--warn);
   --color-danger: var(--danger);
   --color-pr: var(--pr);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  /* No separate display face — headings are Inter at heavy weights + tight
-     tracking. Kept as a token so existing call sites resolve cleanly. */
-  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-steel: var(--steel);
+  --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow-condensed), var(--font-barlow), ui-sans-serif,
+    sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
 }
 
 html {
@@ -80,19 +100,12 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  /* Ambient glow comes from the single .aurora layer — keep body flat. */
   transition: background-color 0.4s ease, color 0.4s ease;
-}
-
-:root[data-theme="light"] .aurora::before,
-:root[data-theme="light"] .aurora::after,
-:root[data-theme="light"] .aurora-blob {
-  opacity: 0.28;
 }
 
 /* Edge vignette — pulls focus to the centre, premium cinematic depth */
@@ -149,20 +162,40 @@ body::after {
   }
 }
 
+/* ---------- typography roles ---------- */
 h1,
 h2,
-h3,
 .font-display {
-  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
-  letter-spacing: -0.025em;
+  font-family: var(--font-barlow-condensed), var(--font-barlow), system-ui,
+    sans-serif;
+  letter-spacing: -0.01em;
 }
-h1.font-display,
-h1 {
-  letter-spacing: -0.03em;
+/* Oversized display heading for hero moments. */
+.display-hero {
+  font-family: var(--font-barlow-condensed), var(--font-barlow), system-ui,
+    sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 0.94;
 }
-/* Big numbers (stats, PRs, streaks) get a subtle vertical fade for depth.
-   Tabular figures keep columns of numbers aligned. */
-.num-gradient {
+/* Large static hero figures (ring %, current weight, streak count). */
+.display-num {
+  font-family: var(--font-barlow-condensed), var(--font-barlow), system-ui,
+    sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+/* Anything that ticks or aligns in columns: timers, set rows, stat tables. */
+.stat-num {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+/* Big numbers with a subtle vertical fade for depth. */
+.num-gradient,
+.num-brand {
   background: linear-gradient(
     180deg,
     var(--foreground) 0%,
@@ -216,20 +249,18 @@ h1 {
       rgba(7, 8, 12, 0.9) 100%
     );
   }
-  /* fixed photographic backdrop behind the aurora — depth, not distraction */
+  /* fixed photographic backdrop behind the aurora — depth, not distraction.
+     Cool-graded (gym photos skew warm/brown and would tint the whole app). */
   .ambient-photo {
     position: fixed;
     inset: 0;
     z-index: -2;
     background-size: cover;
     background-position: center;
-    /* element is already position:fixed, so attachment:fixed would only add
-       scroll-repaint cost for no visual gain. */
-    opacity: 0.8;
-    filter: saturate(1.12) contrast(1.05) brightness(0.9);
+    opacity: 0.55;
+    filter: saturate(0.85) contrast(1.05) brightness(0.9) hue-rotate(8deg);
   }
-  /* Legibility scrim: lighter at top (immersive) → darker toward content,
-     plus a soft vignette so the photo reads without washing out cards. */
+  /* Legibility scrim + a cool blue wash that neutralizes warm color casts. */
   .ambient-photo::after {
     content: "";
     position: absolute;
@@ -237,18 +268,19 @@ h1 {
     background:
       linear-gradient(
         180deg,
-        color-mix(in srgb, var(--background) 32%, transparent) 0%,
-        color-mix(in srgb, var(--background) 55%, transparent) 42%,
-        color-mix(in srgb, var(--background) 80%, transparent) 100%
+        color-mix(in srgb, var(--background) 40%, transparent) 0%,
+        color-mix(in srgb, var(--background) 62%, transparent) 42%,
+        color-mix(in srgb, var(--background) 85%, transparent) 100%
       ),
       radial-gradient(
         130% 100% at 50% -5%,
         transparent 35%,
-        color-mix(in srgb, var(--background) 75%, transparent) 100%
-      );
+        color-mix(in srgb, var(--background) 78%, transparent) 100%
+      ),
+      color-mix(in srgb, var(--accent) 10%, transparent);
   }
   :root[data-theme="light"] .ambient-photo {
-    opacity: 0.32;
+    opacity: 0.14;
   }
   .card-hover {
     transition:
@@ -269,18 +301,20 @@ h1 {
   }
   .btn,
   .btn-primary,
-  .btn-ghost {
+  .btn-ghost,
+  .btn-quiet {
     @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5
       text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed
       active:scale-[0.97];
   }
   .btn-primary {
-    color: #ffffff;
-    background: var(--accent);
+    color: var(--accent-ink);
+    background: var(--grad-brand);
+    box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--accent) 70%, transparent);
   }
   @media (hover: hover) {
     .btn-primary:hover {
-      background: color-mix(in srgb, var(--accent) 88%, #ffffff);
+      filter: brightness(1.08);
     }
   }
   .btn-ghost {
@@ -292,6 +326,17 @@ h1 {
     .btn-ghost:hover {
       border-color: var(--border-strong);
       background: rgba(255, 255, 255, 0.09);
+    }
+  }
+  /* Borderless in-card action (e.g. inline "Apply"). */
+  .btn-quiet {
+    @apply px-2.5 py-1.5;
+    color: var(--accent);
+    background: transparent;
+  }
+  @media (hover: hover) {
+    .btn-quiet:hover {
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
     }
   }
   .input {
@@ -310,16 +355,6 @@ h1 {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   }
-  /* ---------- Type scale (roles, not ad-hoc sizes) ----------
-     display-hero  hero moments        var size, 700, tight
-     h1 / page     30px (text-3xl)     display, 700
-     section-title 17px                display, 600   ← card/section headers
-     h3 / item     16px (text-base)    600
-     body          15–16px             400/500
-     .label        12px upper          form field labels
-     .eyebrow      11px upper +tracked kicker above a title
-     caption       12px (text-xs)      muted
-     ----------------------------------------------------------- */
   .label {
     @apply block text-xs font-semibold uppercase text-muted mb-1.5;
     letter-spacing: 0.08em;
@@ -336,37 +371,29 @@ h1 {
   }
   .section-title {
     @apply flex items-center gap-2.5 font-semibold;
+    font-family: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
     font-size: 1.0625rem;
     line-height: 1.3;
+    letter-spacing: 0;
   }
   .section-title::before {
     content: "";
     width: 3px;
     height: 1.05em;
     border-radius: 9999px;
-    background: var(--accent);
+    background: var(--grad-brand);
   }
-  /* Single solid accent word (e.g. the wordmark) — no gradient clip. */
+  /* Accent-colored word (e.g. in the wordmark or a headline). */
   .gradient-text {
-    color: var(--accent);
+    background: var(--grad-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  /* Hero/stat numbers: solid, heavy, tabular — size + weight carry it. */
-  .num-brand {
-    color: var(--foreground);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-  }
-  /* Solid accent fill (logo tiles, badges, FAB). */
+  /* Brand gradient fill (logo tiles, badges, the Train action). */
   .brand-bg {
-    background: var(--accent);
-  }
-  /* Oversized, tight display heading for hero moments. */
-  .display-hero {
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-    font-weight: 800;
-    letter-spacing: -0.035em;
-    line-height: 0.96;
+    background: var(--grad-brand);
+    color: var(--accent-ink);
   }
 }
 
@@ -462,15 +489,19 @@ h1 {
   overflow: hidden;
   pointer-events: none;
 }
-.aurora::before {
+.aurora::before,
+.aurora::after,
+.aurora-blob {
   content: "";
   position: absolute;
   width: 55vw;
   height: 55vw;
   border-radius: 50%;
   filter: blur(100px);
-  opacity: 0.22;
   will-change: transform;
+}
+.aurora::before {
+  opacity: 0.24;
   top: -18%;
   right: -12%;
   background: radial-gradient(
@@ -480,10 +511,41 @@ h1 {
   );
   animation: drift1 26s ease-in-out infinite alternate;
 }
-/* Second blob and the green blob removed — one restrained glow, single hue. */
-.aurora::after,
+.aurora::after {
+  opacity: 0.16;
+  bottom: -22%;
+  left: -14%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--steel) 50%, transparent),
+    transparent 65%
+  );
+  animation: drift2 32s ease-in-out infinite alternate;
+}
 .aurora-blob {
-  display: none;
+  display: block;
+  opacity: 0.1;
+  top: 40%;
+  left: 55%;
+  width: 38vw;
+  height: 38vw;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--success) 45%, transparent),
+    transparent 65%
+  );
+  animation: drift3 28s ease-in-out infinite alternate;
+}
+/* Light theme: the aurora becomes bright pastel energy — the signature of
+   the refreshed look, so it stays clearly visible on white. */
+:root[data-theme="light"] .aurora::before {
+  opacity: 0.32;
+}
+:root[data-theme="light"] .aurora::after {
+  opacity: 0.26;
+}
+:root[data-theme="light"] .aurora-blob {
+  opacity: 0.2;
 }
 @keyframes drift1 {
   to {
@@ -532,8 +594,35 @@ h1 {
   }
 }
 
-/* Keyboard focus ring — the outline follows each element's own radius
-   (no forced border-radius, which would snap pills/cards to square corners). */
+/* Celebration ambience (Landing, wrapped, achievements) — brighter twin
+   glows on top of the global aurora. */
+.celebrate-scope {
+  position: relative;
+  isolation: isolate;
+}
+.celebrate-scope::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      42rem 30rem at 78% -8%,
+      color-mix(in srgb, var(--accent) 18%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      36rem 26rem at 8% 108%,
+      color-mix(in srgb, var(--pr) 12%, transparent),
+      transparent 60%
+    );
+}
+:root[data-theme="light"] .celebrate-scope::before {
+  opacity: 0.5;
+}
+
+/* Keyboard focus ring — the outline follows each element's own radius. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -607,5 +696,13 @@ h1 {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+  background-clip: padding-box;
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(15, 20, 35, 0.18);
+  background-clip: padding-box;
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 20, 35, 0.28);
   background-clip: padding-box;
 }

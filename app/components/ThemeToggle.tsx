@@ -19,7 +19,7 @@ export default function ThemeToggle() {
     try {
       // read persisted theme post-mount to avoid an SSR hydration mismatch
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPref((localStorage.getItem("theme") as Pref) || "dark");
+      setPref((localStorage.getItem("theme") as Pref) || "light");
     } catch {}
   }, []);
 
@@ -49,7 +49,7 @@ export default function ThemeToggle() {
           title={`${o.key[0].toUpperCase()}${o.key.slice(1)} theme`}
           className={`w-7 h-7 grid place-items-center rounded-md transition-colors ${
             pref === o.key
-              ? "bg-accent text-white"
+              ? "bg-accent text-accent-ink"
               : "text-muted hover:text-foreground"
           }`}
         >

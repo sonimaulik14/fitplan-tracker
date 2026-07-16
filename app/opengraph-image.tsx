@@ -17,7 +17,7 @@ export default function OgImage() {
           justifyContent: "center",
           padding: "80px",
           background:
-            "radial-gradient(110% 110% at 100% 0%, rgba(47,107,255,0.16), #07080c 55%)",
+            "radial-gradient(110% 110% at 100% 0%, rgba(47,107,255,0.2), #07080c 55%)",
           color: "#f4f6fb",
           fontFamily: "sans-serif",
         }}
@@ -39,7 +39,7 @@ export default function OgImage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "#2f6bff",
+              background: "linear-gradient(135deg, #2f6bff 0%, #7c5cff 100%)",
             }}
           >
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

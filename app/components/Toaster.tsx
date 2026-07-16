@@ -22,18 +22,18 @@ export default function Toaster() {
         3200
       );
     };
-    window.addEventListener("fitplan:toast", onToast);
-    return () => window.removeEventListener("fitplan:toast", onToast);
+    window.addEventListener("vajra:toast", onToast);
+    return () => window.removeEventListener("vajra:toast", onToast);
   }, []);
 
   const tones: Record<ToastTone, string> = {
-    success: "border-accent-2/40 text-accent-2",
-    error: "border-red-500/40 text-red-300",
+    success: "border-success/40 text-success",
+    error: "border-danger/40 text-danger",
     info: "border-border text-foreground",
   };
-  const dot: Record<ToastTone, string> = {
-    success: "bg-accent-2",
-    error: "bg-red-400",
+  const rule: Record<ToastTone, string> = {
+    success: "bg-success",
+    error: "bg-danger",
     info: "bg-accent",
   };
 
@@ -45,7 +45,7 @@ export default function Toaster() {
           style={{ animation: "toastIn 0.25s cubic-bezier(0.22,1,0.36,1)" }}
           className={`pointer-events-auto card border px-4 py-2.5 text-sm font-medium shadow-2xl flex items-center gap-2.5 ${tones[i.tone]}`}
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${dot[i.tone]}`} />
+          <span className={`w-[3px] h-4 rounded-full ${rule[i.tone]}`} />
           {i.message}
         </div>
       ))}

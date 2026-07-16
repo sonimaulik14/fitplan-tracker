@@ -67,10 +67,10 @@ export default function CommandPalette() {
     };
     const openEvt = () => setOpen(true);
     window.addEventListener("keydown", onKey);
-    window.addEventListener("fitplan:command", openEvt);
+    window.addEventListener("vajra:command", openEvt);
     return () => {
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("fitplan:command", openEvt);
+      window.removeEventListener("vajra:command", openEvt);
     };
   }, []);
 
@@ -145,7 +145,7 @@ export default function CommandPalette() {
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center p-4 sm:pt-24">
       <button
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60"
         aria-hidden
         onClick={() => setOpen(false)}
       />

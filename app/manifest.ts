@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Follow your 12-week training plan, log every set, and track your adherence.",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#07080c",
-    theme_color: "#07080c",
+    background_color: "#f4f7fd",
+    theme_color: "#f4f7fd",
     orientation: "portrait",
     icons: [
       { src: "/icon-192", sizes: "192x192", type: "image/png", purpose: "any" },

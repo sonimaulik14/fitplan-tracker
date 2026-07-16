@@ -14,9 +14,9 @@ import { MuscleGlyph } from "@/app/components/icons";
 export const metadata = { title: "This week's targets" };
 
 const toneCls: Record<string, string> = {
-  up: "text-accent-2 border-accent-2/30 bg-accent-2/10",
+  up: "text-success border-success/30 bg-success/10",
   beat: "text-accent border-accent/30 bg-accent/10",
-  hold: "text-amber-400 border-amber-400/30 bg-amber-400/10",
+  hold: "text-warn border-warn/30 bg-warn/10",
 };
 
 export default async function TargetsPage() {
@@ -97,7 +97,7 @@ export default async function TargetsPage() {
                         </div>
                         {sug ? (
                           <div className="text-right shrink-0">
-                            <div className="font-display font-bold text-sm">
+                            <div className="stat-num text-sm">
                               {fmtWeight(sug.weight, unit)} × {sug.reps}
                             </div>
                             <span

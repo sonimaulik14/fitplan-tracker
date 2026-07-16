@@ -58,7 +58,7 @@ export default function SwipeToSwap({
     <div className="relative">
       {/* action revealed behind the card as you swipe */}
       <div
-        className="absolute inset-y-0 right-0 flex items-center gap-1.5 pr-6 text-accent-2 pointer-events-none select-none"
+        className="absolute inset-y-0 right-0 flex items-center gap-1.5 pr-6 text-success pointer-events-none select-none"
         style={{ opacity: reveal }}
         aria-hidden
       >

@@ -28,8 +28,10 @@ export default async function HistoryPage() {
       <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <PhotoHero
           queryKey="page:history"
+          eyebrow="Session log"
           title="Workout history"
           subtitle={`${history.length} logged session${history.length === 1 ? "" : "s"}, newest first.`}
+          className="mb-4"
         />
         <Link
           href="/records"
@@ -56,7 +58,7 @@ export default async function HistoryPage() {
                 href={`/workout/${h.dayId}`}
                 className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2 transition-colors"
               >
-                <span className="grid place-items-center w-10 h-10 rounded-xl bg-surface-2 border border-border shrink-0">
+                <span className="grid place-items-center w-10 h-10 rounded-lg bg-surface-2 border border-border shrink-0">
                   <FocusGlyph focus={h.focus} size={20} />
                 </span>
                 <div className="min-w-0 flex-1">

@@ -22,8 +22,8 @@ import {
   type Unit,
 } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
-import InfoTip from "@/app/components/InfoTip";
 import PhotoHero from "@/app/components/PhotoHero";
+import InfoTip from "@/app/components/InfoTip";
 import { MuscleGlyph } from "@/app/components/icons";
 import { AnimatedRing, AnimatedNumber } from "@/app/components/motion";
 
@@ -197,6 +197,7 @@ export default async function AnalysisPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
         <PhotoHero
           queryKey="page:analysis"
+          eyebrow="Training data"
           title="Analysis"
           subtitle={`How closely you're following ${p.plan.name}.`}
         />
@@ -213,18 +214,14 @@ export default async function AnalysisPage() {
             {insights.map((it) => (
               <div
                 key={it.label}
-                className="rounded-xl border border-border bg-surface-2 p-4"
+                className="rounded-xl border border-border bg-surface-2 p-4 border-l-2"
+                style={{ borderLeftColor: it.color }}
               >
-                <div className="flex items-center gap-2">
-                  <it.Icon size={16} style={{ color: it.color }} aria-hidden />
-                  <span
-                    className="text-3xl font-display font-bold tracking-tight"
-                    style={{ color: it.color }}
-                  >
-                    {it.value}
-                  </span>
+                <div className="flex items-center gap-1.5">
+                  <it.Icon size={13} className="text-muted" aria-hidden />
+                  <span className="eyebrow">{it.label}</span>
                 </div>
-                <div className="text-xs text-muted mt-1.5">{it.label}</div>
+                <div className="stat-num text-2xl mt-1.5">{it.value}</div>
               </div>
             ))}
           </div>
@@ -240,13 +237,13 @@ export default async function AnalysisPage() {
           />
           <RingCard
             pct={p.setAdherence}
-            color="var(--accent-2)"
+            color="var(--success)"
             title="Set completion"
             sub={`${p.doneSetsTotal} of ${p.prescribedSetsTotal} sets`}
           />
           <RingCard
             pct={p.repQuality}
-            color="var(--accent-3)"
+            color="var(--steel)"
             title="Rep quality"
             sub={`${p.workingSetsOnTarget} of ${p.workingSetsDone} on target`}
           />
@@ -267,12 +264,12 @@ export default async function AnalysisPage() {
                 <div className="flex items-end gap-0.5 sm:gap-1.5 h-32 w-full justify-center">
                   <Bar
                     heightPct={w.setAdherence}
-                    className="bg-gradient-to-t from-accent-2/60 to-accent-2"
+                    className="bg-success"
                     title={`Set completion ${w.setAdherence}%`}
                   />
                   <Bar
                     heightPct={(w.volume / maxWeekVol) * 100}
-                    className="bg-gradient-to-t from-accent/60 to-accent-hi"
+                    className="bg-accent"
                     title={`Volume ${Math.round(w.volume).toLocaleString()}`}
                   />
                 </div>
@@ -282,7 +279,7 @@ export default async function AnalysisPage() {
           </div>
           <Legend
             items={[
-              { c: "var(--accent-2)", label: "Set completion %" },
+              { c: "var(--success)", label: "Set completion %" },
               { c: "var(--accent)", label: "Volume" },
             ]}
           />
@@ -331,7 +328,7 @@ export default async function AnalysisPage() {
                     <StyleMeter
                       label="Set completion"
                       pct={s.setAdherence}
-                      color="var(--accent-2)"
+                      color="var(--success)"
                     />
                     <StyleMeter
                       label="Workouts done"
@@ -343,9 +340,9 @@ export default async function AnalysisPage() {
                     <div className="flex justify-between text-[11px] text-muted mb-1">
                       <span>Volume share</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-surface overflow-hidden">
+                    <div className="h-1 rounded-sm bg-surface overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hi"
+                        className="h-full bg-accent"
                         style={{ width: `${(s.volume / maxStyleVol) * 100}%` }}
                       />
                     </div>
@@ -377,9 +374,9 @@ export default async function AnalysisPage() {
                       {s.done}/{s.prescribed} · {pct}%
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-surface-2 overflow-hidden">
+                  <div className="h-1 rounded-sm bg-surface-2 overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all"
+                      className="h-full transition-all"
                       style={{ width: `${pct}%`, background: st.color }}
                     />
                   </div>
@@ -425,10 +422,10 @@ export default async function AnalysisPage() {
                         {verdict.label}
                       </span>
                     </div>
-                    <div className="relative h-3 rounded-full bg-surface-2">
+                    <div className="relative h-3 rounded-sm bg-surface-2">
                       {/* productive band MEV→MRV */}
                       <div
-                        className="absolute inset-y-0 rounded-full bg-accent-2/15"
+                        className="absolute inset-y-0 rounded-sm bg-success/15"
                         style={{
                           left: pos(l.mev),
                           right: `${100 - Math.min(100, (l.mrv / scale) * 100)}%`,
@@ -436,7 +433,7 @@ export default async function AnalysisPage() {
                       />
                       {/* current fill */}
                       <div
-                        className="absolute inset-y-0 left-0 rounded-full transition-all"
+                        className="absolute inset-y-0 left-0 rounded-sm transition-all"
                         style={{ width: pos(weekly), background: toneColor }}
                       />
                       {/* MEV / MAV / MRV ticks */}
@@ -495,9 +492,9 @@ export default async function AnalysisPage() {
                           {fmtVolume(v, unit)}
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-surface-2 overflow-hidden">
+                      <div className="h-1 rounded-sm bg-surface-2 overflow-hidden">
                         <div
-                          className="h-full rounded-full transition-all"
+                          className="h-full transition-all"
                           style={{
                             width: `${(v / maxVolume) * 100}%`,
                             background: st.color,
@@ -534,7 +531,7 @@ export default async function AnalysisPage() {
                       <MuscleGlyph muscle={pr.muscle} size={15} />
                       <span className="truncate">{pr.name}</span>
                     </span>
-                    <span className="font-display font-bold whitespace-nowrap">
+                    <span className="stat-num whitespace-nowrap">
                       {fmtWeight(pr.maxWeight, unit)} × {pr.repsAtMax} →
                     </span>
                   </Link>
@@ -560,13 +557,13 @@ export default async function AnalysisPage() {
                 >
                   <span className="text-xs text-muted w-8">D{i + 1}</span>
                   <span className="text-sm flex-1 truncate">{d.focus}</span>
-                  <div className="w-24 h-1.5 rounded-full bg-surface-2 overflow-hidden hidden sm:block">
+                  <div className="w-24 h-1 rounded-sm bg-surface-2 overflow-hidden hidden sm:block">
                     <div
-                      className="h-full rounded-full bg-accent-2"
+                      className="h-full bg-success"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-sm text-muted w-20 text-right">
+                  <span className="stat-num text-sm text-muted w-20 text-right">
                     {d.doneSets}/{d.prescribedSets} · {pct}%
                   </span>
                 </Link>
@@ -593,7 +590,7 @@ function RingCard({
   return (
     <div className="card p-6 flex flex-col items-center text-center">
       <AnimatedRing pct={pct} size={128} stroke={12} color={color}>
-        <div className="text-3xl font-display font-bold num-gradient">
+        <div className="display-num text-3xl">
           <AnimatedNumber value={pct} suffix="%" />
         </div>
       </AnimatedRing>
@@ -616,11 +613,11 @@ function StyleMeter({
     <div>
       <div className="flex justify-between text-[11px] text-muted mb-1">
         <span>{label}</span>
-        <span>{pct}%</span>
+        <span className="stat-num">{pct}%</span>
       </div>
-      <div className="h-1.5 rounded-full bg-surface overflow-hidden">
+      <div className="h-1 rounded-sm bg-surface overflow-hidden">
         <div
-          className="h-full rounded-full transition-all"
+          className="h-full transition-all"
           style={{ width: `${pct}%`, background: color }}
         />
       </div>
@@ -639,7 +636,7 @@ function Bar({
 }) {
   return (
     <div
-      className={`w-2.5 sm:w-4 rounded-t-md ${className}`}
+      className={`w-2.5 sm:w-4 rounded-t-sm ${className}`}
       style={{ height: `${Math.max(2, heightPct)}%` }}
       title={title}
     />

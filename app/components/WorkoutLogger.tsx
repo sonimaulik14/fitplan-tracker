@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useTransition, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   restChime,
@@ -11,21 +10,25 @@ import {
   celebrateWeek,
   celebrateProgram,
 } from "@/lib/celebrate";
-import { ArrowLeftRight, Target as TargetIcon } from "lucide-react";
+import { ArrowLeftRight, Target as TargetIcon, Timer } from "lucide-react";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
+import {
+  enqueueWorkoutSave,
+  getWorkoutItem,
+  removeWorkoutItem,
+} from "@/lib/offline/outbox";
+import { useWakeLock } from "@/lib/useWakeLock";
 import DangerButton from "./DangerButton";
 import SwapControl from "./SwapControl";
 import SwipeToSwap from "./SwipeToSwap";
 import WorkoutSummary from "./WorkoutSummary";
 import {
-  muscleStyle,
   overloadSuggestion,
   weightNum,
   unitToKg,
   termInfo,
   type Unit,
 } from "@/lib/ui";
-import ExImage from "./ExImage";
 import InfoTip from "./InfoTip";
 import { MuscleGlyph } from "./icons";
 import { ExerciseDemoInline } from "./ExerciseDemo";
@@ -54,13 +57,10 @@ export type LoggerExercise = {
   warmupSets: number;
   workingSets: number;
   lastTime: { weight: number; reps: number } | null; // kg
-  photoUrl?: string; // resolved live photo (Pexels/Unsplash), else local fallback
   rows: Row[]; // weight in kg from server
 };
 
 type Meta = { notes: string; mood: string; bodyweight: number | null };
-
-const MOODS = ["", "💪 Strong", "🙂 Good", "😐 Okay", "😴 Tired", "🤕 Sore"];
 
 export default function WorkoutLogger({
   dayId,
@@ -94,7 +94,7 @@ export default function WorkoutLogger({
   });
   const [status, setStatus] = useState(initialStatus);
   const [saveState, setSaveState] = useState<
-    "idle" | "saving" | "saved" | "error"
+    "idle" | "saving" | "saved" | "queued" | "auth" | "error"
   >("idle");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   // Which exercise's swap sheet is open (driven by the Swap button or a swipe).
@@ -149,7 +149,7 @@ export default function WorkoutLogger({
         if (typeof navigator !== "undefined" && navigator.vibrate)
           navigator.vibrate([120, 70, 120]);
         restChime();
-        toast("⏱️ Rest over — next set!");
+        toast("Rest over — next set!");
       } else {
         restRemainingRef.current = next;
         setRest({ remaining: next, total: restTotalRef.current });
@@ -187,6 +187,11 @@ export default function WorkoutLogger({
   type SaveResult = {
     ok: boolean;
     error?: string;
+    code?: "auth" | "not_found" | "not_enrolled" | "conflict";
+    // True when the snapshot is safe in the on-device outbox but hasn't
+    // reached the server yet (offline / network failure). Treated as success
+    // by the UI — OfflineSync replays it when connectivity returns.
+    queued?: boolean;
     weekCompleted?: boolean;
     weekNumber?: number;
     programComplete?: boolean;
@@ -194,23 +199,92 @@ export default function WorkoutLogger({
   const saveChainRef = useRef<Promise<SaveResult>>(Promise.resolve({ ok: true }));
 
   // Persist current state with `status`, chained after any in-flight save.
+  // Outbox-FIRST: the snapshot hits IndexedDB before the network, so from
+  // that moment the data survives a killed tab; the network attempt is just
+  // the fast path.
   const runSave = (status: "in_progress" | "completed"): Promise<SaveResult> => {
     dirtyRef.current = true;
     const next = saveChainRef.current
       .catch(() => ({ ok: false as const }))
       .then(async (): Promise<SaveResult> => {
         const { sets, meta: m } = buildPayload();
+        let inOutbox = false;
+        try {
+          await enqueueWorkoutSave(dayId, { sets, status, meta: m });
+          inOutbox = true;
+          dirtyRef.current = false; // safe on-device; leaving the page is fine
+        } catch {
+          // IndexedDB unavailable (private mode etc.) — keep the unload guard.
+        }
+        if (typeof navigator !== "undefined" && !navigator.onLine && inOutbox)
+          return { ok: true, queued: true };
         try {
           const res = await saveWorkoutAction(dayId, sets, status, m);
-          if (res.ok) dirtyRef.current = false;
+          if (res.ok) {
+            dirtyRef.current = false;
+            if (inOutbox) await removeWorkoutItem(dayId).catch(() => {});
+          }
           return res;
         } catch {
+          if (inOutbox) return { ok: true, queued: true };
           return { ok: false, error: "Network error — check your connection." };
         }
       });
     saveChainRef.current = next;
     return next;
   };
+
+  // Resume-after-close: a queued offline snapshot is newer than the
+  // server-rendered props — overlay it. (Payload weights are kg; state holds
+  // display units.)
+  useEffect(() => {
+    let alive = true;
+    getWorkoutItem(dayId)
+      .then((item) => {
+        if (!alive || !item) return;
+        const byExercise = new Map<string, typeof item.payload.sets>();
+        for (const s of item.payload.sets) {
+          const arr = byExercise.get(s.planExerciseId) ?? [];
+          arr.push(s);
+          byExercise.set(s.planExerciseId, arr);
+        }
+        setExercises((prev) =>
+          prev.map((ex) => {
+            const queued = byExercise.get(ex.id);
+            if (!queued) return ex;
+            return {
+              ...ex,
+              rows: queued
+                .slice()
+                .sort((a, b) => a.setNumber - b.setNumber)
+                .map((s) => ({
+                  planExerciseId: s.planExerciseId,
+                  setNumber: s.setNumber,
+                  setType: s.setType,
+                  weight: s.weight == null ? null : weightNum(s.weight, unit),
+                  reps: s.reps,
+                  rpe: s.rpe,
+                  done: s.done,
+                })),
+            };
+          })
+        );
+        const m = item.payload.meta;
+        setMeta({
+          notes: (m.notes as string) ?? "",
+          mood: (m.mood as string) ?? "",
+          bodyweight:
+            m.bodyweight == null ? null : weightNum(m.bodyweight, unit),
+        });
+        setStatus(item.payload.status);
+        setSaveState("queued");
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayId]);
 
   // Warn before leaving with unsaved (or failed-to-save) edits.
   useEffect(() => {
@@ -249,10 +323,15 @@ export default function WorkoutLogger({
     setSaveState("saving");
     debounceRef.current = setTimeout(async () => {
       const res = await runSave(statusRef.current);
-      if (res.ok) {
+      if (res.ok && res.queued) {
+        setSaveState("queued");
+      } else if (res.ok) {
         setSaveState("saved");
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
         savedTimerRef.current = setTimeout(() => setSaveState("idle"), 1500);
+      } else if (res.code === "auth") {
+        setSaveState("auth");
+        toast("Session expired — sign in to sync this workout.", "error");
       } else {
         setSaveState("error");
         toast(res.error ?? "Could not save.", "error");
@@ -286,6 +365,10 @@ export default function WorkoutLogger({
   const applySwap = (exId: string, name: string) => {
     const n = name.trim();
     if (!n) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      toast("You're offline — swaps need a connection.", "error");
+      return;
+    }
     setExercises((prev) =>
       prev.map((ex) =>
         ex.id !== exId
@@ -312,11 +395,17 @@ export default function WorkoutLogger({
   const resetDay = async () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     stopRest();
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      toast("You're offline — try resetting when connected.", "error");
+      return;
+    }
     const res = await resetDayAction(dayId);
     if (!res.ok) {
       toast(res.error ?? "Could not reset.", "error");
       return;
     }
+    // A queued snapshot must not resurrect the day it just reset.
+    await removeWorkoutItem(dayId).catch(() => {});
     setExercises((prev) =>
       prev.map((ex) => ({
         ...ex,
@@ -477,7 +566,7 @@ export default function WorkoutLogger({
       const res = await runSave(finalStatus);
       if (res.ok) {
         setStatus(finalStatus);
-        setSaveState("saved");
+        setSaveState(res.queued ? "queued" : "saved");
         if (finalStatus === "completed") {
           stopRest();
           // Build the session recap (state weights are already in display unit).
@@ -496,6 +585,9 @@ export default function WorkoutLogger({
             );
             if (best > weightNum(e.lastTime.weight, unit)) beat += 1;
           }
+          // A queued (offline) completion shows the local recap; week/program
+          // milestones only come from the server, so their celebration fires
+          // as a toast when OfflineSync replays the save.
           setSummary({
             week: res.weekCompleted ? (res.weekNumber ?? null) : null,
             sets: doneRows.length,
@@ -516,13 +608,20 @@ export default function WorkoutLogger({
         } else {
           toast("Reopened for editing");
         }
-        router.refresh();
+        if (!res.queued) router.refresh();
+      } else if (res.code === "auth") {
+        setSaveState("auth");
+        toast("Session expired — sign in to sync this workout.", "error");
       } else {
         setSaveState("error");
         toast(res.error ?? "Could not save.", "error");
       }
     });
   };
+
+  // Keep the screen awake for the whole session — a phone that sleeps
+  // mid-set forces an unlock between every exercise.
+  useWakeLock(status === "in_progress" && !summary);
 
 
   const totalRows = exercises.reduce((n, ex) => n + ex.rows.length, 0);
@@ -536,68 +635,13 @@ export default function WorkoutLogger({
   const isLightDay = exercises.length > 0 && exercises.every((e) => e.isCardio);
 
   return (
-    <div className="space-y-5 pb-28">
-      {/* Floating rest timer — auto-starts on set completion, works in both
-          normal and focus mode (z above the focus overlay). */}
-      {rest && !summary && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-8 z-[60] w-[min(92vw,26rem)] animate-fade-up">
-          <div
-            className="rounded-2xl border border-border-strong bg-surface-solid/95 backdrop-blur-xl px-4 py-3 shadow-2xl"
-            style={{ boxShadow: "0 20px 50px -12px rgba(0,0,0,0.6)" }}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl leading-none">⏱️</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wide text-muted font-semibold">
-                    Rest
-                  </span>
-                  <span className="font-display font-bold text-lg tabular-nums">
-                    {fmtClock(rest.remaining)}
-                  </span>
-                </div>
-                <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-1.5">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${(rest.remaining / rest.total) * 100}%`,
-                      transition: "width 1s linear",
-                      background: "var(--grad-brand)",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2.5">
-              <button
-                type="button"
-                onClick={() => adjustRest(-15)}
-                className="btn-ghost !py-1.5 !px-3 text-xs flex-1"
-              >
-                −15s
-              </button>
-              <button
-                type="button"
-                onClick={() => adjustRest(15)}
-                className="btn-ghost !py-1.5 !px-3 text-xs flex-1"
-              >
-                +15s
-              </button>
-              <button
-                type="button"
-                onClick={stopRest}
-                className="btn-primary !py-1.5 !px-3 text-xs flex-1"
-              >
-                Skip
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className={`space-y-4 ${rest && !summary ? "pb-40" : "pb-24"}`}>
       {summary && (
         <WorkoutSummary
           summary={summary}
           unit={unit}
+          meta={meta}
+          onMetaChange={setMetaField}
           onClose={() => setSummary(null)}
         />
       )}
@@ -606,33 +650,41 @@ export default function WorkoutLogger({
       <div className="card !bg-surface-solid p-4">
         <div className="flex items-center justify-between gap-3 text-sm">
           <span className="text-muted">
-            <span className="text-foreground font-bold text-base">{doneRows}</span>{" "}
+            <span className="stat-num text-foreground text-base">{doneRows}</span>{" "}
             / {totalRows} sets logged
           </span>
           <span
-            className={`shrink-0 text-xs font-semibold tabular-nums ${
-              saveState === "error" ? "text-danger" : "text-muted"
+            className={`shrink-0 text-xs font-semibold stat-num ${
+              saveState === "error" || saveState === "auth"
+                ? "text-danger"
+                : saveState === "queued"
+                  ? "text-warn"
+                  : "text-muted"
             }`}
           >
             {saveState === "saving"
               ? "Saving…"
               : saveState === "saved"
                 ? "Saved ✓"
-                : saveState === "error"
-                  ? "⚠ Not saved"
-                  : `${pct}%`}
+                : saveState === "queued"
+                  ? "Saved on phone"
+                  : saveState === "auth"
+                    ? "Sign in to sync"
+                    : saveState === "error"
+                      ? "Not saved"
+                      : `${pct}%`}
           </span>
         </div>
-        <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-2.5">
+        <div className="h-1 rounded-sm bg-surface-2 overflow-hidden mt-2.5">
           <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${pct}%`, background: "var(--grad-brand)" }}
+            className="h-full transition-all"
+            style={{ width: `${pct}%`, background: "var(--accent)" }}
           />
         </div>
         {status === "completed" && (
           <div className="mt-3">
-            <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-2" /> Workout complete
+            <span className="chip text-success border-success/30 bg-success/10">
+              <span className="w-[3px] h-3 rounded-full bg-success" /> Workout complete
             </span>
           </div>
         )}
@@ -640,7 +692,6 @@ export default function WorkoutLogger({
       )}
 
       {exercises.map((ex, idx) => {
-        const st = muscleStyle(ex.muscle);
         const sg = overloadSuggestion(ex.lastTime, ex.repTarget, ex.isCardio);
         const sgWeight = sg ? weightNum(sg.weight, unit) : 0;
         const isCollapsed = collapsed[ex.id] ?? false;
@@ -655,73 +706,51 @@ export default function WorkoutLogger({
             className="card p-5 sm:p-6 relative overflow-hidden animate-fade-up"
             style={{ animationDelay: `${idx * 30}ms` }}
           >
-            <span
-              className="absolute left-0 top-5 bottom-5 w-1 rounded-full opacity-70"
-              style={{ background: st.color }}
-            />
-            <div className="flex items-start justify-between gap-3 pl-2.5">
-              <div className="flex items-start gap-3 min-w-0">
-                {ex.photoUrl ? (
-                  <Image
-                    src={ex.photoUrl}
-                    alt={ex.muscle}
-                    width={56}
-                    height={56}
-                    sizes="56px"
-                    className="w-14 h-14 rounded-xl object-cover border border-border duotone shrink-0"
-                  />
-                ) : (
-                  <ExImage
-                    srcKey={st.key}
-                    alt={ex.muscle}
-                    className="w-14 h-14 rounded-xl object-cover border border-border duotone shrink-0"
-                  />
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {ex.groupLabel &&
-                      (() => {
-                        const info = termInfo(ex.groupLabel);
-                        const chip = (
-                          <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10 !py-0.5">
-                            {ex.groupLabel}
-                          </span>
-                        );
-                        return info ? (
-                          <InfoTip
-                            title={info.title}
-                            desc={info.desc}
-                            className="text-accent-2"
-                          >
-                            {chip}
-                          </InfoTip>
-                        ) : (
-                          chip
-                        );
-                      })()}
-                    <span className="text-xs text-muted flex items-center gap-1">
-                      <MuscleGlyph muscle={ex.muscle} size={14} /> {ex.muscle}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-muted flex items-center gap-1">
+                    <MuscleGlyph muscle={ex.muscle} size={14} /> {ex.muscle}
+                  </span>
+                  {ex.groupLabel &&
+                    (() => {
+                      const info = termInfo(ex.groupLabel);
+                      const chip = (
+                        <span className="chip text-success border-success/30 bg-success/10 !py-0.5">
+                          {ex.groupLabel}
+                        </span>
+                      );
+                      return info ? (
+                        <InfoTip
+                          title={info.title}
+                          desc={info.desc}
+                          className="text-success"
+                        >
+                          {chip}
+                        </InfoTip>
+                      ) : (
+                        chip
+                      );
+                    })()}
+                </div>
+                <h3 className="font-display font-semibold text-xl mt-1 flex items-center gap-2 flex-wrap">
+                  {ex.name}
+                </h3>
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  {!ex.isCardio && <ExerciseDemoInline name={ex.name} />}
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-2.5 py-1 text-xs font-semibold">
+                    <TargetIcon size={13} className="text-accent shrink-0" />
+                    <span className="text-muted font-medium">Target</span>
+                    <span className="text-foreground stat-num">
+                      {ex.repTarget}
                     </span>
-                  </div>
-                  <h3 className="font-semibold mt-1 flex items-center gap-2 flex-wrap">
-                    {ex.name}
-                  </h3>
-                  <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    {!ex.isCardio && <ExerciseDemoInline name={ex.name} />}
-                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-2.5 py-1 text-xs font-semibold">
-                      <TargetIcon size={13} className="text-accent shrink-0" />
-                      <span className="text-muted font-medium">Target</span>
-                      <span className="text-foreground tabular-nums">
-                        {ex.repTarget}
-                      </span>
+                  </span>
+                  {ex.swapped && (
+                    <span className="inline-flex items-center gap-1 text-xs text-success">
+                      <ArrowLeftRight size={11} /> swapped from{" "}
+                      {ex.originalName}
                     </span>
-                    {ex.swapped && (
-                      <span className="inline-flex items-center gap-1 text-xs text-accent-2">
-                        <ArrowLeftRight size={11} /> swapped from{" "}
-                        {ex.originalName}
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -760,16 +789,16 @@ export default function WorkoutLogger({
                         ex.lastTime!.reps
                       )
                     }
-                    className="text-right rounded-xl border border-border bg-surface-2 px-3 py-2 hover:border-accent-2/40 transition-colors"
+                    className="text-right rounded-lg border border-border bg-surface-2 px-3 py-2 hover:border-success/40 transition-colors"
                     title="Fill empty sets with last time's numbers"
                   >
                     <div className="text-[10px] uppercase tracking-wide text-muted">
                       Last time
                     </div>
-                    <div className="text-sm font-display font-bold">
+                    <div className="text-sm stat-num">
                       {weightNum(ex.lastTime.weight, unit)} × {ex.lastTime.reps}
                     </div>
-                    <div className="text-[11px] text-accent-2 font-semibold">
+                    <div className="text-[11px] text-success font-semibold">
                       ↺ Use
                     </div>
                   </button>
@@ -788,13 +817,14 @@ export default function WorkoutLogger({
             </div>
 
             {isCollapsed && (
-              <div className="mt-3 pl-2.5 text-sm text-muted">
-                {exDone}/{ex.rows.length} sets done — tap to expand
+              <div className="mt-3 text-sm text-muted">
+                <span className="stat-num">{exDone}/{ex.rows.length}</span> sets
+                done — tap to expand
               </div>
             )}
 
             {!isCollapsed && sg && (
-              <div className="mt-4 ml-2.5 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2">
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2">
                 <TargetIcon size={14} className="text-accent shrink-0" aria-hidden />
                 <div className="text-sm flex-1 min-w-0">
                   <span className="text-muted">Tip: </span>
@@ -802,7 +832,7 @@ export default function WorkoutLogger({
                   <span className="text-muted">
                     {" "}
                     → try{" "}
-                    <span className="text-foreground font-display font-bold">
+                    <span className="text-foreground stat-num">
                       {sgWeight} × {sg.reps}
                     </span>
                   </span>
@@ -810,7 +840,7 @@ export default function WorkoutLogger({
                 <button
                   type="button"
                   onClick={() => applyToEmpty(ex.id, sgWeight, sg.reps)}
-                  className="shrink-0 text-xs font-semibold text-accent hover:underline"
+                  className="btn-quiet shrink-0 text-xs"
                 >
                   Apply
                 </button>
@@ -818,15 +848,15 @@ export default function WorkoutLogger({
             )}
 
             {!isCollapsed && (
-            <div className="mt-5 space-y-2.5 pl-2.5">
+            <div className="mt-5 space-y-2.5">
               {ex.rows.map((r) => (
                 <div
                   key={r.setNumber}
-                  className={`grid items-center gap-2 rounded-xl px-2 py-2 transition-colors ${
+                  className={`grid items-center gap-2 rounded-lg px-2 py-2 transition-colors ${
                     ex.isCardio
                       ? "grid-cols-[3rem_1fr_auto]"
-                      : "grid-cols-[2.6rem_1fr_1fr_3rem_2.5rem]"
-                  } ${r.done ? "bg-accent-2/5" : ""}`}
+                      : "grid-cols-[2.6rem_1fr_1fr_3.2rem_3rem]"
+                  } ${r.done ? "bg-success/5" : ""}`}
                 >
                   <div className="text-xs">
                     {r.setType === "cardio" ? (
@@ -855,7 +885,7 @@ export default function WorkoutLogger({
                       inputMode="numeric"
                       placeholder="minutes"
                       aria-label={`${ex.name} set ${r.setNumber} minutes`}
-                      className="input py-2 logfield"
+                      className="input h-12 stat-num text-base logfield"
                       onKeyDown={onFieldKeyDown}
                       value={r.reps ?? ""}
                       onChange={(e) =>
@@ -872,7 +902,7 @@ export default function WorkoutLogger({
                           inputMode="decimal"
                           placeholder="wt  (or 100x10)"
                           aria-label={`${ex.name} set ${r.setNumber} weight in ${unit}`}
-                          className="input py-2 pr-7 logfield"
+                          className="input h-12 stat-num text-base pr-7 logfield"
                           onKeyDown={onFieldKeyDown}
                           value={r.weight ?? ""}
                           onChange={(e) =>
@@ -888,7 +918,7 @@ export default function WorkoutLogger({
                         inputMode="numeric"
                         placeholder="reps"
                         aria-label={`${ex.name} set ${r.setNumber} reps`}
-                        className="input py-2 logfield"
+                        className="input h-12 stat-num text-base logfield"
                         onKeyDown={onFieldKeyDown}
                         value={r.reps ?? ""}
                         onChange={(e) =>
@@ -904,7 +934,7 @@ export default function WorkoutLogger({
                           placeholder="RPE"
                           title="Rate of Perceived Exertion (1-10)"
                           aria-label={`${ex.name} set ${r.setNumber} RPE`}
-                          className="input py-2 px-1.5 text-center logfield"
+                          className="input h-12 stat-num px-1.5 text-center logfield"
                           onKeyDown={onFieldKeyDown}
                           value={r.rpe ?? ""}
                           onChange={(e) =>
@@ -923,10 +953,10 @@ export default function WorkoutLogger({
                     type="button"
                     onClick={() => toggleDone(ex.id, r.setNumber, r.done)}
                     aria-label="mark set done"
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center transition-all active:scale-90 ${
+                    className={`w-12 h-12 rounded-lg border flex items-center justify-center transition-all active:scale-90 ${
                       r.done
-                        ? "bg-accent-2 border-accent-2 text-[#05231a] shadow-lg shadow-accent-2/30"
-                        : "border-border text-muted hover:border-accent-2/50"
+                        ? "bg-success border-success text-[#05231a]"
+                        : "border-border text-muted hover:border-success/50"
                     }`}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -942,7 +972,7 @@ export default function WorkoutLogger({
                 </div>
               ))}
               {!ex.isCardio && (
-                <div className="flex gap-4 pt-3 pl-2.5">
+                <div className="flex gap-4 pt-3">
                   <button
                     type="button"
                     onClick={() => addSet(ex.id)}
@@ -968,62 +998,8 @@ export default function WorkoutLogger({
         );
       })}
 
-      {/* Session notes / mood / bodyweight */}
-      {!isLightDay && (
-      <div className="card p-5 space-y-4 animate-fade-up">
-        <h3 className="font-semibold">How did it go?</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label" htmlFor="bw">
-              Bodyweight ({unit})
-            </label>
-            <input
-              id="bw"
-              type="number"
-              inputMode="decimal"
-              placeholder="optional"
-              className="input"
-              value={meta.bodyweight ?? ""}
-              onChange={(e) =>
-                setMetaField({
-                  bodyweight: e.target.value ? Number(e.target.value) : null,
-                })
-              }
-            />
-          </div>
-          <div>
-            <label className="label" htmlFor="mood">
-              Mood
-            </label>
-            <select
-              id="mood"
-              className="input"
-              value={meta.mood}
-              onChange={(e) => setMetaField({ mood: e.target.value })}
-            >
-              {MOODS.map((mo) => (
-                <option key={mo} value={mo} className="bg-surface-solid">
-                  {mo === "" ? "—" : mo}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div>
-          <label className="label" htmlFor="notes">
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            rows={3}
-            className="input resize-none"
-            placeholder="training / nutrition / supplement notes…"
-            value={meta.notes}
-            onChange={(e) => setMetaField({ notes: e.target.value })}
-          />
-        </div>
-      </div>
-      )}
+      {/* Session mood/bodyweight/notes moved into the completion flow
+          (WorkoutSummary) — one less card between the lifter and the sets. */}
 
       {/* Reset this day */}
       <div className="flex justify-center pt-2">
@@ -1036,21 +1012,76 @@ export default function WorkoutLogger({
         />
       </div>
 
-      {/* Sticky action bar (sits above mobile tab bar) */}
-      <div className="fixed bottom-[calc(66px+env(safe-area-inset-bottom))] sm:bottom-0 left-0 right-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl">
+      {/* Docked bottom stack: rest bar (when running) + action bar. Gym mode
+          owns the bottom edge — the app TabBar hides on /workout/*. */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+        {rest && !summary && (
+          <div className="border-b border-border">
+            <div className="max-w-3xl mx-auto px-5 py-2.5">
+              <div className="flex items-center gap-3">
+                <Timer size={16} className="text-accent shrink-0" aria-hidden />
+                <span className="eyebrow">Rest</span>
+                <span className="stat-num text-lg ml-auto">
+                  {fmtClock(rest.remaining)}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => adjustRest(-15)}
+                    className="btn-ghost !py-1 !px-2.5 text-xs"
+                  >
+                    −15
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustRest(15)}
+                    className="btn-ghost !py-1 !px-2.5 text-xs"
+                  >
+                    +15
+                  </button>
+                  <button
+                    type="button"
+                    onClick={stopRest}
+                    className="btn-primary !py-1 !px-2.5 text-xs"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+              <div className="h-1 rounded-sm bg-surface-2 overflow-hidden mt-2">
+                <div
+                  className="h-full"
+                  style={{
+                    width: `${(rest.remaining / rest.total) * 100}%`,
+                    transition: "width 1s linear",
+                    background: "var(--accent)",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
         <div className="max-w-3xl mx-auto px-5 py-3 flex items-center gap-3">
           <span
             className={`text-xs ${
-              saveState === "error" ? "text-danger font-semibold" : "text-muted"
+              saveState === "error" || saveState === "auth"
+                ? "text-danger font-semibold"
+                : saveState === "queued"
+                  ? "text-warn font-semibold"
+                  : "text-muted"
             }`}
           >
             {saveState === "saving"
               ? "Saving…"
               : saveState === "saved"
                 ? "All changes saved ✓"
-                : saveState === "error"
-                  ? "⚠ Not saved — keep this page open"
-                  : "Changes save automatically"}
+                : saveState === "queued"
+                  ? "Saved on this phone — will sync"
+                  : saveState === "auth"
+                    ? "Sign in to sync this workout"
+                    : saveState === "error"
+                      ? "Not saved — keep this page open"
+                      : "Changes save automatically"}
           </span>
           <div className="ml-auto flex gap-2">
             {status === "completed" ? (

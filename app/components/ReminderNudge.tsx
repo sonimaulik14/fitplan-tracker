@@ -59,7 +59,7 @@ export default function ReminderNudge({
     content = (
       <Banner tone="done">
         <span className="flex items-center gap-2">
-          <CheckCircle2 size={16} className="shrink-0 text-accent-2" aria-hidden />
+          <CheckCircle2 size={16} className="shrink-0 text-success" aria-hidden />
           You&apos;ve logged today — great work keeping it up.
         </span>
       </Banner>
@@ -83,7 +83,7 @@ export default function ReminderNudge({
     content = (
       <Banner tone="streak">
         <span className="flex items-center gap-2">
-          <Flame size={16} className="shrink-0 text-amber-400" aria-hidden />
+          <Flame size={16} className="shrink-0 text-warn" aria-hidden />
           Keep your {streak}-day streak alive — get a session in today.
         </span>
       </Banner>
@@ -131,8 +131,8 @@ function Banner({
 }) {
   const styles: Record<string, string> = {
     go: "border-accent/30 bg-accent/5",
-    streak: "border-amber-400/30 bg-amber-400/5",
-    done: "border-accent-2/30 bg-accent-2/5",
+    streak: "border-warn/30 bg-warn/5",
+    done: "border-success/30 bg-success/5",
     rest: "border-border bg-surface-2",
   };
   return (

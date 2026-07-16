@@ -59,11 +59,20 @@ async function upstash(
   return count <= limit;
 }
 
-/** Returns true if the request is allowed, false if it should be rejected. */
+/**
+ * Returns true if the request is allowed, false if it should be rejected.
+ *
+ * `critical` governs what happens when Upstash is configured but unreachable:
+ * critical limits (login, signup, password reset) fail CLOSED — a Redis outage
+ * must not silently drop auth throttling to weak per-lambda counters — while
+ * cosmetic limits fail open to the in-memory fallback. When Upstash isn't
+ * configured at all, both use the in-memory limiter (local dev unchanged).
+ */
 export async function rateLimit(
   action: string,
   limit: number,
-  windowMs: number
+  windowMs: number,
+  opts: { critical?: boolean } = {}
 ): Promise<boolean> {
   const key = `${action}:${await clientIp()}`;
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -71,8 +80,18 @@ export async function rateLimit(
   if (url && token) {
     try {
       return await upstash(url, token, key, limit, windowMs);
-    } catch {
-      // Redis unreachable — fail open to in-memory rather than block users.
+    } catch (err) {
+      if (opts.critical) {
+        console.error(
+          `[rate-limit] Redis unreachable — failing CLOSED for "${action}":`,
+          err
+        );
+        return false;
+      }
+      console.warn(
+        `[rate-limit] Redis unreachable — failing open to in-memory for "${action}":`,
+        err
+      );
       return inMemory(key, limit, windowMs);
     }
   }

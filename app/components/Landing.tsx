@@ -11,15 +11,15 @@ import { MUSCLE_STYLE } from "@/lib/ui";
 
 export default function Landing() {
   return (
-    <div className="flex-1">
+    <div className="flex-1 celebrate-scope">
       {/* Nav */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/60 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-border bg-background">
         <nav className="max-w-6xl mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
-            <span className="grid place-items-center w-8 h-8 rounded-xl brand-bg shadow-lg shadow-accent/30">
+            <span className="grid place-items-center w-8 h-8 rounded-lg brand-bg">
               <VajraMark size={22} />
             </span>
-            <span className="font-display font-bold text-lg tracking-tight">
+            <span className="font-display font-bold text-lg uppercase tracking-wide">
               Vajra
             </span>
           </div>
@@ -41,7 +41,7 @@ export default function Landing() {
           <ExImage
             srcKey="hero"
             alt=""
-            className="w-full h-full object-cover kenburns"
+            className="w-full h-full object-cover"
           />
           {/* dark to the left for headline legibility, photo breathes to the right */}
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/25" />
@@ -56,7 +56,7 @@ export default function Landing() {
             transition={{ duration: 0.5 }}
             className="chip"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-accent-2" /> 12-week
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" /> 12-week
             transformation tracker
           </motion.span>
 
@@ -64,11 +64,11 @@ export default function Landing() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-[2.75rem] sm:text-6xl xl:text-7xl font-bold leading-[1.02] mt-6"
+            className="display-hero uppercase text-[2.75rem] sm:text-6xl xl:text-7xl mt-6"
           >
             Your plan.
             <br />
-            Tracked to <span className="gradient-text">the rep.</span>
+            Tracked to <span className="text-accent">the rep.</span>
           </motion.h1>
 
           <motion.p
@@ -134,8 +134,8 @@ export default function Landing() {
               <div className="flex-1 space-y-3">
                 {[
                   { label: "Leg Press", v: "180 × 10", c: "var(--accent)" },
-                  { label: "Bench Press", v: "90 × 12", c: "var(--accent-2)" },
-                  { label: "Barbell Row", v: "100 × 8", c: "var(--accent-3)" },
+                  { label: "Bench Press", v: "90 × 12", c: "var(--success)" },
+                  { label: "Barbell Row", v: "100 × 8", c: "var(--steel)" },
                 ].map((row, i) => (
                   <motion.div
                     key={row.label}
@@ -180,7 +180,7 @@ export default function Landing() {
       {/* Features */}
       <section className="max-w-6xl mx-auto px-5 py-16">
         <Reveal>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-center">
+          <h2 className="display-hero uppercase text-3xl sm:text-4xl text-center">
             Not just a logbook.
           </h2>
           <p className="text-muted text-center mt-3 max-w-xl mx-auto">
@@ -217,7 +217,7 @@ export default function Landing() {
                 <ExImage
                   srcKey={MUSCLE_STYLE[m].key}
                   alt={m}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 duotone"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <span className="absolute bottom-2 left-3 z-10 text-white text-sm font-semibold drop-shadow">
                   {m}
@@ -231,7 +231,7 @@ export default function Landing() {
       {/* How it works */}
       <section className="max-w-6xl mx-auto px-5 py-16">
         <Reveal>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-center">
+          <h2 className="display-hero uppercase text-3xl sm:text-4xl text-center">
             Three steps to consistency
           </h2>
         </Reveal>
@@ -239,7 +239,7 @@ export default function Landing() {
           {STEPS.map((s, i) => (
             <Reveal key={s.title} delay={i * 0.1}>
               <div className="card p-6 h-full">
-                <div className="text-5xl font-display font-bold gradient-text">
+                <div className="text-5xl font-display font-bold text-accent">
                   {String(i + 1).padStart(2, "0")}
                 </div>
                 <h3 className="font-semibold mt-4">{s.title}</h3>
@@ -256,7 +256,7 @@ export default function Landing() {
       <section className="max-w-6xl mx-auto px-5 py-16">
         <Reveal>
           <div className="relative overflow-hidden card p-10 sm:p-16 text-center">
-            <h2 className="display-hero text-3xl sm:text-5xl">
+            <h2 className="display-hero uppercase text-3xl sm:text-5xl">
               Start your 12 weeks today.
             </h2>
             <p className="text-muted mt-4 max-w-md mx-auto">

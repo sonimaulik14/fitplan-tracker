@@ -48,12 +48,12 @@ export default function BodyweightChart({
   return (
     <div>
       <div className="flex items-baseline gap-3 mb-3">
-        <span className="text-3xl font-display font-bold">{last}</span>
+        <span className="display-num text-3xl">{last}</span>
         <span className="text-sm text-muted">{unit} now</span>
         <span
-          className={`text-sm font-semibold ${
+          className={`stat-num text-sm ${
             delta < 0
-              ? "text-accent-2"
+              ? "text-success"
               : delta > 0
                 ? "text-accent"
                 : "text-muted"
@@ -64,12 +64,6 @@ export default function BodyweightChart({
         </span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-        <defs>
-          <linearGradient id="bw-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
         {[lo, (lo + hi) / 2, hi].map((v, i) => (
           <g key={i}>
             <line
@@ -90,7 +84,8 @@ export default function BodyweightChart({
             </text>
           </g>
         ))}
-        <polygon points={area} fill="url(#bw-fill)" />
+        {/* flat matte area — FORGE has no gradients on data surfaces */}
+        <polygon points={area} fill="var(--accent)" opacity="0.08" />
         <polyline
           points={line}
           fill="none"

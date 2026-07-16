@@ -82,7 +82,7 @@ export default async function MeasurementsPage() {
               </div>
               <div className="h-2 rounded-full bg-surface-2 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hi"
+                  className="h-full rounded-full bg-accent"
                   style={{ width: `${goalPct}%` }}
                 />
               </div>
@@ -131,7 +131,7 @@ export default async function MeasurementsPage() {
                       {ch != null && Math.abs(ch) > 0.05 && (
                         <div
                           className={`text-xs mt-0.5 ${
-                            ch < 0 ? "text-accent-2" : "text-amber-400"
+                            ch < 0 ? "text-success" : "text-warn"
                           }`}
                         >
                           {ch > 0 ? "▲" : "▼"} {Math.abs(ch).toFixed(1)}

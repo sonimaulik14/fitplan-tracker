@@ -1,15 +1,31 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Inter } from "next/font/google";
+import { Barlow, Barlow_Condensed, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Toaster from "./components/Toaster";
 import PWA from "./components/PWA";
+import OfflineSync from "./components/OfflineSync";
 import AmbientPhoto from "./components/AmbientPhoto";
 
-// One family, doing all the work via weight + tracking. No display face.
-const inter = Inter({
+// FORGE type system: an industrial grotesque superfamily for UI + a condensed
+// display cut for headings/hero numbers, and a mono face for anything that
+// ticks or aligns in columns (timers, set rows, stat tables).
+const barlow = Barlow({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-barlow-condensed",
+  display: "swap",
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-plex-mono",
   display: "swap",
 });
 
@@ -42,7 +58,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#07080c",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#07080c" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f7fd" },
+  ],
   // Extend under the iOS status bar / home indicator so we can pad around them
   // with env(safe-area-inset-*). Without this, those insets always report 0.
   viewportFit: "cover",
@@ -57,12 +76,12 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} h-full`}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${plexMono.variable} h-full`}
     >
       <head>
         {/* Anti-flash theme init — runs before paint. */}
         <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'dark';if(t==='system'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();`}
+          {`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'light';if(t==='system'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();`}
         </Script>
       </head>
       <body className="min-h-full flex flex-col">
@@ -73,6 +92,7 @@ export default function RootLayout({
         {children}
         <Toaster />
         <PWA />
+        <OfflineSync />
       </body>
     </html>
   );
