@@ -4,8 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastTimeByExercise, getSwaps, getDaySupplements, getActiveEnrollment } from "@/lib/metrics";
-import { termInfo, muscleStyle, type Unit } from "@/lib/ui";
-import { getPhoto } from "@/lib/unsplash";
+import { termInfo, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
 import WorkoutLogger, { type LoggerExercise } from "@/app/components/WorkoutLogger";
 import DaySupplements from "@/app/components/DaySupplements";
@@ -89,17 +88,6 @@ export default async function WorkoutPage({
     };
   });
 
-  // Resolve a live photo per muscle group (cached) and attach to each exercise.
-  const muscleKeys = [...new Set(exercises.map((e) => muscleStyle(e.muscle).key))];
-  const photoByKey = new Map<string, string>();
-  await Promise.all(
-    muscleKeys.map(async (k) => {
-      const p = await getPhoto(`hero:${k}`);
-      photoByKey.set(k, p.url);
-    })
-  );
-  for (const e of exercises) e.photoUrl = photoByKey.get(muscleStyle(e.muscle).key);
-
   const weekStyleInfo = day.week.style ? termInfo(day.week.style) : null;
 
   return (
@@ -108,7 +96,7 @@ export default async function WorkoutPage({
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-solid py-1.5 pl-2 pr-3.5 text-sm font-medium text-foreground/80 hover:text-foreground hover:border-border-strong transition-colors"
+          className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-solid py-1.5 pl-2 pr-3.5 text-sm font-medium text-foreground/80 hover:text-foreground hover:border-border-strong transition-colors"
         >
           <ChevronLeft size={16} /> Dashboard
         </Link>

@@ -47,7 +47,7 @@ export default function DangerButton({
         onClose={() => !pending && setOpen(false)}
         ariaLabel={title}
         dismissible={!pending}
-        panelClassName="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl border border-border-strong bg-surface-solid shadow-2xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+        panelClassName="w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl border border-border-strong bg-surface-solid shadow-2xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
       >
         <div className="text-3xl">⚠️</div>
         <h2 className="font-display text-lg font-bold mt-2">{title}</h2>

@@ -4,6 +4,7 @@ import { Barlow, Barlow_Condensed, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Toaster from "./components/Toaster";
 import PWA from "./components/PWA";
+import OfflineSync from "./components/OfflineSync";
 
 // FORGE type system: an industrial grotesque superfamily for UI + a condensed
 // display cut for headings/hero numbers, and a mono face for anything that
@@ -86,6 +87,7 @@ export default function RootLayout({
         {children}
         <Toaster />
         <PWA />
+        <OfflineSync />
       </body>
     </html>
   );

@@ -20,8 +20,8 @@ export type OutboxSet = {
   done: boolean;
 };
 export type OutboxMeta = {
-  notes?: string;
-  mood?: string;
+  notes?: string | null;
+  mood?: string | null;
   bodyweight?: number | null;
 };
 export type WorkoutSavePayload = {

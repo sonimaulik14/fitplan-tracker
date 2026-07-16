@@ -39,7 +39,7 @@ self.addEventListener("push", (event) => {
       body: data.body || "",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: data.tag || "fitplan-reminder",
+      tag: data.tag || "vajra-reminder",
       data: { url: data.url || "/dashboard" },
       vibrate: [80, 40, 80],
     })

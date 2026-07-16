@@ -70,14 +70,14 @@ export default function DaySupplements({
             aria-pressed={s.taken}
             className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all active:scale-[0.97] disabled:opacity-60 ${
               s.taken
-                ? "border-accent-2/45 bg-accent-2/10"
+                ? "border-success/45 bg-success/10"
                 : "border-border bg-surface-2 hover:border-border-strong"
             }`}
           >
             <span
               className={`grid place-items-center w-5 h-5 rounded-md shrink-0 transition-colors ${
                 s.taken
-                  ? "bg-accent-2 text-[#05231a]"
+                  ? "bg-success text-[#05231a]"
                   : "border border-border-strong"
               }`}
             >
