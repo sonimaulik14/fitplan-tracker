@@ -34,6 +34,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "images.pexels.com" },
+      // Vercel Blob — user avatars and progress photos (lib/storage.ts).
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
   // Security hardening headers on every response (clickjacking, MIME sniffing,

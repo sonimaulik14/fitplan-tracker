@@ -14,7 +14,7 @@ const ORDER = ["Legs", "Chest", "Back", "Shoulders", "Arms", "Calves", "Abs"];
 export default async function LibraryPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const plan = await getActivePlan();
+  const plan = await getActivePlan(user.id);
 
   // Unique exercises by name → { muscle, count }
   const byName = new Map<string, { muscle: string; count: number }>();

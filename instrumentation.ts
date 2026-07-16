@@ -12,7 +12,6 @@ export function register() {
   }
 
   const features = {
-    "AI Coach": !!process.env.ANTHROPIC_API_KEY,
     "Push reminders":
       !!process.env.VAPID_PUBLIC_KEY && !!process.env.VAPID_PRIVATE_KEY,
     "Reminder cron": !!process.env.CRON_SECRET,

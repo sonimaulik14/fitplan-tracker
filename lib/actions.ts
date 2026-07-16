@@ -13,13 +13,12 @@ import {
   revokeSessions,
 } from "./auth";
 import { rateLimit } from "./rate-limit";
-import { serializeSupplements } from "./ui";
+import { hashResetToken } from "./tokens";
+import { serializeSupplements, unitToKg } from "./ui";
 import { storeImage } from "./storage";
 import { sendEmail, emailConfigured, passwordResetEmail } from "./email";
 import { todayKey } from "./date";
 import { headers } from "next/headers";
-
-const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
 // Only accept raster image data URLs. Rejects SVG (which can carry inline
 // script) and anything that isn't a base64 PNG/JPEG/WebP/GIF.
@@ -180,7 +179,7 @@ export async function requestPasswordResetAction(
     await prisma.passwordResetToken.create({
       data: {
         userId: user.id,
-        tokenHash: sha256(raw),
+        tokenHash: hashResetToken(raw),
         expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       },
     });
@@ -231,7 +230,7 @@ export async function resetPasswordAction(
   if (next !== confirm) return { error: "Passwords don't match." };
 
   const row = await prisma.passwordResetToken.findUnique({
-    where: { tokenHash: sha256(token) },
+    where: { tokenHash: hashResetToken(token) },
   });
   if (!row || row.expiresAt < new Date())
     return { error: "This reset link is invalid or has expired." };
@@ -455,10 +454,8 @@ export async function completeOnboardingAction(input: OnboardingInput) {
 
   // Optional starting weigh-in (convert chosen unit → kg).
   if (input.bodyweight && input.bodyweight > 0) {
-    const kg =
-      input.unit === "lb" ? input.bodyweight / 2.2046226218 : input.bodyweight;
     await prisma.bodyMetric.create({
-      data: { userId: user.id, weightKg: kg },
+      data: { userId: user.id, weightKg: unitToKg(input.bodyweight, input.unit) },
     });
   }
 
