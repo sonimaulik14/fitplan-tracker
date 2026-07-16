@@ -37,6 +37,7 @@ model User {
   photos       ProgressPhoto[]
   resetTokens  PasswordResetToken[]
   pushSubscriptions PushSubscription[]
+  customPlans  Plan[]          @relation("CustomPlans")
 }
 
 model PushSubscription {
@@ -142,8 +143,14 @@ model Plan {
   name        String
   description String?
   totalWeeks  Int          @default(12)
+  // Null = built-in (seeded, visible to everyone). Set = a user-authored
+  // custom program, visible only to its owner.
+  ownerId     String?
+  owner       User?        @relation("CustomPlans", fields: [ownerId], references: [id], onDelete: Cascade)
   weeks       Week[]
   enrollments Enrollment[]
+
+  @@index([ownerId])
 }
 
 model Week {

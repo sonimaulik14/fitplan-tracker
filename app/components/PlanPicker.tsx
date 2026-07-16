@@ -10,6 +10,7 @@ type Plan = {
   description: string | null;
   totalWeeks: number;
   daysPerWeek: number;
+  custom?: boolean;
 };
 
 export default function PlanPicker({
@@ -63,6 +64,11 @@ export default function PlanPicker({
                   <span className="chip text-accent border-accent/30 bg-accent/10">
                     {p.totalWeeks} weeks
                   </span>
+                  {p.custom && (
+                    <span className="chip text-steel border-steel/30 bg-steel/10">
+                      Yours
+                    </span>
+                  )}
                   {p.id === currentPlanId && (
                     <span className="chip text-success border-success/30 bg-success/10">
                       Current

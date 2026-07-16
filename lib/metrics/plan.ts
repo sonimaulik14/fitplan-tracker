@@ -29,17 +29,26 @@ export async function getActivePlan(userId?: string) {
   return prisma.plan.findFirst({ include: PLAN_INCLUDE });
 }
 
-// All plans the user can choose from, with light summary stats for the picker.
-export async function getAllPlans() {
+// All plans the user can choose from — built-ins plus their own custom
+// programs — with light summary stats for the picker.
+export async function getAllPlans(userId?: string) {
   const plans = await prisma.plan.findMany({
-    orderBy: { totalWeeks: "asc" },
-    include: { weeks: { take: 1, orderBy: { number: "asc" }, include: { days: true } } },
+    where: userId
+      ? { OR: [{ ownerId: null }, { ownerId: userId }] }
+      : { ownerId: null },
+    orderBy: [{ ownerId: "asc" }, { totalWeeks: "asc" }],
+    include: {
+      weeks: { take: 1, orderBy: { number: "asc" }, include: { days: true } },
+      _count: { select: { weeks: true } },
+    },
   });
   return plans.map((pl) => ({
     id: pl.id,
     name: pl.name,
     description: pl.description,
     totalWeeks: pl.totalWeeks,
+    custom: pl.ownerId != null,
+    builtWeeks: pl._count.weeks,
     daysPerWeek: pl.weeks[0]
       ? pl.weeks[0].days.filter(
           (d) => !d.focus.toLowerCase().includes("rest")
