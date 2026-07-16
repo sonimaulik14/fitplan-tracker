@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "../prisma";
 import { getCurrentUser } from "../auth";
+import { getActiveEnrollment } from "../metrics/enrollment";
 import { serializeSupplements } from "../ui";
 import { todayKey } from "../date";
 
@@ -60,17 +61,26 @@ export async function adjustWaterAction(deltaMl: number) {
 }
 
 // Toggle a supplement as taken for a specific WORKOUT DAY (not the calendar
-// date), so each program day has its own independent log. Stored in DailyLog
-// under a "wd:<workoutDayId>" key (kept separate from the date-keyed water rows).
+// date), so each program day has its own independent log. Scoped to the
+// active enrollment — a fresh cycle starts with empty checklists.
 export async function toggleDaySupplementAction(
   workoutDayId: string,
   name: string
 ) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  const day = `wd:${workoutDayId}`;
-  const existing = await prisma.dailyLog.findUnique({
-    where: { userId_day: { userId: user.id, day } },
+  const day = await prisma.workoutDay.findUnique({
+    where: { id: workoutDayId },
+    select: { week: { select: { planId: true } } },
+  });
+  if (!day) return { ok: false, error: "Workout not found." };
+  const enrollment = await getActiveEnrollment(user.id, day.week.planId);
+  if (!enrollment) return { ok: false, error: "Not enrolled." };
+
+  const existing = await prisma.workoutDaySupplementLog.findUnique({
+    where: {
+      enrollmentId_workoutDayId: { enrollmentId: enrollment.id, workoutDayId },
+    },
   });
   const set = new Set(
     (existing?.supplementsTaken ?? "")
@@ -81,9 +91,11 @@ export async function toggleDaySupplementAction(
   if (set.has(name)) set.delete(name);
   else set.add(name);
   const csv = [...set].join(",");
-  await prisma.dailyLog.upsert({
-    where: { userId_day: { userId: user.id, day } },
-    create: { userId: user.id, day, supplementsTaken: csv },
+  await prisma.workoutDaySupplementLog.upsert({
+    where: {
+      enrollmentId_workoutDayId: { enrollmentId: enrollment.id, workoutDayId },
+    },
+    create: { enrollmentId: enrollment.id, workoutDayId, supplementsTaken: csv },
     update: { supplementsTaken: csv },
   });
   revalidatePath(`/workout/${workoutDayId}`);

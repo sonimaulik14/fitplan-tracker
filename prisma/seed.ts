@@ -1259,11 +1259,20 @@ async function main() {
       onboardedAt: new Date(),
     },
   });
-  await prisma.enrollment.upsert({
-    where: { userId_planId: { userId: demo.id, planId: plan.id } },
-    update: { status: "active" },
-    create: { userId: demo.id, planId: plan.id, status: "active" },
+  const demoEnrollment = await prisma.enrollment.findFirst({
+    where: { userId: demo.id, planId: plan.id },
+    orderBy: { cycle: "desc" },
   });
+  if (demoEnrollment) {
+    await prisma.enrollment.update({
+      where: { id: demoEnrollment.id },
+      data: { status: "active" },
+    });
+  } else {
+    await prisma.enrollment.create({
+      data: { userId: demo.id, planId: plan.id, status: "active" },
+    });
+  }
 
   const exCount = await prisma.planExercise.count();
   console.log(

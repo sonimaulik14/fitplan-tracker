@@ -1,6 +1,7 @@
 import { prisma } from "../prisma";
 import { todayKey } from "../date";
 import { parseSupplements } from "../ui";
+import { getActiveEnrollment } from "./enrollment";
 
 /** Today's food entries, macro totals, water + supplement state, and goals. */
 export async function getNutritionToday(userId: string) {
@@ -49,12 +50,15 @@ export async function getNutritionToday(userId: string) {
 }
 
 // Supplement definitions + whether each was logged for a specific WORKOUT DAY.
-// Keyed per workout day (wd:<id>) so each program day logs independently.
+// Scoped to the user's active enrollment so each cycle logs independently.
 export async function getDaySupplements(userId: string, workoutDayId: string) {
   const [user, log] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { supplements: true } }),
-    prisma.dailyLog.findUnique({
-      where: { userId_day: { userId, day: `wd:${workoutDayId}` } },
+    prisma.workoutDaySupplementLog.findFirst({
+      where: {
+        workoutDayId,
+        enrollment: { userId, status: "active" },
+      },
     }),
   ]);
   const taken = new Set(
@@ -77,11 +81,7 @@ export async function getSupplementTotals(userId: string) {
       where: { id: userId },
       select: { supplements: true },
     }),
-    prisma.enrollment.findFirst({
-      where: { userId, status: "active" },
-      orderBy: { startDate: "desc" },
-      select: { startDate: true, startedAt: true },
-    }),
+    getActiveEnrollment(userId),
   ]);
   const defs = parseSupplements(user?.supplements);
   if (defs.length === 0) return { supplements: [], daysElapsed: 0 };
@@ -90,11 +90,13 @@ export async function getSupplementTotals(userId: string) {
     enrollment?.startedAt ??
     enrollment?.startDate ??
     new Date(Date.now() - 84 * 86400000);
-  // Per-workout-day logs are keyed "wd:<id>" (see toggleDaySupplementAction).
-  const logs = await prisma.dailyLog.findMany({
-    where: { userId, day: { startsWith: "wd:" }, supplementsTaken: { not: "" } },
-    select: { supplementsTaken: true },
-  });
+  // Per-workout-day logs, scoped to the active enrollment (current cycle).
+  const logs = enrollment
+    ? await prisma.workoutDaySupplementLog.findMany({
+        where: { enrollmentId: enrollment.id, supplementsTaken: { not: "" } },
+        select: { supplementsTaken: true },
+      })
+    : [];
 
   const counts = new Map<string, number>();
   for (const l of logs)

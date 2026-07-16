@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "../prisma";
 import { getCurrentUser } from "../auth";
+import { getActiveEnrollment } from "../metrics/enrollment";
+import { isProgramComplete } from "../metrics/progress";
 
 // Clear all logged sets for a single workout day (deletes that day's session;
 // set entries cascade). The day shows as not-started again.
@@ -17,9 +19,7 @@ export async function resetDayAction(
     include: { week: true },
   });
   if (!day) return { ok: false, error: "Workout not found." };
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId: user.id, planId: day.week.planId },
-  });
+  const enrollment = await getActiveEnrollment(user.id, day.week.planId);
   if (!enrollment) return { ok: false, error: "Not enrolled." };
 
   await prisma.workoutSession.deleteMany({
@@ -36,10 +36,7 @@ export async function resetDayAction(
 export async function resetProgramAction() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId: user.id, status: "active" },
-    orderBy: { startDate: "desc" },
-  });
+  const enrollment = await getActiveEnrollment(user.id);
   if (enrollment) {
     await prisma.workoutSession.deleteMany({
       where: { enrollmentId: enrollment.id },
@@ -68,11 +65,26 @@ export async function startPlanAction(formData: FormData) {
     where: { userId: user.id, status: "active" },
     data: { status: "paused" },
   });
-  await prisma.enrollment.upsert({
-    where: { userId_planId: { userId: user.id, planId: plan.id } },
-    update: { status: "active" },
-    create: { userId: user.id, planId: plan.id },
+  // Reactivate the latest run of this plan unless it was completed; a
+  // completed cycle stays archived and a fresh cycle row begins instead.
+  const latest = await prisma.enrollment.findFirst({
+    where: { userId: user.id, planId: plan.id },
+    orderBy: { cycle: "desc" },
   });
+  if (latest && latest.status !== "completed") {
+    await prisma.enrollment.update({
+      where: { id: latest.id },
+      data: { status: "active" },
+    });
+  } else {
+    await prisma.enrollment.create({
+      data: {
+        userId: user.id,
+        planId: plan.id,
+        cycle: latest ? latest.cycle + 1 : 1,
+      },
+    });
+  }
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
@@ -94,31 +106,66 @@ type WorkoutMeta = {
   bodyweight?: number | null;
 };
 
+// Machine-readable failure codes for the offline outbox's retry classifier
+// (string matching on error copy would be fragile). "conflict" = a stale
+// offline snapshot must not clobber newer server data.
+export type SaveWorkoutResult = {
+  ok: boolean;
+  error?: string;
+  code?: "auth" | "not_found" | "not_enrolled" | "conflict";
+  weekCompleted?: boolean;
+  weekNumber?: number;
+  programComplete?: boolean;
+};
+
 export async function saveWorkoutAction(
   workoutDayId: string,
   sets: IncomingSet[],
   status: "in_progress" | "completed",
-  meta: WorkoutMeta = {}
-): Promise<{
-  ok: boolean;
-  error?: string;
-  weekCompleted?: boolean;
-  weekNumber?: number;
-  programComplete?: boolean;
-}> {
+  meta: WorkoutMeta = {},
+  // When replaying a queued offline snapshot, the time it was last edited.
+  // Live foreground saves omit it (always-win, today's behavior).
+  capturedAt?: number
+): Promise<SaveWorkoutResult> {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Not signed in." };
+  if (!user) return { ok: false, error: "Not signed in.", code: "auth" };
 
   const day = await prisma.workoutDay.findUnique({
     where: { id: workoutDayId },
     include: { week: true, exercises: { select: { id: true } } },
   });
-  if (!day) return { ok: false, error: "Workout not found." };
+  if (!day)
+    return { ok: false, error: "Workout not found.", code: "not_found" };
 
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId: user.id, planId: day.week.planId },
-  });
-  if (!enrollment) return { ok: false, error: "You haven't started this plan." };
+  const enrollment = await getActiveEnrollment(user.id, day.week.planId);
+  if (!enrollment)
+    return {
+      ok: false,
+      error: "You haven't started this plan.",
+      code: "not_enrolled",
+    };
+
+  // Cross-device guard: saves are last-write-wins for the WHOLE day (the
+  // session's sets are replaced wholesale below). A delayed offline replay
+  // older than the session's latest write must not clobber it.
+  if (capturedAt != null) {
+    const existing = await prisma.workoutSession.findUnique({
+      where: {
+        enrollmentId_workoutDayId: {
+          enrollmentId: enrollment.id,
+          workoutDayId,
+        },
+      },
+      select: { performedDate: true },
+    });
+    if (existing && existing.performedDate.getTime() > capturedAt) {
+      return {
+        ok: false,
+        error: "This workout was updated more recently on another device.",
+        code: "conflict",
+      };
+    }
+  }
 
   // Sanitize client input: drop sets whose exercise doesn't belong to this day
   // (prevents cross-plan pollution), and clamp the numeric fields to sane ranges.
@@ -242,9 +289,10 @@ export async function swapExerciseAction(
   });
   if (!ex) return { ok: false, error: "Exercise not found." };
 
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId: user.id, planId: ex.workoutDay.week.planId },
-  });
+  const enrollment = await getActiveEnrollment(
+    user.id,
+    ex.workoutDay.week.planId
+  );
   if (!enrollment) return { ok: false, error: "Not enrolled." };
 
   const trimmed = name.trim();
@@ -304,11 +352,7 @@ export async function startProgramAction(dateStr?: string) {
     date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
   }
 
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId: user.id, status: "active" },
-    orderBy: { startDate: "desc" },
-    select: { id: true },
-  });
+  const enrollment = await getActiveEnrollment(user.id);
   if (!enrollment) return { ok: false, error: "No active plan." };
 
   await prisma.enrollment.update({
@@ -329,11 +373,7 @@ export async function setStartDateAction(dateStr: string) {
   if ("error" in parsed) return { ok: false, error: parsed.error };
   const date = parsed.date;
 
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId: user.id, status: "active" },
-    orderBy: { startDate: "desc" },
-    select: { id: true },
-  });
+  const enrollment = await getActiveEnrollment(user.id);
   if (!enrollment) return { ok: false, error: "No active plan." };
 
   await prisma.enrollment.update({
@@ -343,4 +383,72 @@ export async function setStartDateAction(dateStr: string) {
   revalidatePath("/timeline");
   revalidatePath("/dashboard");
   return { ok: true };
+}
+
+/**
+ * Day-85: archive the finished run and begin the next cycle of the same
+ * plan. History (sessions, PRs, streaks) stays on the completed enrollment;
+ * equipment swaps carry over; the new cycle lands on the existing "Start
+ * program / schedule a date" surface (startedAt: null).
+ */
+export async function startNextCycleAction(): Promise<{
+  ok: boolean;
+  error?: string;
+  cycle?: number;
+}> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+
+  const enrollment = await getActiveEnrollment(user.id);
+  if (!enrollment) return { ok: false, error: "No active plan." };
+
+  // Restart is offered once the program is fully logged, or once the
+  // scheduled 12 weeks have elapsed (a missed day shouldn't wall off the
+  // next block).
+  const complete = await isProgramComplete(enrollment.id, enrollment.planId);
+  if (!complete && enrollment.startedAt) {
+    const plan = await prisma.plan.findUnique({
+      where: { id: enrollment.planId },
+      select: { totalWeeks: true },
+    });
+    const endMs =
+      enrollment.startedAt.getTime() +
+      (plan?.totalWeeks ?? 12) * 7 * 86_400_000;
+    if (Date.now() < endMs)
+      return { ok: false, error: "This program isn't finished yet." };
+  } else if (!complete) {
+    return { ok: false, error: "This program isn't finished yet." };
+  }
+
+  const swaps = await prisma.exerciseSwap.findMany({
+    where: { enrollmentId: enrollment.id },
+    select: { planExerciseId: true, name: true },
+  });
+
+  const next = await prisma.$transaction(async (tx) => {
+    await tx.enrollment.update({
+      where: { id: enrollment.id },
+      data: { status: "completed" },
+    });
+    const created = await tx.enrollment.create({
+      data: {
+        userId: user.id,
+        planId: enrollment.planId,
+        cycle: enrollment.cycle + 1,
+        status: "active",
+        startedAt: null,
+      },
+    });
+    if (swaps.length) {
+      await tx.exerciseSwap.createMany({
+        data: swaps.map((s) => ({ ...s, enrollmentId: created.id })),
+      });
+    }
+    return created;
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/timeline");
+  revalidatePath("/plan");
+  return { ok: true, cycle: next.cycle };
 }

@@ -3,7 +3,7 @@ import { ChevronLeft } from "lucide-react";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getLastTimeByExercise, getSwaps, getDaySupplements } from "@/lib/metrics";
+import { getLastTimeByExercise, getSwaps, getDaySupplements, getActiveEnrollment } from "@/lib/metrics";
 import { termInfo, muscleStyle, type Unit } from "@/lib/ui";
 import { getPhoto } from "@/lib/unsplash";
 import NavBar from "@/app/components/NavBar";
@@ -28,9 +28,7 @@ export default async function WorkoutPage({
   });
   if (!day) notFound();
 
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId: user.id, planId: day.week.planId },
-  });
+  const enrollment = await getActiveEnrollment(user.id, day.week.planId);
   if (!enrollment) redirect("/dashboard");
 
   const session = await prisma.workoutSession.findUnique({

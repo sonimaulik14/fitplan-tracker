@@ -20,8 +20,11 @@ export async function getProgress(userId: string) {
   const plan = await getActivePlan(userId);
   if (!plan) return null;
 
+  // Active enrollment only (highest cycle) — progress is per-cycle; finished
+  // cycles keep their history on their own archived rows.
   const enrollment = await prisma.enrollment.findFirst({
-    where: { userId, planId: plan.id },
+    where: { userId, planId: plan.id, status: "active" },
+    orderBy: [{ cycle: "desc" }, { startDate: "desc" }],
     include: {
       sessions: {
         include: { setEntries: true },
@@ -356,4 +359,31 @@ export function buildTimeline(p: ProgressResult, today: Date = new Date()): Time
     behind: Math.max(0, dueByToday - doneByToday),
     days,
   };
+}
+
+/**
+ * True when every training day of the plan has a completed session for this
+ * enrollment. The same count saveWorkoutAction uses to fire the
+ * program-complete celebration; extracted so the Day-85 flow shares it.
+ */
+export async function isProgramComplete(
+  enrollmentId: string,
+  planId: string
+): Promise<boolean> {
+  const allDays = await prisma.workoutDay.findMany({
+    where: { week: { planId } },
+    select: { id: true, focus: true },
+  });
+  const trainingIds = allDays
+    .filter((d) => !d.focus.toLowerCase().includes("rest"))
+    .map((d) => d.id);
+  if (trainingIds.length === 0) return false;
+  const done = await prisma.workoutSession.count({
+    where: {
+      enrollmentId,
+      workoutDayId: { in: trainingIds },
+      status: "completed",
+    },
+  });
+  return done >= trainingIds.length;
 }

@@ -1,5 +1,6 @@
 import { prisma } from "../prisma";
 import { slugify } from "../ui";
+import { getActiveEnrollment } from "./enrollment";
 
 const PLAN_INCLUDE = {
   weeks: {
@@ -18,10 +19,7 @@ const PLAN_INCLUDE = {
 // enrolled yet. With no userId, falls back to the first plan (browse contexts).
 export async function getActivePlan(userId?: string) {
   if (userId) {
-    const enr = await prisma.enrollment.findFirst({
-      where: { userId, status: "active" },
-      orderBy: { startDate: "desc" },
-    });
+    const enr = await getActiveEnrollment(userId);
     if (!enr) return null;
     return prisma.plan.findUnique({
       where: { id: enr.planId },

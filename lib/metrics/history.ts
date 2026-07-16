@@ -64,6 +64,8 @@ export async function getLastTimeByExercise(
         weight: { not: null },
         reps: { not: null },
         session: {
+          // Deliberately spans ALL cycles of this plan — Day 1 of cycle 2
+          // should show cycle-1 numbers as "last time" + overload baseline.
           enrollment: { userId, planId },
           workoutDayId: { not: excludeWorkoutDayId },
         },
@@ -71,8 +73,10 @@ export async function getLastTimeByExercise(
       include: { planExercise: true, session: true },
       orderBy: [{ session: { performedDate: "desc" } }, { setNumber: "desc" }],
     }),
+    // Swaps come from the ACTIVE enrollment only, so history is keyed by
+    // today's effective movement names (not a stale cycle's).
     prisma.exerciseSwap.findMany({
-      where: { enrollment: { userId, planId } },
+      where: { enrollment: { userId, planId, status: "active" } },
     }),
   ]);
 
@@ -118,8 +122,10 @@ export async function getExerciseHistory(userId: string, name: string) {
       },
       orderBy: { session: { performedDate: "asc" } },
     }),
+    // Active enrollment's swaps only — with copied swap rows on every cycle,
+    // an unscoped query could key the same exercise two different ways.
     prisma.exerciseSwap.findMany({
-      where: { enrollment: { userId } },
+      where: { enrollment: { userId, status: "active" } },
       select: { planExerciseId: true, name: true },
     }),
   ]);
