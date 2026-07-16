@@ -10,7 +10,8 @@ import {
   celebrateWeek,
   celebrateProgram,
 } from "@/lib/celebrate";
-import { ArrowLeftRight, Target as TargetIcon, Timer } from "lucide-react";
+import { ArrowLeftRight, Target as TargetIcon, Timer, Pin } from "lucide-react";
+import { getRestPref, setRestPref } from "@/lib/restPrefs";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
 import {
   enqueueWorkoutSave,
@@ -112,17 +113,23 @@ export default function WorkoutLogger({
   const router = useRouter();
 
   // ---- Rest timer ----------------------------------------------------------
-  // Auto-starts when a set is checked done; counts down a per-set-type default,
-  // adjustable on the fly, and chimes/vibrates at zero. Pure client-side.
+  // Auto-starts when a set is checked done; counts down the exercise's saved
+  // rest (or a per-set-type default), adjustable on the fly, and
+  // chimes/vibrates at zero. Pure client-side.
   const REST_DEFAULTS = { warmup: 45, work: 90 };
-  const [rest, setRest] = useState<{ remaining: number; total: number } | null>(
-    null
-  );
+  const [rest, setRest] = useState<{
+    remaining: number;
+    total: number;
+    // Which exercise (effective name) this rest belongs to — enables the
+    // "save as default for this exercise" pin. Null for warmup rests.
+    exName: string | null;
+  } | null>(null);
   const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Refs hold the live countdown so the interval never reads stale state and we
   // keep side-effects (chime/vibrate/toast) OUT of the setState updater.
   const restRemainingRef = useRef(0);
   const restTotalRef = useRef(0);
+  const restExRef = useRef<string | null>(null);
 
   const stopRest = useCallback(() => {
     if (restIntervalRef.current) {
@@ -133,11 +140,12 @@ export default function WorkoutLogger({
     setRest(null);
   }, []);
 
-  const startRest = useCallback((seconds: number) => {
+  const startRest = useCallback((seconds: number, exName: string | null = null) => {
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
     restRemainingRef.current = seconds;
     restTotalRef.current = seconds;
-    setRest({ remaining: seconds, total: seconds });
+    restExRef.current = exName;
+    setRest({ remaining: seconds, total: seconds, exName });
     restIntervalRef.current = setInterval(() => {
       const next = restRemainingRef.current - 1;
       if (next <= 0) {
@@ -153,7 +161,11 @@ export default function WorkoutLogger({
         toast("Rest over — next set!");
       } else {
         restRemainingRef.current = next;
-        setRest({ remaining: next, total: restTotalRef.current });
+        setRest({
+          remaining: next,
+          total: restTotalRef.current,
+          exName: restExRef.current,
+        });
       }
     }, 1000);
   }, []);
@@ -162,7 +174,20 @@ export default function WorkoutLogger({
     const next = Math.max(1, restRemainingRef.current + delta);
     restRemainingRef.current = next;
     if (next > restTotalRef.current) restTotalRef.current = next;
-    setRest({ remaining: next, total: restTotalRef.current });
+    setRest({
+      remaining: next,
+      total: restTotalRef.current,
+      exName: restExRef.current,
+    });
+  };
+
+  // Pin the current rest length (the running total, incl. ±15 nudges) as this
+  // exercise's default for every future session on this device.
+  const saveRestDefault = () => {
+    const name = restExRef.current;
+    if (!name) return;
+    setRestPref(name, restTotalRef.current);
+    toast(`Rest for ${name} set to ${fmtClock(restTotalRef.current)}`);
   };
 
   // Clear any running interval on unmount.
@@ -436,9 +461,13 @@ export default function WorkoutLogger({
       const ex = exRef.current.find((e) => e.id === exId);
       const row = ex?.rows.find((r) => r.setNumber === setNumber);
       if (ex && row && !ex.isCardio && row.setType !== "cardio") {
-        startRest(
-          row.setType === "warmup" ? REST_DEFAULTS.warmup : REST_DEFAULTS.work
-        );
+        if (row.setType === "warmup") {
+          startRest(REST_DEFAULTS.warmup);
+        } else {
+          // Work sets honor the exercise's saved rest (keyed by effective
+          // name, so it follows swaps); the pin on the rest bar saves it.
+          startRest(getRestPref(ex.name) ?? REST_DEFAULTS.work, ex.name);
+        }
       }
     } else {
       // Unchecking the set that's resting → cancel the timer.
@@ -1039,7 +1068,9 @@ export default function WorkoutLogger({
             <div className="max-w-3xl mx-auto px-5 py-2.5">
               <div className="flex items-center gap-3">
                 <Timer size={16} className="text-accent shrink-0" aria-hidden />
-                <span className="eyebrow">Rest</span>
+                <span className="eyebrow truncate">
+                  Rest{rest.exName ? ` · ${rest.exName}` : ""}
+                </span>
                 <span className="stat-num text-lg ml-auto">
                   {fmtClock(rest.remaining)}
                 </span>
@@ -1058,6 +1089,17 @@ export default function WorkoutLogger({
                   >
                     +15
                   </button>
+                  {rest.exName && (
+                    <button
+                      type="button"
+                      onClick={saveRestDefault}
+                      aria-label={`Save ${fmtClock(rest.total)} as the default rest for ${rest.exName}`}
+                      title={`Save ${fmtClock(rest.total)} as this exercise's rest`}
+                      className="btn-ghost !py-1 !px-2.5 text-xs"
+                    >
+                      <Pin size={13} aria-hidden />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={stopRest}
