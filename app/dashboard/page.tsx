@@ -68,7 +68,7 @@ export default async function DashboardPage({
   // A placeholder program (selected but no workouts built yet) has no days.
   const hasWorkouts = (p?.days.length ?? 0) > 0;
   // Not enrolled yet → offer the available plans to choose from.
-  const plans = p?.enrolled ? [] : await getAllPlans();
+  const plans = p?.enrolled ? [] : await getAllPlans(user.id);
   const firstName = user.name.split(" ")[0];
   // Enrolled but nothing logged yet — show an inviting first-run hero instead
   // of a wall of zeros.

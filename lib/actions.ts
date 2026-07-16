@@ -7,3 +7,4 @@ export * from "./actions/profile";
 export * from "./actions/nutrition";
 export * from "./actions/body";
 export * from "./actions/cache";
+export * from "./actions/plans";
