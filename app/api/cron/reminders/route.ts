@@ -1,36 +1,11 @@
 import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser, pushEnabled } from "@/lib/push";
+import { reminderDecision } from "@/lib/reminders";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-const WEEKDAY: Record<string, number> = {
-  Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
-};
-
-// Local weekday (0-6), "HH:MM", and "YYYY-MM-DD" for an IANA timezone.
-function localNow(tz: string) {
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: tz,
-    hour12: false,
-    weekday: "short",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const p = Object.fromEntries(fmt.formatToParts(new Date()).map((x) => [x.type, x.value]));
-  let hour = p.hour;
-  if (hour === "24") hour = "00"; // some engines emit 24 at midnight
-  return {
-    weekday: WEEKDAY[p.weekday] ?? 0,
-    hm: `${hour}:${p.minute}`,
-    date: `${p.year}-${p.month}-${p.day}`,
-  };
-}
 
 // Constant-time bearer-token check. Vercel Cron sends `Authorization: Bearer
 // $CRON_SECRET` automatically, so no query-string secret (which would leak into
@@ -72,24 +47,14 @@ export async function GET(req: Request) {
   let considered = 0;
 
   for (const u of users) {
-    const tz = u.timezone || "UTC";
-    let now;
-    try {
-      now = localNow(tz);
-    } catch {
-      now = localNow("UTC");
-    }
+    const decision = reminderDecision(u);
 
-    if (u.lastNotifiedDay === now.date) continue; // already handled today
-    if (now.hm < (u.reminderTime || "18:00")) continue; // not time yet
+    if (decision.kind === "skip-already-notified") continue; // already handled today
+    if (decision.kind === "skip-before-time") continue; // not time yet
 
-    // Training-day gate (if they specified days; otherwise remind daily).
-    const days = (u.trainingDays || "")
-      .split(",")
-      .map((s) => Number(s.trim()))
-      .filter((d) => !Number.isNaN(d));
-    if (days.length && !days.includes(now.weekday)) {
-      await mark(u.id, now.date);
+    // Training-day gate: still mark the day so they aren't re-evaluated today.
+    if (decision.kind === "skip-not-training-day") {
+      await mark(u.id, decision.localDate);
       continue;
     }
 
@@ -104,7 +69,7 @@ export async function GET(req: Request) {
       select: { id: true },
     });
     if (logged) {
-      await mark(u.id, now.date);
+      await mark(u.id, decision.localDate);
       continue;
     }
 
@@ -115,7 +80,7 @@ export async function GET(req: Request) {
       tag: "fitplan-daily",
     });
     sent += n;
-    await mark(u.id, now.date);
+    await mark(u.id, decision.localDate);
   }
 
   return Response.json({ ok: true, candidates: users.length, considered, sent });
