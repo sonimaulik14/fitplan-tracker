@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#07080c" },
-    { media: "(prefers-color-scheme: light)", color: "#eef1f7" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f7fd" },
   ],
   // Extend under the iOS status bar / home indicator so we can pad around them
   // with env(safe-area-inset-*). Without this, those insets always report 0.
@@ -81,7 +81,7 @@ export default function RootLayout({
       <head>
         {/* Anti-flash theme init — runs before paint. */}
         <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'dark';if(t==='system'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();`}
+          {`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'light';if(t==='system'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();`}
         </Script>
       </head>
       <body className="min-h-full flex flex-col">

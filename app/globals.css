@@ -37,26 +37,28 @@
   --tabbar-h: 64px;
 }
 
+/* Light — the default. "AERO": airy cool white with electric blue→violet
+   energy and pastel glow. Refreshing, bright, premium-fitness. */
 :root[data-theme="light"] {
-  --background: #eef1f7;
-  --surface: rgba(255, 255, 255, 0.85);
-  --surface-2: rgba(15, 20, 35, 0.045);
+  --background: #f4f7fd; /* cool sky-tinted white */
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-2: rgba(23, 37, 84, 0.05);
   --surface-solid: #ffffff;
-  --border: rgba(15, 20, 35, 0.1);
-  --border-strong: rgba(15, 20, 35, 0.18);
-  --foreground: #161a24;
-  --muted: #515a6b;
+  --border: rgba(23, 37, 84, 0.1);
+  --border-strong: rgba(23, 37, 84, 0.18);
+  --foreground: #10162a; /* cool navy ink */
+  --muted: #55617c;
   /* Darker than the dark-theme accent so small accent text/links clear WCAG
      AA (4.5:1) on the light background. */
   --accent: #2456e6;
   --accent-hi: #2f6bff;
   --accent-ink: #ffffff;
   --success: #0a9d6b;
-  --warn: #b67c0a;
-  --danger: #e0521f;
-  --pr: #c79200;
+  --warn: #a97408;
+  --danger: #dd4a1b;
+  --pr: #b8860b;
   --steel: #4c5fd7;
-  --grad-brand: linear-gradient(135deg, #2456e6 0%, #6d4de0 100%);
+  --grad-brand: linear-gradient(135deg, #2f6bff 0%, #7c3aed 100%);
   --grad-brand-soft: color-mix(in srgb, var(--accent) 10%, transparent);
   --accent-2: var(--success);
   --accent-3: var(--steel);
@@ -247,17 +249,18 @@ h2,
       rgba(7, 8, 12, 0.9) 100%
     );
   }
-  /* fixed photographic backdrop behind the aurora — depth, not distraction */
+  /* fixed photographic backdrop behind the aurora — depth, not distraction.
+     Cool-graded (gym photos skew warm/brown and would tint the whole app). */
   .ambient-photo {
     position: fixed;
     inset: 0;
     z-index: -2;
     background-size: cover;
     background-position: center;
-    opacity: 0.8;
-    filter: saturate(1.12) contrast(1.05) brightness(0.9);
+    opacity: 0.55;
+    filter: saturate(0.85) contrast(1.05) brightness(0.9) hue-rotate(8deg);
   }
-  /* Legibility scrim: lighter at top (immersive) → darker toward content. */
+  /* Legibility scrim + a cool blue wash that neutralizes warm color casts. */
   .ambient-photo::after {
     content: "";
     position: absolute;
@@ -265,18 +268,19 @@ h2,
     background:
       linear-gradient(
         180deg,
-        color-mix(in srgb, var(--background) 32%, transparent) 0%,
-        color-mix(in srgb, var(--background) 55%, transparent) 42%,
-        color-mix(in srgb, var(--background) 80%, transparent) 100%
+        color-mix(in srgb, var(--background) 40%, transparent) 0%,
+        color-mix(in srgb, var(--background) 62%, transparent) 42%,
+        color-mix(in srgb, var(--background) 85%, transparent) 100%
       ),
       radial-gradient(
         130% 100% at 50% -5%,
         transparent 35%,
-        color-mix(in srgb, var(--background) 75%, transparent) 100%
-      );
+        color-mix(in srgb, var(--background) 78%, transparent) 100%
+      ),
+      color-mix(in srgb, var(--accent) 10%, transparent);
   }
   :root[data-theme="light"] .ambient-photo {
-    opacity: 0.32;
+    opacity: 0.14;
   }
   .card-hover {
     transition:
@@ -532,10 +536,16 @@ h2,
   );
   animation: drift3 28s ease-in-out infinite alternate;
 }
-:root[data-theme="light"] .aurora::before,
-:root[data-theme="light"] .aurora::after,
+/* Light theme: the aurora becomes bright pastel energy — the signature of
+   the refreshed look, so it stays clearly visible on white. */
+:root[data-theme="light"] .aurora::before {
+  opacity: 0.32;
+}
+:root[data-theme="light"] .aurora::after {
+  opacity: 0.26;
+}
 :root[data-theme="light"] .aurora-blob {
-  opacity: 0.16;
+  opacity: 0.2;
 }
 @keyframes drift1 {
   to {

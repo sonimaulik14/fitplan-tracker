@@ -19,7 +19,7 @@ export default function ThemeToggle() {
     try {
       // read persisted theme post-mount to avoid an SSR hydration mismatch
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPref((localStorage.getItem("theme") as Pref) || "dark");
+      setPref((localStorage.getItem("theme") as Pref) || "light");
     } catch {}
   }, []);
 
