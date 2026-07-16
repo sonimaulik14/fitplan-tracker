@@ -65,9 +65,13 @@ export function reminderDecision(user: ReminderUser, now: Date = new Date()): Re
     return { kind: "skip-before-time", localDate: local.date }; // not time yet
 
   // Training-day gate (if they specified days; otherwise remind daily).
+  // Empty entries are dropped BEFORE Number() — Number("") is 0, which would
+  // silently turn "no days set" into "Sundays only".
   const days = (user.trainingDays || "")
     .split(",")
-    .map((s) => Number(s.trim()))
+    .map((s) => s.trim())
+    .filter((s) => s !== "")
+    .map(Number)
     .filter((d) => !Number.isNaN(d));
   if (days.length && !days.includes(local.weekday))
     return { kind: "skip-not-training-day", localDate: local.date };
