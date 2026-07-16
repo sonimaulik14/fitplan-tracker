@@ -1,25 +1,18 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import {
+  SESSION_COOKIE,
+  assertSecret,
+  getSecretKey,
+  verifySessionToken,
+} from "./session";
 
-const RAW_SECRET = process.env.AUTH_SECRET;
-const SECRET = new TextEncoder().encode(
-  RAW_SECRET ?? "dev-insecure-secret-change-me"
-);
-// Refuse to issue/verify sessions with the insecure default in production —
-// checked lazily (not at import) so builds without the runtime secret don't fail.
-function assertSecret() {
-  if (!RAW_SECRET && process.env.NODE_ENV === "production")
-    throw new Error(
-      "AUTH_SECRET is not set — refusing to use an insecure default in production."
-    );
-}
-const COOKIE = "fitplan_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days (default)
-const REMEMBER_AGE = 60 * 60 * 24 * 365 * 10; // 10 years — effectively "always signed in"
+const REMEMBER_AGE = 60 * 60 * 24 * 90; // 90 days — long-lived but bounded
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 12);
@@ -29,8 +22,8 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-// `remember` keeps the user signed in indefinitely (10-year cookie + token),
-// so they're never auto-logged-out. Default keeps the prior 30-day behaviour.
+// `remember` extends the session to 90 days (sliding on each fresh login).
+// Default keeps the prior 30-day behaviour.
 export async function createSession(userId: string, remember = false) {
   assertSecret();
   const maxAge = remember ? REMEMBER_AGE : MAX_AGE;
@@ -44,10 +37,10 @@ export async function createSession(userId: string, remember = false) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${maxAge}s`)
-    .sign(SECRET);
+    .sign(getSecretKey());
 
   const store = await cookies();
-  store.set(COOKIE, token, {
+  store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -58,7 +51,7 @@ export async function createSession(userId: string, remember = false) {
 
 export async function destroySession() {
   const store = await cookies();
-  store.delete(COOKIE);
+  store.delete(SESSION_COOKIE);
 }
 
 // Invalidate every session for a user (e.g. after a password change/reset).
@@ -72,39 +65,32 @@ export async function revokeSessions(userId: string) {
 // Wrapped in React cache() so repeated calls within one request (layout, page,
 // nested server components) share a single DB lookup instead of re-querying.
 export const getCurrentUser = cache(async () => {
-  assertSecret();
   const store = await cookies();
-  const token = store.get(COOKIE)?.value;
+  const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, SECRET);
-    const uid = payload.uid as string;
-    if (!uid) return null;
-    const tv = typeof payload.tv === "number" ? payload.tv : 0;
-    const user = await prisma.user.findUnique({
-      where: { id: uid },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        tokenVersion: true,
-        unit: true,
-        avatarUrl: true,
-        goal: true,
-        goalWeightKg: true,
-        calorieGoal: true,
-        proteinGoal: true,
-        supplements: true,
-        trainingDays: true,
-        reminderTime: true,
-        remindersOn: true,
-        onboardedAt: true,
-      },
-    });
-    // Reject sessions issued before the latest password change.
-    if (!user || user.tokenVersion !== tv) return null;
-    return user;
-  } catch {
-    return null;
-  }
+  const session = await verifySessionToken(token);
+  if (!session) return null;
+  const user = await prisma.user.findUnique({
+    where: { id: session.uid },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      tokenVersion: true,
+      unit: true,
+      avatarUrl: true,
+      goal: true,
+      goalWeightKg: true,
+      calorieGoal: true,
+      proteinGoal: true,
+      supplements: true,
+      trainingDays: true,
+      reminderTime: true,
+      remindersOn: true,
+      onboardedAt: true,
+    },
+  });
+  // Reject sessions issued before the latest password change.
+  if (!user || user.tokenVersion !== session.tv) return null;
+  return user;
 });

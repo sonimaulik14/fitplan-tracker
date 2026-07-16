@@ -31,7 +31,7 @@ export async function signupAction(
   _prev: AuthState,
   formData: FormData
 ): Promise<AuthState> {
-  if (!(await rateLimit("signup", 5, 60_000)))
+  if (!(await rateLimit("signup", 5, 60_000, { critical: true })))
     return { error: "Too many attempts. Please wait a minute and try again." };
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -56,7 +56,7 @@ export async function loginAction(
   _prev: AuthState,
   formData: FormData
 ): Promise<AuthState> {
-  if (!(await rateLimit("login", 8, 60_000)))
+  if (!(await rateLimit("login", 8, 60_000, { critical: true })))
     return { error: "Too many attempts. Please wait a minute and try again." };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -136,7 +136,7 @@ export async function changePasswordAction(
   const sessionUser = await getCurrentUser();
   if (!sessionUser) return { error: "Not signed in." };
   // Throttle online guessing of the current password.
-  if (!(await rateLimit("change-password", 8, 60_000)))
+  if (!(await rateLimit("change-password", 8, 60_000, { critical: true })))
     return { error: "Too many attempts — try again in a minute." };
   if (next.length < 8)
     return { error: "New password must be at least 8 characters." };
@@ -167,7 +167,8 @@ export async function requestPasswordResetAction(
   formData: FormData
 ): Promise<{ sent?: boolean; link?: string }> {
   // Throttle to curb reset-spam and email enumeration. Always report "sent".
-  if (!(await rateLimit("reset", 5, 15 * 60_000))) return { sent: true };
+  if (!(await rateLimit("reset", 5, 15 * 60_000, { critical: true })))
+    return { sent: true };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const user = email
     ? await prisma.user.findUnique({ where: { email } })
@@ -219,7 +220,7 @@ export async function resetPasswordAction(
   formData: FormData
 ): Promise<AuthState> {
   // Throttle token-guessing attempts (tokens are 256-bit, but defense in depth).
-  if (!(await rateLimit("reset-confirm", 10, 15 * 60_000)))
+  if (!(await rateLimit("reset-confirm", 10, 15 * 60_000, { critical: true })))
     return { error: "Too many attempts — try again later." };
   const token = String(formData.get("token") ?? "");
   const next = String(formData.get("next") ?? "");
