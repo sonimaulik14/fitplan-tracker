@@ -2,7 +2,14 @@ import Link from "next/link";
 import { Flame, Target, Trophy, Dumbbell, Hammer } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress, getAllPlans, buildTimeline, getActiveEnrollment } from "@/lib/metrics";
+import {
+  getProgress,
+  getAllPlans,
+  buildTimeline,
+  getActiveEnrollment,
+  getPlateaus,
+  getCycleComparison,
+} from "@/lib/metrics";
 import {
   focusKey,
   quoteForDay,
@@ -18,6 +25,8 @@ import PlanTimelineCard from "@/app/components/PlanTimelineCard";
 import StartProgram from "@/app/components/StartProgram";
 import PlanPicker from "@/app/components/PlanPicker";
 import ProgramCompleteCard from "@/app/components/ProgramCompleteCard";
+import CoachCard from "@/app/components/CoachCard";
+import CycleProgress from "@/app/components/CycleProgress";
 import {
   Reveal,
   AnimatedNumber,
@@ -75,6 +84,12 @@ export default async function DashboardPage({
         d.focus.toLowerCase().includes("rest") || d.status === "completed"
     );
   const activeEnrollment = programDone ? await getActiveEnrollment(user.id) : null;
+
+  // Coaching insights — stalled lifts + cycle-over-cycle deltas (both are
+  // cheap no-ops for fresh accounts).
+  const [plateaus, cycleCmp] = p?.enrolled
+    ? await Promise.all([getPlateaus(user.id), getCycleComparison(user.id)])
+    : [[], null];
 
   // "Up next" = first not-completed training day (skip rest days if possible).
   const nextDay =
@@ -252,6 +267,18 @@ export default async function DashboardPage({
                   </div>
                 </Link>
               </Reveal>
+            )}
+
+            {/* Coaching insights — cycle deltas + plateau watch */}
+            {(cycleCmp || plateaus.length > 0) && (
+              <div
+                className={`grid gap-4 mt-4 ${
+                  cycleCmp && plateaus.length > 0 ? "md:grid-cols-2" : ""
+                }`}
+              >
+                <CycleProgress cmp={cycleCmp} unit={user.unit as Unit} />
+                <CoachCard plateaus={plateaus} unit={user.unit as Unit} />
+              </div>
             )}
 
             {/* Hero: adherence ring + stats — only once there's data to show */}

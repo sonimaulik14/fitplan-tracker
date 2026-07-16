@@ -2,7 +2,11 @@ import Link from "next/link";
 import { ChevronLeft, AlertTriangle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getExerciseHistory, resolveExerciseSlug } from "@/lib/metrics";
+import {
+  getExerciseHistory,
+  resolveExerciseSlug,
+  getCycleComparison,
+} from "@/lib/metrics";
 import {
   fmtWeight,
   fmtVolume,
@@ -30,7 +34,13 @@ export default async function ExerciseHistoryPage({
   const resolved = await resolveExerciseSlug(user.id, raw);
   const name = resolved?.name ?? decodeURIComponent(raw);
 
-  const h = await getExerciseHistory(user.id, name);
+  const [h, cycleCmp] = await Promise.all([
+    getExerciseHistory(user.id, name),
+    getCycleComparison(user.id),
+  ]);
+  const cycleDelta =
+    cycleCmp?.lifts.find((l) => l.name.toLowerCase() === name.toLowerCase()) ??
+    null;
   // History only knows the muscle from logged sets; use the plan's muscle when
   // the exercise hasn't been logged yet.
   const muscle = h.muscle !== "Other" ? h.muscle : resolved?.muscle ?? h.muscle;
@@ -75,6 +85,21 @@ export default async function ExerciseHistoryPage({
                 <div className="stat-num text-2xl sm:text-3xl mt-1.5">
                   {fmtWeight(h.best1RM, unit)}
                 </div>
+                {cycleDelta && (
+                  <div
+                    className={`text-xs mt-1 stat-num ${
+                      cycleDelta.deltaKg > 0.01
+                        ? "text-success"
+                        : cycleDelta.deltaKg < -0.01
+                          ? "text-danger"
+                          : "text-muted"
+                    }`}
+                  >
+                    {cycleDelta.deltaKg > 0.01 ? "+" : ""}
+                    {fmtWeight(cycleDelta.deltaKg, unit)} vs cycle{" "}
+                    {cycleCmp!.prevCycle}
+                  </div>
+                )}
               </div>
               <div className="card p-4">
                 <div className="eyebrow">Sessions</div>
