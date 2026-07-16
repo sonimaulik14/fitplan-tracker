@@ -77,7 +77,7 @@ export async function GET(req: Request) {
       title: "Time to train 💪",
       body: "Today's a training day — log a session to keep your streak going.",
       url: "/workout/next",
-      tag: "fitplan-daily",
+      tag: "vajra-daily",
     });
     sent += n;
     await mark(u.id, decision.localDate);

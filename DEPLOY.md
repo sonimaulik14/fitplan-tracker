@@ -1,4 +1,4 @@
-# Deploying FitPlan (Vercel + Neon Postgres)
+# Deploying Vajra (Vercel + Neon Postgres)
 
 The app now uses **PostgreSQL** (it was SQLite — that doesn't survive on serverless
 hosts). Local dev and production both run Postgres.
