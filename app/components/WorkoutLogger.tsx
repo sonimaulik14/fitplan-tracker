@@ -19,6 +19,7 @@ import {
 } from "@/lib/offline/outbox";
 import { useWakeLock } from "@/lib/useWakeLock";
 import DangerButton from "./DangerButton";
+import PlateCalc from "./PlateCalc";
 import SwapControl from "./SwapControl";
 import SwipeToSwap from "./SwipeToSwap";
 import WorkoutSummary from "./WorkoutSummary";
@@ -696,6 +697,17 @@ export default function WorkoutLogger({
         const sgWeight = sg ? weightNum(sg.weight, unit) : 0;
         const isCollapsed = collapsed[ex.id] ?? false;
         const exDone = ex.rows.filter((r) => r.done).length;
+        // Best guess for the plate calculator: heaviest entered weight, else
+        // the overload suggestion, else last time's top set.
+        const heaviestEntered = Math.max(0, ...ex.rows.map((r) => r.weight ?? 0));
+        const plateWeight =
+          heaviestEntered > 0
+            ? heaviestEntered
+            : sg
+              ? sgWeight
+              : ex.lastTime
+                ? weightNum(ex.lastTime.weight, unit)
+                : null;
         return (
           <SwipeToSwap
             key={ex.id}
@@ -745,6 +757,13 @@ export default function WorkoutLogger({
                       {ex.repTarget}
                     </span>
                   </span>
+                  {!ex.isCardio && (
+                    <PlateCalc
+                      unit={unit}
+                      exerciseName={ex.name}
+                      initialWeight={plateWeight}
+                    />
+                  )}
                   {ex.swapped && (
                     <span className="inline-flex items-center gap-1 text-xs text-success">
                       <ArrowLeftRight size={11} /> swapped from{" "}
