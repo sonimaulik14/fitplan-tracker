@@ -22,6 +22,7 @@ import {
   type Unit,
 } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
+import PhotoHero from "@/app/components/PhotoHero";
 import InfoTip from "@/app/components/InfoTip";
 import { MuscleGlyph } from "@/app/components/icons";
 import { AnimatedRing, AnimatedNumber } from "@/app/components/motion";
@@ -194,13 +195,12 @@ export default async function AnalysisPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-4xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
-        <header className="animate-fade-up">
-          <p className="eyebrow">Training data</p>
-          <h1 className="display-hero text-4xl sm:text-5xl mt-1">Analysis</h1>
-          <p className="text-sm text-muted mt-2">
-            How closely you&apos;re following {p.plan.name}.
-          </p>
-        </header>
+        <PhotoHero
+          queryKey="page:analysis"
+          eyebrow="Training data"
+          title="Analysis"
+          subtitle={`How closely you're following ${p.plan.name}.`}
+        />
 
         {/* Insights — the dense charts below, in one glance */}
         <section className="card p-6 animate-fade-up">

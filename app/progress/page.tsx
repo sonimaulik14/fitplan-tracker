@@ -19,6 +19,7 @@ import {
   buildAchievements,
 } from "@/lib/metrics";
 import NavBar from "@/app/components/NavBar";
+import PhotoHero from "@/app/components/PhotoHero";
 import BodyweightChart from "@/app/components/BodyweightChart";
 import {
   WeighInForm,
@@ -73,13 +74,12 @@ export default async function ProgressPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-4xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
-        <header className="animate-fade-up">
-          <p className="eyebrow">Your journey</p>
-          <h1 className="display-hero text-4xl sm:text-5xl mt-1">Progress</h1>
-          <p className="text-sm text-muted mt-2">
-            Your consistency, milestones and body.
-          </p>
-        </header>
+        <PhotoHero
+          queryKey="page:progress"
+          eyebrow="Your journey"
+          title="Progress"
+          subtitle="Your consistency, milestones and body."
+        />
 
         {/* 12-Week Wrapped entry */}
         {p?.enrolled && activity.totalActiveDays > 0 && (

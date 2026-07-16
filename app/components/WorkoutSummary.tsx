@@ -84,7 +84,7 @@ export default function WorkoutSummary({
     >
       <div
         className="px-6 py-8 text-center relative overflow-hidden"
-        style={{ background: "var(--accent)", color: "var(--accent-ink)" }}
+        style={{ background: "var(--grad-brand)", color: "var(--accent-ink)" }}
       >
         <HeaderIcon className="w-11 h-11 mx-auto" strokeWidth={1.75} aria-hidden />
         <h2 className="display-hero text-3xl mt-2 uppercase">

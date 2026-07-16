@@ -8,6 +8,7 @@ import {
   type Unit,
 } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
+import PhotoHero from "@/app/components/PhotoHero";
 import { MuscleGlyph } from "@/app/components/icons";
 
 export const metadata = { title: "This week's targets" };
@@ -45,18 +46,12 @@ export default async function TargetsPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-6">
-        <header className="animate-fade-up">
-          <p className="eyebrow">
-            Week {currentWeek}
-            {week?.style ? ` · ${week.style}` : ""}
-          </p>
-          <h1 className="display-hero text-4xl sm:text-5xl mt-1">
-            This week&apos;s targets
-          </h1>
-          <p className="text-sm text-muted mt-2">
-            Suggested weights from last time + your rep targets. Beat these.
-          </p>
-        </header>
+        <PhotoHero
+          queryKey="hero:hero"
+          eyebrow={`Week ${currentWeek}${week?.style ? ` · ${week.style}` : ""}`}
+          title="This week's targets"
+          subtitle="Suggested weights from last time + your rep targets. Beat these."
+        />
 
         {trainingDays.length === 0 ? (
           <div className="card p-8 text-center text-muted">

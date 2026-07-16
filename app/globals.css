@@ -1,61 +1,65 @@
 @import "tailwindcss";
 
 /* ============================================================
-   FORGE — iron, chalk, and ember.
-   Matte industrial system: warm forge-black opaque panels, chalk
-   text, one molten-ember accent. No glass, no glow, no gradients
-   inside the app — heat is earned only on celebration surfaces
-   via .celebrate-scope.
+   VOLT — vibrant premium.
+   Rich photographic depth: glassy translucent panels over an
+   ambient photo backdrop, aurora glow, film grain, and bright
+   electric color — blue→violet brand gradient, mint, gold.
+   Display type stays condensed (Barlow Condensed) with mono
+   digits for everything that ticks.
    ============================================================ */
 
 :root {
-  --background: #0c0b09; /* forge black (warm, no blue cast) */
-  --surface: #131110; /* opaque matte panel */
-  --surface-2: #1b1815;
-  --surface-solid: #171512;
-  --border: rgba(242, 238, 230, 0.1);
-  --border-strong: rgba(242, 238, 230, 0.18);
-  --foreground: #f2eee6; /* chalk */
-  --muted: #a69e92; /* ash — 7.43:1 on bg */
-  --accent: #ff7a1f; /* ember — 7.55:1 on bg */
-  --accent-hi: #ff8324;
-  --accent-ink: #1c0f02; /* text ON ember fills — 7.20:1 on accent */
+  --background: #07080c;
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --surface-solid: #11131b;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --foreground: #f4f6fb;
+  --muted: #a8b1c2;
+  --accent: #2f6bff; /* electric blue */
+  --accent-hi: #4f86f5;
+  --accent-ink: #ffffff; /* text on accent fills */
   /* semantic palette — consistent meaning across the app */
-  --success: #3fce8f;
-  --warn: #e9b44c;
-  --danger: #ff6b5e;
-  --pr: #f7c948; /* molten gold — personal records & milestones */
-  --steel: #8fa3b8; /* secondary data series */
-  /* deprecated aliases — call sites being swept; delete when grep-clean */
+  --success: #2fe6a8; /* vivid mint */
+  --warn: #f5c451;
+  --danger: #ff6a3d;
+  --pr: #ffd25f; /* gold — personal records & milestones */
+  --steel: #7c8cff; /* bright periwinkle — secondary data series */
+  /* the brand gradient — used on primary fills, bars, rings */
+  --grad-brand: linear-gradient(135deg, #2f6bff 0%, #7c5cff 100%);
+  --grad-brand-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  /* deprecated aliases — a few call sites still reference them */
   --accent-2: var(--success);
   --accent-3: var(--steel);
-  --grad-brand: var(--accent);
-  --grad-brand-soft: color-mix(in srgb, var(--accent) 10%, transparent);
   /* layout chrome */
   --tabbar-h: 64px;
 }
 
 :root[data-theme="light"] {
-  --background: #f4f1ea; /* chalk paper */
-  --surface: #fdfcf9;
-  --surface-2: rgba(27, 22, 16, 0.05);
+  --background: #eef1f7;
+  --surface: rgba(255, 255, 255, 0.85);
+  --surface-2: rgba(15, 20, 35, 0.045);
   --surface-solid: #ffffff;
-  --border: rgba(27, 22, 16, 0.12);
-  --border-strong: rgba(27, 22, 16, 0.2);
-  --foreground: #1b1610;
-  --muted: #5d5548; /* 6.51:1 on bg */
-  --accent: #a63d00; /* burnt ember — 5.66:1 on bg */
-  --accent-hi: #b2430a;
-  --accent-ink: #ffffff; /* white on burnt ember — 6.39:1 */
-  --success: #0b7a50;
-  --warn: #8a6400;
-  --danger: #c03221;
-  --pr: #7e5f00;
-  --steel: #4a6075;
+  --border: rgba(15, 20, 35, 0.1);
+  --border-strong: rgba(15, 20, 35, 0.18);
+  --foreground: #161a24;
+  --muted: #515a6b;
+  /* Darker than the dark-theme accent so small accent text/links clear WCAG
+     AA (4.5:1) on the light background. */
+  --accent: #2456e6;
+  --accent-hi: #2f6bff;
+  --accent-ink: #ffffff;
+  --success: #0a9d6b;
+  --warn: #b67c0a;
+  --danger: #e0521f;
+  --pr: #c79200;
+  --steel: #4c5fd7;
+  --grad-brand: linear-gradient(135deg, #2456e6 0%, #6d4de0 100%);
+  --grad-brand-soft: color-mix(in srgb, var(--accent) 10%, transparent);
   --accent-2: var(--success);
   --accent-3: var(--steel);
-  --grad-brand: var(--accent);
-  --grad-brand-soft: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 @theme inline {
@@ -102,6 +106,60 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
+/* Edge vignette — pulls focus to the centre, premium cinematic depth */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 120% at 50% 35%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+:root[data-theme="light"] body::before {
+  background: radial-gradient(
+    120% 120% at 50% 35%,
+    transparent 60%,
+    rgba(15, 20, 35, 0.08) 100%
+  );
+}
+
+/* Film grain — subtle tactile texture over everything (dark theme only) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] body::after {
+  display: none;
+}
+
+/* Cinematic slow zoom for hero/banner photography */
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+.kenburns {
+  animation: kenburns 20s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kenburns {
+    animation: none;
+  }
+}
+
 /* ---------- typography roles ---------- */
 h1,
 h2,
@@ -110,7 +168,7 @@ h2,
     sans-serif;
   letter-spacing: -0.01em;
 }
-/* Oversized display heading for hero moments — plate-stamp condensed caps. */
+/* Oversized display heading for hero moments. */
 .display-hero {
   font-family: var(--font-barlow-condensed), var(--font-barlow), system-ui,
     sans-serif;
@@ -126,37 +184,56 @@ h2,
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 }
-/* Anything that ticks or aligns in columns: timers, set rows, stat tables.
-   Monospace digits can never jiggle; tabular-nums is belt-and-braces. */
+/* Anything that ticks or aligns in columns: timers, set rows, stat tables. */
 .stat-num {
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-weight: 500;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
-/* Deprecated (pre-FORGE gradient numerals) — now solid; swept to .stat-num. */
+/* Big numbers with a subtle vertical fade for depth. */
 .num-gradient,
 .num-brand {
-  color: var(--foreground);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  background: linear-gradient(
+    180deg,
+    var(--foreground) 0%,
+    color-mix(in srgb, var(--foreground) 72%, transparent) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border;
+    @apply rounded-2xl border;
     background: var(--surface);
     border-color: var(--border);
-  }
-  /* dark: machined panel — hairline top-edge highlight only, no glow */
-  :root:not([data-theme="light"]) .card {
-    box-shadow: inset 0 1px 0 rgba(242, 238, 230, 0.04);
+    backdrop-filter: blur(16px);
   }
   :root[data-theme="light"] .card {
     box-shadow:
-      0 1px 2px rgba(27, 22, 16, 0.04),
-      0 8px 22px -18px rgba(27, 22, 16, 0.2);
+      0 1px 2px rgba(15, 20, 35, 0.04),
+      0 12px 30px -18px rgba(15, 20, 35, 0.25);
+  }
+  /* dark theme: subtle top highlight + soft drop for real depth */
+  :root:not([data-theme="light"]) .card {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 20px 44px -28px rgba(0, 0, 0, 0.7);
+  }
+  /* energetic, motivational photo grade: vivid + punchy, pops more on hover */
+  .duotone {
+    filter: saturate(1.12) contrast(1.1) brightness(0.98);
+    transition:
+      filter 0.5s ease,
+      transform 0.5s ease;
+  }
+  .group:hover .duotone,
+  .duotone:hover {
+    filter: saturate(1.22) contrast(1.14) brightness(1.03);
   }
   /* photo overlay so text stays legible on any image, in any theme */
   .img-overlay::after {
@@ -165,39 +242,75 @@ h2,
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(12, 11, 9, 0.12) 0%,
-      rgba(12, 11, 9, 0.55) 55%,
-      rgba(12, 11, 9, 0.9) 100%
+      rgba(7, 8, 12, 0.15) 0%,
+      rgba(7, 8, 12, 0.55) 55%,
+      rgba(7, 8, 12, 0.9) 100%
     );
+  }
+  /* fixed photographic backdrop behind the aurora — depth, not distraction */
+  .ambient-photo {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.8;
+    filter: saturate(1.12) contrast(1.05) brightness(0.9);
+  }
+  /* Legibility scrim: lighter at top (immersive) → darker toward content. */
+  .ambient-photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--background) 32%, transparent) 0%,
+        color-mix(in srgb, var(--background) 55%, transparent) 42%,
+        color-mix(in srgb, var(--background) 80%, transparent) 100%
+      ),
+      radial-gradient(
+        130% 100% at 50% -5%,
+        transparent 35%,
+        color-mix(in srgb, var(--background) 75%, transparent) 100%
+      );
+  }
+  :root[data-theme="light"] .ambient-photo {
+    opacity: 0.32;
   }
   .card-hover {
     transition:
+      transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
       border-color 0.2s ease,
+      box-shadow 0.2s ease,
       background 0.2s ease;
   }
-  /* Hover states only on real pointer devices — on touch, a tap "sticks"
-     :hover and the card stays raised, which looks broken. */
+  /* Hover lift only on real pointer devices — on touch, a tap "sticks" :hover
+     and the card stays raised, which looks broken. */
   @media (hover: hover) {
     .card-hover:hover {
+      transform: translateY(-2px);
       border-color: var(--border-strong);
       background: var(--surface-2);
+      box-shadow: 0 14px 34px -24px rgba(0, 0, 0, 0.7);
     }
   }
   .btn,
   .btn-primary,
   .btn-ghost,
   .btn-quiet {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5
       text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed
-      active:scale-[0.98];
+      active:scale-[0.97];
   }
   .btn-primary {
     color: var(--accent-ink);
-    background: var(--accent);
+    background: var(--grad-brand);
+    box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--accent) 70%, transparent);
   }
   @media (hover: hover) {
     .btn-primary:hover {
-      background: var(--accent-hi);
+      filter: brightness(1.08);
     }
   }
   .btn-ghost {
@@ -208,7 +321,7 @@ h2,
   @media (hover: hover) {
     .btn-ghost:hover {
       border-color: var(--border-strong);
-      background: color-mix(in srgb, var(--foreground) 9%, transparent);
+      background: rgba(255, 255, 255, 0.09);
     }
   }
   /* Borderless in-card action (e.g. inline "Apply"). */
@@ -223,9 +336,13 @@ h2,
     }
   }
   .input {
-    @apply w-full rounded-lg px-3.5 py-2.5 text-foreground outline-none transition-all;
+    @apply w-full rounded-xl px-3.5 py-2.5 text-foreground outline-none transition-all;
     background: var(--surface-2);
     border: 1px solid var(--border);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+  :root[data-theme="light"] .input {
+    box-shadow: inset 0 1px 2px rgba(15, 20, 35, 0.04);
   }
   .input::placeholder {
     color: var(--muted);
@@ -234,16 +351,6 @@ h2,
     border-color: var(--accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   }
-  /* ---------- Type scale (roles, not ad-hoc sizes) ----------
-     display-hero  hero moments        condensed 700, tight
-     h1 / page     30px (text-3xl)     condensed 700
-     section-title 17px                sans 600        ← card/section headers
-     h3 / item     16px (text-base)    sans 600
-     body          15–16px             400/500
-     .label        12px upper          form field labels
-     .eyebrow      11px upper +tracked kicker above a title
-     caption       12px (text-xs)      muted
-     ----------------------------------------------------------- */
   .label {
     @apply block text-xs font-semibold uppercase text-muted mb-1.5;
     letter-spacing: 0.08em;
@@ -254,7 +361,7 @@ h2,
     letter-spacing: 0.14em;
   }
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
     border: 1px solid var(--border);
     background: var(--surface-2);
   }
@@ -270,15 +377,18 @@ h2,
     width: 3px;
     height: 1.05em;
     border-radius: 9999px;
-    background: var(--accent);
+    background: var(--grad-brand);
   }
-  /* Single solid accent word (e.g. the wordmark). */
+  /* Accent-colored word (e.g. in the wordmark or a headline). */
   .gradient-text {
-    color: var(--accent);
+    background: var(--grad-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  /* Solid accent fill (logo tiles, badges, the Train action). */
+  /* Brand gradient fill (logo tiles, badges, the Train action). */
   .brand-bg {
-    background: var(--accent);
+    background: var(--grad-brand);
     color: var(--accent-ink);
   }
 }
@@ -367,8 +477,115 @@ h2,
   }
 }
 
-/* ---------- celebration ambience (opt-in, marketing/wrapped/achievements
-   only — never inside the training flow) ---------- */
+/* ---------- aurora background ---------- */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora::before,
+.aurora::after,
+.aurora-blob {
+  content: "";
+  position: absolute;
+  width: 55vw;
+  height: 55vw;
+  border-radius: 50%;
+  filter: blur(100px);
+  will-change: transform;
+}
+.aurora::before {
+  opacity: 0.24;
+  top: -18%;
+  right: -12%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    transparent 65%
+  );
+  animation: drift1 26s ease-in-out infinite alternate;
+}
+.aurora::after {
+  opacity: 0.16;
+  bottom: -22%;
+  left: -14%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--steel) 50%, transparent),
+    transparent 65%
+  );
+  animation: drift2 32s ease-in-out infinite alternate;
+}
+.aurora-blob {
+  display: block;
+  opacity: 0.1;
+  top: 40%;
+  left: 55%;
+  width: 38vw;
+  height: 38vw;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--success) 45%, transparent),
+    transparent 65%
+  );
+  animation: drift3 28s ease-in-out infinite alternate;
+}
+:root[data-theme="light"] .aurora::before,
+:root[data-theme="light"] .aurora::after,
+:root[data-theme="light"] .aurora-blob {
+  opacity: 0.16;
+}
+@keyframes drift1 {
+  to {
+    transform: translate(-12vw, 14vh) scale(1.15);
+  }
+}
+@keyframes drift2 {
+  to {
+    transform: translate(12vw, -10vh) scale(1.2);
+  }
+}
+@keyframes drift3 {
+  to {
+    transform: translate(8vw, -12vh) scale(0.9);
+  }
+}
+
+/* cursor-reactive glow card */
+.glow-card {
+  position: relative;
+  isolation: isolate;
+}
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    18rem 18rem at var(--mx, 50%) var(--my, 0%),
+    color-mix(in srgb, var(--accent) 14%, transparent),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+.glow-card:hover::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora::before,
+  .aurora::after,
+  .aurora-blob {
+    animation: none;
+  }
+}
+
+/* Celebration ambience (Landing, wrapped, achievements) — brighter twin
+   glows on top of the global aurora. */
 .celebrate-scope {
   position: relative;
   isolation: isolate;
@@ -382,12 +599,12 @@ h2,
   background:
     radial-gradient(
       42rem 30rem at 78% -8%,
-      color-mix(in srgb, var(--accent) 16%, transparent),
+      color-mix(in srgb, var(--accent) 18%, transparent),
       transparent 62%
     ),
     radial-gradient(
       36rem 26rem at 8% 108%,
-      color-mix(in srgb, var(--pr) 10%, transparent),
+      color-mix(in srgb, var(--pr) 12%, transparent),
       transparent 60%
     );
 }
@@ -395,8 +612,7 @@ h2,
   opacity: 0.5;
 }
 
-/* Keyboard focus ring — the outline follows each element's own radius
-   (no forced border-radius, which would snap pills/cards to square corners). */
+/* Keyboard focus ring — the outline follows each element's own radius. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -407,7 +623,7 @@ h2,
   position: relative;
   overflow: hidden;
   background: var(--surface-2);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 .skeleton::after {
   content: "";
@@ -417,20 +633,20 @@ h2,
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(242, 238, 230, 0.06),
+    rgba(255, 255, 255, 0.07),
     transparent
   );
   animation: shimmer 1.4s infinite;
 }
-/* Light theme: the pale sweep is invisible, so darken the base + shimmer. */
+/* Light theme: the white sweep is invisible, so darken the base + shimmer. */
 :root[data-theme="light"] .skeleton {
-  background: rgba(27, 22, 16, 0.07);
+  background: rgba(15, 20, 35, 0.07);
 }
 :root[data-theme="light"] .skeleton::after {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(27, 22, 16, 0.06),
+    rgba(15, 20, 35, 0.06),
     transparent
   );
 }
@@ -463,20 +679,20 @@ h2,
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(242, 238, 230, 0.14);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(242, 238, 230, 0.22);
+  background: rgba(255, 255, 255, 0.2);
   background-clip: padding-box;
 }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(27, 22, 16, 0.18);
+  background: rgba(15, 20, 35, 0.18);
   background-clip: padding-box;
 }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(27, 22, 16, 0.28);
+  background: rgba(15, 20, 35, 0.28);
   background-clip: padding-box;
 }

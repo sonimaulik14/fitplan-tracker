@@ -6,6 +6,7 @@ import { getProgress, buildTimeline, getActiveEnrollment, type TimelineDay } fro
 import ProgramCompleteCard from "@/app/components/ProgramCompleteCard";
 import { ymd } from "@/lib/date";
 import NavBar from "@/app/components/NavBar";
+import PhotoHero from "@/app/components/PhotoHero";
 import StartDateEditor from "@/app/components/StartDateEditor";
 import StartProgram from "@/app/components/StartProgram";
 
@@ -83,13 +84,12 @@ export default async function TimelinePage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
-        <header className="animate-fade-up">
-          <p className="eyebrow">Your program</p>
-          <h1 className="display-hero text-4xl sm:text-5xl mt-1">Timeline</h1>
-          <p className="text-sm text-muted mt-2">
-            Your whole 12-week plan, mapped to real dates.
-          </p>
-        </header>
+        <PhotoHero
+          queryKey="page:timeline"
+          eyebrow="Your program"
+          title="Timeline"
+          subtitle="Your whole 12-week plan, mapped to real dates."
+        />
 
         {t.hasFinished && (
           <ProgramCompleteCard

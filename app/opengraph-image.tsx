@@ -17,8 +17,8 @@ export default function OgImage() {
           justifyContent: "center",
           padding: "80px",
           background:
-            "radial-gradient(110% 110% at 100% 0%, rgba(255,122,31,0.18), #0c0b09 55%)",
-          color: "#f2eee6",
+            "radial-gradient(110% 110% at 100% 0%, rgba(47,107,255,0.2), #07080c 55%)",
+          color: "#f4f6fb",
           fontFamily: "sans-serif",
         }}
       >
@@ -39,14 +39,14 @@ export default function OgImage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "#FF7A1F",
+              background: "linear-gradient(135deg, #2f6bff 0%, #7c5cff 100%)",
             }}
           >
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="8.7" y="2.6" width="6.6" height="3" rx="1.5" fill="#1C0F02" />
-              <rect x="10.7" y="5.2" width="2.6" height="7.2" rx="1.3" fill="#1C0F02" />
-              <circle cx="12" cy="16.4" r="5.1" fill="#1C0F02" />
-              <circle cx="12" cy="22" r="1.4" fill="#1C0F02" />
+              <rect x="8.7" y="2.6" width="6.6" height="3" rx="1.5" fill="#ffffff" />
+              <rect x="10.7" y="5.2" width="2.6" height="7.2" rx="1.3" fill="#ffffff" />
+              <circle cx="12" cy="16.4" r="5.1" fill="#ffffff" />
+              <circle cx="12" cy="22" r="1.4" fill="#ffffff" />
             </svg>
           </div>
           Vajra
@@ -64,9 +64,9 @@ export default function OgImage() {
           }}
         >
           <span>Train the plan.</span>
-          <span style={{ color: "#FF7A1F" }}>Track the proof.</span>
+          <span style={{ color: "#5c8dff" }}>Track the proof.</span>
         </div>
-        <div style={{ fontSize: 34, color: "#a69e92", marginTop: 36 }}>
+        <div style={{ fontSize: 34, color: "#a8b1c2", marginTop: 36 }}>
           A 12-week transformation tracker — sets, PRs, streaks & volume.
         </div>
       </div>

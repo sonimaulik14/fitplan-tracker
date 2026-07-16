@@ -38,15 +38,15 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
 
   const slides: Slide[] = [
     {
-      // FORGE heat — ember cooling into deep iron
-      bg: "linear-gradient(160deg, #ff7a1f 0%, #7c2d12 55%, #0c0b09 100%)",
+      // brand gradient — electric blue into violet
+      bg: "linear-gradient(160deg, #2f6bff 0%, #7c5cff 100%)",
       eyebrow: "Your season",
       title: "12-Week Wrapped",
       sub: "Tap through your transformation →",
     },
     {
-      // molten gold pouring into ember
-      bg: "linear-gradient(160deg, #f7c948 0%, #c2410c 60%, #7c2d12 100%)",
+      // vivid mint flowing into electric blue
+      bg: "linear-gradient(160deg, #2fe6a8 0%, #2f6bff 100%)",
       eyebrow: "Total volume moved",
       big: (
         <>
@@ -58,16 +58,16 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
       sub: "Every rep added up.",
     },
     {
-      // iron heating up
-      bg: "linear-gradient(160deg, #1b1815 0%, #b2430a 100%)",
+      // deep blue into bright cyan
+      bg: "linear-gradient(160deg, #2f6bff 0%, #18a9ff 100%)",
       eyebrow: "Workouts crushed",
       big: <AnimatedNumber value={stats.workouts} />,
       title: `${stats.sets.toLocaleString()} sets logged`,
       sub: `Across ${stats.activeDays} active days.`,
     },
     {
-      // full flame — gold through ember
-      bg: "linear-gradient(160deg, #f7c948 0%, #ff7a1f 40%, #7c2d12 100%)",
+      // streak flame — gold into hot orange
+      bg: "linear-gradient(160deg, #ffd25f 0%, #ff6a3d 100%)",
       eyebrow: "Longest streak",
       big: (
         <>
@@ -80,7 +80,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
     ...(stats.topMuscle
       ? [
           {
-            bg: "linear-gradient(160deg, #8fa3b8 0%, #39464f 55%, #0c0b09 100%)",
+            bg: "linear-gradient(160deg, #7c8cff 0%, #2f6bff 100%)",
             eyebrow: "Most-trained muscle",
             big: stats.topMuscle.name,
             title: "Your signature body part",
@@ -91,7 +91,8 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
     ...(stats.topPR
       ? [
           {
-            bg: "linear-gradient(160deg, #f7c948 0%, #7e5f00 60%, #3f2f00 100%)",
+            // molten gold — the PR color
+            bg: "linear-gradient(160deg, #ffd25f 0%, #f0a72e 55%, #a86a00 100%)",
             eyebrow: "Heaviest lift",
             big: (
               <>
@@ -107,7 +108,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
     ...(stats.topStyle
       ? [
           {
-            bg: "linear-gradient(160deg, #e8590c 0%, #39464f 100%)",
+            bg: "linear-gradient(160deg, #2f6bff 0%, #7c5cff 100%)",
             eyebrow: "Favourite protocol",
             big: stats.topStyle.style,
             title: "Your go-to block",
@@ -116,7 +117,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
         ]
       : []),
     {
-      bg: "linear-gradient(160deg, #ff7a1f 0%, #b2430a 50%, #1b1815 100%)",
+      bg: "linear-gradient(160deg, #7c5cff 0%, #2f6bff 100%)",
       eyebrow: "Plan adherence",
       big: (
         <>
@@ -128,8 +129,8 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
       sub: `${stats.weeksDone} of ${stats.totalWeeks} weeks complete.`,
     },
     {
-      // finale — the full heat sweep, gold to iron
-      bg: "linear-gradient(160deg, #f7c948 0%, #ff7a1f 35%, #7c2d12 70%, #0c0b09 100%)",
+      // finale — the full electric spectrum
+      bg: "linear-gradient(160deg, #ff6a3d 0%, #7c5cff 60%, #2f6bff 100%)",
       eyebrow: "That's a wrap",
       title: "You showed up.",
       sub: "Share it. Then go again. 💪",
@@ -247,7 +248,7 @@ export default function WrappedStory({ stats }: { stats: WrappedStats }) {
           <div className="flex flex-col items-center gap-3 mt-8 z-20">
             <button
               onClick={share}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#f2eee6] text-[#0c0b09] font-semibold px-5 py-2.5 active:scale-95 transition-transform"
+              className="inline-flex items-center gap-2 rounded-lg bg-white text-[#1a1d29] font-semibold px-5 py-2.5 active:scale-95 transition-transform"
             >
               <Share2 size={16} /> Share my Wrapped
             </button>

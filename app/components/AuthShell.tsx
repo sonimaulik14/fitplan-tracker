@@ -7,7 +7,7 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col">
         {/* mobile-only photographic header (desktop gets the full panel at right) */}
         <div className="lg:hidden relative h-44 sm:h-52 overflow-hidden">
-          <CoachPhoto className="absolute inset-0 w-full h-full object-cover object-top" />
+          <CoachPhoto className="absolute inset-0 w-full h-full object-cover object-top duotone kenburns" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-background/10" />
           <div className="absolute inset-0 flex flex-col justify-end p-6">
             <span className="chip w-fit mb-2 !bg-black/55 !border-white/20 text-white">
@@ -28,14 +28,14 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
 
       {/* hero side — full-bleed coach photo */}
       <div className="hidden lg:flex relative overflow-hidden border-l border-border">
-        <CoachPhoto className="absolute inset-0 w-full h-full object-cover object-top" />
-        {/* scrim for text legibility + ember heat (celebration surface) */}
+        <CoachPhoto className="absolute inset-0 w-full h-full object-cover object-top duotone kenburns" />
+        {/* scrim for text legibility + brand glow (celebration surface) */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-background/20" />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(40rem 40rem at 80% 10%, rgba(255,122,31,0.22), transparent 55%)",
+              "radial-gradient(40rem 40rem at 80% 10%, rgba(47,107,255,0.28), transparent 55%), radial-gradient(40rem 40rem at 10% 90%, rgba(124,140,255,0.22), transparent 55%)",
           }}
         />
         <div className="relative z-10 flex flex-col justify-center p-12 xl:p-16 max-w-xl">

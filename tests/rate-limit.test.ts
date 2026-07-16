@@ -67,7 +67,8 @@ describe("rateLimit — Upstash path", () => {
 
   it("counts via INCR and blocks once the count exceeds the limit", async () => {
     let count = 0;
-    const fetchMock = vi.fn(async (url: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) => {
       if (url.includes("/incr/")) {
         count += 1;
         return { ok: true, json: async () => ({ result: count }) };

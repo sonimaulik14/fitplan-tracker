@@ -5,6 +5,7 @@ import "./globals.css";
 import Toaster from "./components/Toaster";
 import PWA from "./components/PWA";
 import OfflineSync from "./components/OfflineSync";
+import AmbientPhoto from "./components/AmbientPhoto";
 
 // FORGE type system: an industrial grotesque superfamily for UI + a condensed
 // display cut for headings/hero numbers, and a mono face for anything that
@@ -58,8 +59,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0c0b09" },
-    { media: "(prefers-color-scheme: light)", color: "#f4f1ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#07080c" },
+    { media: "(prefers-color-scheme: light)", color: "#eef1f7" },
   ],
   // Extend under the iOS status bar / home indicator so we can pad around them
   // with env(safe-area-inset-*). Without this, those insets always report 0.
@@ -84,6 +85,10 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="min-h-full flex flex-col">
+        <AmbientPhoto />
+        <div className="aurora" aria-hidden>
+          <div className="aurora-blob" />
+        </div>
         {children}
         <Toaster />
         <PWA />

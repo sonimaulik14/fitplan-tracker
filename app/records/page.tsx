@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getProgress, est1RM } from "@/lib/metrics";
 import { fmtWeight, muscleStyle, slugify, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
+import PhotoHero from "@/app/components/PhotoHero";
 import { MuscleGlyph } from "@/app/components/icons";
 
 export const metadata = { title: "Personal records" };
@@ -20,15 +21,13 @@ export default async function RecordsPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
-        <header className="animate-fade-up mb-4">
-          <p className="eyebrow">All-time bests</p>
-          <h1 className="display-hero text-4xl sm:text-5xl mt-1">
-            Personal records
-          </h1>
-          <p className="text-sm text-muted mt-2">
-            Your heaviest lift on every exercise.
-          </p>
-        </header>
+        <PhotoHero
+          queryKey="page:records"
+          eyebrow="All-time bests"
+          title="Personal records"
+          subtitle="Your heaviest lift on every exercise."
+          className="mb-4"
+        />
         <Link
           href="/history"
           className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"

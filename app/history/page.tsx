@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getWorkoutHistory } from "@/lib/metrics";
 import { fmtVolume, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
+import PhotoHero from "@/app/components/PhotoHero";
 import EmptyState from "@/app/components/EmptyState";
 import { FocusGlyph } from "@/app/components/icons";
 
@@ -25,16 +26,13 @@ export default async function HistoryPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
-        <header className="animate-fade-up mb-4">
-          <p className="eyebrow">Session log</p>
-          <h1 className="display-hero text-4xl sm:text-5xl mt-1">
-            Workout history
-          </h1>
-          <p className="text-sm text-muted mt-2">
-            {history.length} logged session
-            {history.length === 1 ? "" : "s"}, newest first.
-          </p>
-        </header>
+        <PhotoHero
+          queryKey="page:history"
+          eyebrow="Session log"
+          title="Workout history"
+          subtitle={`${history.length} logged session${history.length === 1 ? "" : "s"}, newest first.`}
+          className="mb-4"
+        />
         <Link
           href="/records"
           className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
