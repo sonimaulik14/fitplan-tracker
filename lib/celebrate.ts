@@ -36,7 +36,7 @@ export function fmtClock(s: number) {
 }
 
 export function celebrate() {
-  const colors = ["#2f6bff", "#18a9ff", "#2fe6a8", "#7c8cff"];
+  const colors = ["#FF7A1F", "#F7C948", "#3FCE8F", "#8FA3B8"];
   const fire = (ratio: number, opts: confetti.Options) =>
     confetti({
       origin: { y: 0.7 },
@@ -74,7 +74,7 @@ export function celebratePR() {
 }
 
 export function celebrateWeek() {
-  const colors = ["#2f6bff", "#18a9ff", "#2fe6a8", "#7c8cff", "#f5c451"];
+  const colors = ["#FF7A1F", "#F7C948", "#3FCE8F", "#8FA3B8", "#E9B44C"];
   const end = Date.now() + 1400;
   (function frame() {
     confetti({ particleCount: 6, angle: 60, spread: 70, origin: { x: 0 }, colors });
@@ -85,7 +85,7 @@ export function celebrateWeek() {
 }
 
 export function celebrateProgram() {
-  const colors = ["#2f6bff", "#18a9ff", "#2fe6a8", "#7c8cff", "#f5c451", "#ff6a3d"];
+  const colors = ["#FF7A1F", "#F7C948", "#3FCE8F", "#8FA3B8", "#E9B44C", "#FF6B5E"];
   const end = Date.now() + 4000;
   (function frame() {
     confetti({ particleCount: 9, angle: 60, spread: 80, origin: { x: 0 }, colors });

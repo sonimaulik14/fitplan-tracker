@@ -17,7 +17,7 @@ export function vajraIcon(px: number, opts?: { pad?: number; radius?: number }) 
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#2f6bff",
+          background: "#FF7A1F",
           borderRadius: radius,
         }}
       >
@@ -28,10 +28,10 @@ export function vajraIcon(px: number, opts?: { pad?: number; radius?: number }) 
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <rect x="8.7" y="2.6" width="6.6" height="3" rx="1.5" fill="#ffffff" />
-          <rect x="10.7" y="5.2" width="2.6" height="7.2" rx="1.3" fill="#ffffff" />
-          <circle cx="12" cy="16.4" r="5.1" fill="#ffffff" />
-          <circle cx="12" cy="22" r="1.4" fill="#ffffff" />
+          <rect x="8.7" y="2.6" width="6.6" height="3" rx="1.5" fill="#1C0F02" />
+          <rect x="10.7" y="5.2" width="2.6" height="7.2" rx="1.3" fill="#1C0F02" />
+          <circle cx="12" cy="16.4" r="5.1" fill="#1C0F02" />
+          <circle cx="12" cy="22" r="1.4" fill="#1C0F02" />
         </svg>
       </div>
     ),

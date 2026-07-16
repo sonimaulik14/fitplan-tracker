@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { registerSW } from "@/lib/sw-client";
 import VajraMark from "./VajraMark";
 
 type BIPEvent = Event & { prompt: () => void; userChoice: Promise<unknown> };
@@ -11,7 +12,7 @@ export default function PWA() {
 
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+      registerSW().catch(() => {});
     }
     const onPrompt = (e: Event) => {
       e.preventDefault();

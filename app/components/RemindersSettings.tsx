@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { Bell } from "lucide-react";
 import { updateRemindersAction } from "@/lib/actions";
+import { registerSW } from "@/lib/sw-client";
 import { toast } from "@/lib/toast";
 
 // Display Monday-first (how most people read a week); the value is the weekday
@@ -104,7 +105,7 @@ export default function RemindersSettings({
     if (!vapid) return;
     setBusy(true);
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js");
+      const reg = await registerSW();
       await navigator.serviceWorker.ready;
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {

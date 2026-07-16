@@ -2,13 +2,13 @@ function Bar({ className = "" }: { className?: string }) {
   return <div className={`skeleton ${className}`} />;
 }
 
-// Faux glassy top bar matching the real NavBar.
+// Faux top bar matching the real NavBar (flat, opaque, mobile-slim).
 function FauxNav() {
   return (
-    <div className="sticky top-0 z-30 border-b border-border bg-background/55 backdrop-blur-2xl">
-      <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
+    <div className="sticky top-0 z-30 border-b border-border bg-background">
+      <div className="max-w-5xl mx-auto px-4 sm:px-5 h-14 sm:h-16 flex items-center justify-between">
         <Bar className="w-28 h-8" />
-        <Bar className="hidden md:block w-80 h-9 rounded-2xl" />
+        <Bar className="hidden md:block w-80 h-9 rounded-lg" />
         <Bar className="w-9 h-9 rounded-full" />
       </div>
     </div>
@@ -16,7 +16,7 @@ function FauxNav() {
 }
 
 // A lightweight stand-in shown while a route's data loads. Mirrors the real
-// layout: glassy nav + photographic hero banner + page-specific body.
+// layout: flat nav + page-specific body.
 export default function PageSkeleton({
   variant = "default",
 }: {

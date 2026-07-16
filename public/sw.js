@@ -1,7 +1,8 @@
 // Vajra service worker — app shell caching + offline fallback.
-// Bump CACHE on each release that changes precached/static-cached assets so the
-// activate handler purges the old cache.
-const CACHE = "fitplan-v2";
+// The registration URL carries ?v=<build id> (lib/sw-client.ts), so the cache
+// name rolls automatically per deploy and the activate handler purges old ones.
+const VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
+const CACHE = `vajra-${VERSION}`;
 const PRECACHE = ["/offline", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {

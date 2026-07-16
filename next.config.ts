@@ -24,6 +24,13 @@ const csp = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  // Build stamp for the service-worker registration URL (lib/sw-client.ts) so
+  // each deploy rolls the SW + its caches without hand-bumping a version.
+  env: {
+    NEXT_PUBLIC_BUILD_ID:
+      process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ??
+      `dev-${Date.now().toString(36)}`,
+  },
   // Tree-shake large icon / animation packages so only used exports ship.
   experimental: {
     optimizePackageImports: ["lucide-react", "motion"],
@@ -42,6 +49,14 @@ const nextConfig: NextConfig = {
   // referrer leakage, feature access, and HTTPS pinning).
   async headers() {
     return [
+      {
+        // The SW script itself must never be HTTP-cached — a stale worker
+        // pins users to a dead build's assets.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
       {
         source: "/:path*",
         headers: [
