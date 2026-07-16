@@ -27,7 +27,7 @@ export default function EmptyState({
         compact ? "py-8" : "py-12"
       } px-6 ${className}`}
     >
-      <div className="grid place-items-center w-14 h-14 rounded-2xl bg-surface-2 border border-border mb-4 text-muted">
+      <div className="grid place-items-center w-14 h-14 rounded-xl bg-surface-2 border border-border mb-4 text-muted">
         <Icon size={24} strokeWidth={1.75} aria-hidden />
       </div>
       <p className="font-semibold">{title}</p>

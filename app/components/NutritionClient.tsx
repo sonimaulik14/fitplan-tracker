@@ -86,7 +86,7 @@ export function FoodLog({ entries }: { entries: Entry[] }) {
             <button
               type="button"
               onClick={() => del(e.id)}
-              className="text-muted hover:text-red-400 text-lg shrink-0"
+              className="text-muted hover:text-danger text-lg shrink-0"
               aria-label="Delete entry"
             >
               ×
@@ -181,7 +181,7 @@ export function WaterTracker({
           <button
             type="button"
             onClick={() => adjust(-stepMl)}
-            className="w-10 h-10 rounded-xl border border-border hover:bg-surface-2 text-xl"
+            className="w-10 h-10 rounded-lg border border-border hover:bg-surface-2 text-xl"
             aria-label="Remove a glass"
           >
             −
@@ -189,7 +189,7 @@ export function WaterTracker({
           <button
             type="button"
             onClick={() => adjust(stepMl)}
-            className="w-10 h-10 rounded-xl bg-accent text-white text-xl"
+            className="w-10 h-10 rounded-lg bg-accent text-accent-ink text-xl"
             aria-label="Add a glass"
           >
             +

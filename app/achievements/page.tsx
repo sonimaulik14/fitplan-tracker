@@ -18,7 +18,7 @@ export default async function AchievementsPage() {
     return (
       <>
         <NavBar user={user} />
-        <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
+        <main className="celebrate-scope flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
           <h1 className="display-hero text-3xl">Achievements</h1>
           <div className="card p-8 mt-6 text-center text-muted">
             Start the plan and log a workout to begin earning badges.
@@ -42,7 +42,7 @@ export default async function AchievementsPage() {
   return (
     <>
       <NavBar user={user} />
-      <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
+      <main className="celebrate-scope flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
         <PhotoHero
           queryKey="page:achievements"
           title="Achievements"
@@ -83,7 +83,7 @@ export default async function AchievementsPage() {
                   <div
                     className="h-full rounded-full"
                     style={{
-                      background: "var(--grad-brand)",
+                      background: "var(--accent)",
                       width: `${
                         p.prescribedWorkouts
                           ? Math.round(
@@ -121,7 +121,7 @@ export default async function AchievementsPage() {
                 <div className="font-semibold text-sm mt-2.5">{a.title}</div>
                 <div className="text-xs text-muted mt-0.5">{a.desc}</div>
                 {a.unlocked && (
-                  <div className="chip text-accent-2 border-accent-2/30 bg-accent-2/10 mt-2.5 inline-flex">
+                  <div className="chip text-success border-success/30 bg-success/10 mt-2.5 inline-flex">
                     Unlocked
                   </div>
                 )}

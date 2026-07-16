@@ -22,8 +22,8 @@ export default function Toaster() {
         3200
       );
     };
-    window.addEventListener("fitplan:toast", onToast);
-    return () => window.removeEventListener("fitplan:toast", onToast);
+    window.addEventListener("vajra:toast", onToast);
+    return () => window.removeEventListener("vajra:toast", onToast);
   }, []);
 
   const tones: Record<ToastTone, string> = {

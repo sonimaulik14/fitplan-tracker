@@ -86,7 +86,7 @@ export default function AvatarUploader({
             </button>
           )}
         </div>
-        {msg && <span className="text-xs text-red-300">{msg}</span>}
+        {msg && <span className="text-xs text-danger">{msg}</span>}
       </div>
     </div>
   );

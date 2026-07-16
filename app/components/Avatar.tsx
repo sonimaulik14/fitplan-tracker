@@ -25,7 +25,7 @@ export default function Avatar({
   }
   return (
     <span
-      className={`grid place-items-center rounded-full bg-gradient-to-br from-accent-3 to-accent text-white font-bold ${className}`}
+      className={`grid place-items-center rounded-full bg-accent text-accent-ink font-bold ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.42 }}
     >
       {initial}

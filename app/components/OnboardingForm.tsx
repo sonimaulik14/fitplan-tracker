@@ -95,7 +95,7 @@ export default function OnboardingForm({
         </button>
       )}
       <div className="flex items-center gap-2 mb-1">
-        <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg shadow-lg shadow-accent/30">
+        <span className="grid place-items-center w-9 h-9 rounded-lg brand-bg">
           <VajraMark size={26} />
         </span>
         <span className="font-display font-bold text-xl">
@@ -118,7 +118,7 @@ export default function OnboardingForm({
               key={g.id}
               type="button"
               onClick={() => setGoal(g.id)}
-              className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors ${
                 goal === g.id
                   ? "border-accent bg-accent/10 text-foreground"
                   : "border-border bg-surface-2 text-muted hover:text-foreground"
@@ -133,15 +133,15 @@ export default function OnboardingForm({
       {/* Units */}
       <div className="mt-5">
         <div className="label">Weight units</div>
-        <div className="flex items-center rounded-xl border border-border bg-surface-2 p-1 w-fit">
+        <div className="flex items-center rounded-lg border border-border bg-surface-2 p-1 w-fit">
           {(["kg", "lb"] as Unit[]).map((u) => (
             <button
               key={u}
               type="button"
               onClick={() => setUnit(u)}
-              className={`px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+              className={`px-5 py-1.5 rounded-md text-sm font-semibold transition-colors ${
                 unit === u
-                  ? "bg-accent text-[#ffffff]"
+                  ? "bg-accent text-accent-ink"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -164,9 +164,9 @@ export default function OnboardingForm({
                 aria-pressed={active}
                 aria-label={label}
                 onClick={() => toggleDay(v)}
-                className={`flex items-center justify-center h-12 rounded-xl text-xs font-bold border transition-colors ${
+                className={`flex items-center justify-center h-12 rounded-lg text-xs font-bold border transition-colors ${
                   active
-                    ? "bg-accent text-white border-accent shadow-sm shadow-accent/30"
+                    ? "bg-accent text-accent-ink border-accent"
                     : "bg-surface-2 text-muted border-border active:bg-surface hover:text-foreground hover:border-border-strong"
                 }`}
               >

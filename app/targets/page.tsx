@@ -8,15 +8,14 @@ import {
   type Unit,
 } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
-import PhotoHero from "@/app/components/PhotoHero";
 import { MuscleGlyph } from "@/app/components/icons";
 
 export const metadata = { title: "This week's targets" };
 
 const toneCls: Record<string, string> = {
-  up: "text-accent-2 border-accent-2/30 bg-accent-2/10",
+  up: "text-success border-success/30 bg-success/10",
   beat: "text-accent border-accent/30 bg-accent/10",
-  hold: "text-amber-400 border-amber-400/30 bg-amber-400/10",
+  hold: "text-warn border-warn/30 bg-warn/10",
 };
 
 export default async function TargetsPage() {
@@ -46,12 +45,18 @@ export default async function TargetsPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-6">
-        <PhotoHero
-          queryKey="hero:hero"
-          eyebrow={`Week ${currentWeek}${week?.style ? ` · ${week.style}` : ""}`}
-          title="This week's targets"
-          subtitle="Suggested weights from last time + your rep targets. Beat these."
-        />
+        <header className="animate-fade-up">
+          <p className="eyebrow">
+            Week {currentWeek}
+            {week?.style ? ` · ${week.style}` : ""}
+          </p>
+          <h1 className="display-hero text-4xl sm:text-5xl mt-1">
+            This week&apos;s targets
+          </h1>
+          <p className="text-sm text-muted mt-2">
+            Suggested weights from last time + your rep targets. Beat these.
+          </p>
+        </header>
 
         {trainingDays.length === 0 ? (
           <div className="card p-8 text-center text-muted">
@@ -97,7 +102,7 @@ export default async function TargetsPage() {
                         </div>
                         {sug ? (
                           <div className="text-right shrink-0">
-                            <div className="font-display font-bold text-sm">
+                            <div className="stat-num text-sm">
                               {fmtWeight(sug.weight, unit)} × {sug.reps}
                             </div>
                             <span

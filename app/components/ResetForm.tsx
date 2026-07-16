@@ -14,7 +14,7 @@ export default function ResetForm({ token }: { token: string }) {
   return (
     <div className="w-full max-w-sm animate-fade-up">
       <div className="flex items-center gap-2 mb-6">
-        <span className="grid place-items-center w-9 h-9 rounded-xl brand-bg shadow-lg shadow-accent/30">
+        <span className="grid place-items-center w-9 h-9 rounded-lg brand-bg">
           <VajraMark size={26} />
         </span>
         <span className="font-display font-bold text-xl">
@@ -45,7 +45,7 @@ export default function ResetForm({ token }: { token: string }) {
           />
         </div>
         {state?.error && (
-          <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2.5">
+          <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2.5">
             {state.error}
           </p>
         )}

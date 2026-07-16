@@ -99,7 +99,7 @@ export default function PhotoCompare({
             ))}
           </select>
         </label>
-        <div className="flex rounded-xl border border-border overflow-hidden shrink-0">
+        <div className="flex rounded-lg border border-border overflow-hidden shrink-0">
           {(["slider", "side"] as const).map((m) => (
             <button
               key={m}
@@ -107,7 +107,7 @@ export default function PhotoCompare({
               onClick={() => setMode(m)}
               className={`px-3 py-2 text-xs font-semibold transition-colors ${
                 mode === m
-                  ? "bg-accent text-white"
+                  ? "bg-accent text-accent-ink"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -155,10 +155,10 @@ export default function PhotoCompare({
               ⇄
             </div>
           </div>
-          <span className="absolute top-2 left-2 chip !bg-black/45 !border-white/20 text-white backdrop-blur text-[11px]">
+          <span className="absolute top-2 left-2 chip !bg-black/60 !border-white/20 text-white text-[11px]">
             Before · {new Date(before.date).toLocaleDateString()}
           </span>
-          <span className="absolute top-2 right-2 chip !bg-black/45 !border-white/20 text-white backdrop-blur text-[11px]">
+          <span className="absolute top-2 right-2 chip !bg-black/60 !border-white/20 text-white text-[11px]">
             After · {new Date(after.date).toLocaleDateString()}
           </span>
         </div>
@@ -194,7 +194,7 @@ export default function PhotoCompare({
         <span className="text-muted">{fmtGap(before.date, after.date)}</span>
         {weightDelta != null && Math.abs(weightDelta) >= 0.1 && (
           <span
-            className="font-display font-bold"
+            className="stat-num font-semibold"
             style={{
               color: weightDelta < 0 ? "var(--success)" : "var(--accent-hi)",
             }}

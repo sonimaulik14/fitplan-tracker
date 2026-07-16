@@ -49,7 +49,7 @@ export default function ThemeToggle() {
           title={`${o.key[0].toUpperCase()}${o.key.slice(1)} theme`}
           className={`w-7 h-7 grid place-items-center rounded-md transition-colors ${
             pref === o.key
-              ? "bg-accent text-white"
+              ? "bg-accent text-accent-ink"
               : "text-muted hover:text-foreground"
           }`}
         >

@@ -56,7 +56,7 @@ export default function WeekSwitcher({
           onClick={() => setOpen((o) => !o)}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className="flex items-center gap-2.5 pl-3.5 pr-2.5 h-9 rounded-xl border border-border bg-surface-2 hover:border-border-strong transition-colors"
+          className="flex items-center gap-2.5 pl-3.5 pr-2.5 h-9 rounded-lg border border-border bg-surface-2 hover:border-border-strong transition-colors"
         >
           <span className="font-display font-bold text-sm whitespace-nowrap">
             Week {sel?.number}
@@ -114,7 +114,7 @@ export default function WeekSwitcher({
                         </span>
                       )}
                       {w.completed && (
-                        <span className="grid place-items-center w-4 h-4 rounded-full bg-accent-2 text-[#05231a]">
+                        <span className="grid place-items-center w-4 h-4 rounded-full bg-success text-background">
                           <Check size={11} strokeWidth={3} aria-hidden />
                         </span>
                       )}

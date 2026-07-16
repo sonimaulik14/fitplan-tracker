@@ -39,14 +39,14 @@ export default async function NutritionPage() {
       label: "Carbs",
       val: Math.round(n.totals.carbsG),
       goal: null,
-      color: "var(--accent-2)",
+      color: "var(--success)",
       unit: "g",
     },
     {
       label: "Fat",
       val: Math.round(n.totals.fatG),
       goal: null,
-      color: "var(--accent-3)",
+      color: "var(--steel)",
       unit: "g",
     },
   ];
@@ -135,7 +135,7 @@ export default async function NutritionPage() {
                 <div key={s.name}>
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="font-semibold text-sm">{s.name}</span>
-                    <span className="font-display font-bold num-gradient">
+                    <span className="stat-num text-foreground">
                       {s.totalAmount != null
                         ? `${s.totalAmount.toLocaleString()} ${s.unit}`.trim()
                         : `${s.daysTaken} days`}

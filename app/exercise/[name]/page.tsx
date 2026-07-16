@@ -72,20 +72,20 @@ export default async function ExerciseHistoryPage({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 animate-fade-up">
               <div className="card p-4">
                 <div className="eyebrow">Best est. 1RM</div>
-                <div className="text-2xl sm:text-3xl font-display font-bold num-gradient mt-1.5">
+                <div className="stat-num text-2xl sm:text-3xl mt-1.5">
                   {fmtWeight(h.best1RM, unit)}
                 </div>
               </div>
               <div className="card p-4">
                 <div className="eyebrow">Sessions</div>
-                <div className="text-2xl sm:text-3xl font-display font-bold num-gradient mt-1.5">
+                <div className="stat-num text-2xl sm:text-3xl mt-1.5">
                   {h.points.length}
                 </div>
               </div>
               {standard && (
                 <div className="card p-4 col-span-2 sm:col-span-1">
                   <div className="eyebrow">Strength level</div>
-                  <div className="text-2xl sm:text-3xl font-display font-bold num-gradient mt-1.5">
+                  <div className="display-num text-2xl sm:text-3xl mt-1.5">
                     {standard.level}
                   </div>
                   <div className="text-xs text-muted mt-1">
@@ -126,7 +126,7 @@ export default async function ExerciseHistoryPage({
                 {[...h.points].reverse().map((p) => (
                   <div
                     key={p.date}
-                    className="grid grid-cols-4 text-sm py-2 border-b border-border last:border-0 tabular-nums"
+                    className="grid grid-cols-4 stat-num text-sm py-2 border-b border-border last:border-0"
                   >
                     <span className="text-muted">{p.date.slice(5)}</span>
                     <span>

@@ -33,15 +33,18 @@ export default function WelcomeTour() {
   useEffect(() => {
     try {
       // show the tour once, based on a post-mount localStorage read
+      const toured =
+        localStorage.getItem("vajra-toured") ??
+        localStorage.getItem("fitplan-toured"); // pre-rename key
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (!localStorage.getItem("fitplan-toured")) setOpen(true);
+      if (!toured) setOpen(true);
     } catch {}
   }, []);
 
   const close = () => {
     setOpen(false);
     try {
-      localStorage.setItem("fitplan-toured", "1");
+      localStorage.setItem("vajra-toured", "1");
     } catch {}
   };
 
@@ -52,12 +55,12 @@ export default function WelcomeTour() {
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center p-4">
       <button
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60"
         aria-hidden
         onClick={close}
       />
       <div className="relative w-full max-w-md card p-7 text-center shadow-2xl animate-scale-in">
-        <span className="grid place-items-center w-14 h-14 mx-auto mb-4 rounded-2xl bg-accent/12 text-accent">
+        <span className="grid place-items-center w-14 h-14 mx-auto mb-4 rounded-xl bg-accent/12 text-accent">
           <s.Icon size={26} strokeWidth={1.75} aria-hidden />
         </span>
         <h2 className="font-display text-2xl font-bold">{s.title}</h2>

@@ -63,7 +63,7 @@ export default async function LibraryPage() {
                     alt={m}
                     width={48}
                     height={48}
-                    className="w-12 h-12 rounded-xl object-cover border border-border duotone"
+                    className="w-12 h-12 rounded-xl object-cover border border-border"
                   />
                   <div>
                     <h2 className="font-bold text-lg flex items-center gap-2">

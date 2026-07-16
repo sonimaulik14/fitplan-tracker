@@ -28,7 +28,6 @@ import {
 import { Reveal, AnimatedNumber } from "@/app/components/motion";
 import ShareCard from "@/app/components/ShareCard";
 import PhotoCompare from "@/app/components/PhotoCompare";
-import PhotoHero from "@/app/components/PhotoHero";
 import { AchievementBadge } from "@/app/components/icons";
 import { fmtVolume, type Unit } from "@/lib/ui";
 
@@ -74,32 +73,34 @@ export default async function ProgressPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-4xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12 space-y-8">
-        <PhotoHero
-          queryKey="page:progress"
-          title="Progress"
-          subtitle="Your consistency, milestones and body."
-        />
+        <header className="animate-fade-up">
+          <p className="eyebrow">Your journey</p>
+          <h1 className="display-hero text-4xl sm:text-5xl mt-1">Progress</h1>
+          <p className="text-sm text-muted mt-2">
+            Your consistency, milestones and body.
+          </p>
+        </header>
 
         {/* 12-Week Wrapped entry */}
         {p?.enrolled && activity.totalActiveDays > 0 && (
           <Link
             href="/wrapped"
-            className="relative block overflow-hidden rounded-2xl p-5 animate-fade-up active:scale-[0.99] transition-transform"
+            className="relative block overflow-hidden rounded-xl p-5 animate-fade-up active:scale-[0.99] transition-transform"
             style={{ background: "var(--accent)" }}
           >
-            <div className="flex items-center justify-between gap-3 text-white">
+            <div className="flex items-center justify-between gap-3 text-accent-ink">
               <div>
-                <div className="text-[11px] uppercase tracking-[0.2em] font-semibold text-white/80">
+                <div className="text-[11px] uppercase tracking-[0.2em] font-semibold text-accent-ink/80">
                   New
                 </div>
                 <div className="font-display font-bold text-xl mt-0.5 flex items-center gap-2">
                   <Film size={18} /> Your 12-Week Wrapped
                 </div>
-                <div className="text-white/85 text-sm mt-0.5">
+                <div className="text-accent-ink/85 text-sm mt-0.5">
                   A swipeable recap of your season — tap to play.
                 </div>
               </div>
-              <span className="shrink-0 rounded-full bg-white text-[#1a1d29] font-semibold text-sm px-4 py-2">
+              <span className="shrink-0 rounded-lg bg-accent-ink text-accent font-semibold text-sm px-4 py-2">
                 Play →
               </span>
             </div>
@@ -128,7 +129,7 @@ export default async function ProgressPage() {
                   {recapWeek.style ? ` : ${recapWeek.style}` : ""} recap
                 </h2>
                 {recapWeek.completed && (
-                  <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
+                  <span className="chip text-success border-success/30 bg-success/10">
                     ✓ Complete
                   </span>
                 )}
@@ -170,7 +171,7 @@ export default async function ProgressPage() {
                         key={wn}
                         className={`rounded-xl border p-4 ${
                           done
-                            ? "border-accent-2/40 bg-accent-2/5"
+                            ? "border-success/40 bg-success/5"
                             : loaded
                               ? "border-border bg-surface-2"
                               : "border-border bg-surface-2 opacity-50"
@@ -187,7 +188,7 @@ export default async function ProgressPage() {
                             ) : null}
                           </span>
                           {done ? (
-                            <span className="grid place-items-center w-6 h-6 rounded-full bg-accent-2 text-[#05231a] text-xs font-bold">
+                            <span className="grid place-items-center w-6 h-6 rounded-full bg-success text-background text-xs font-bold">
                               ✓
                             </span>
                           ) : loaded ? (
@@ -198,10 +199,10 @@ export default async function ProgressPage() {
                             <Lock size={13} className="text-muted" aria-hidden />
                           )}
                         </div>
-                        <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mt-3 border border-border/50">
+                        <div className="h-1 rounded-sm bg-surface-2 overflow-hidden mt-3 border border-border/50">
                           <div
-                            className={`h-full rounded-full ${
-                              done ? "bg-accent-2" : "bg-accent"
+                            className={`h-full ${
+                              done ? "bg-success" : "bg-accent"
                             }`}
                             style={{ width: `${wk?.trainingPct ?? 0}%` }}
                           />
@@ -354,8 +355,8 @@ export default async function ProgressPage() {
 function RecapStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-surface-2 border border-border p-3">
-      <div className="font-display font-bold text-lg">{value}</div>
-      <div className="text-xs text-muted mt-0.5">{label}</div>
+      <div className="eyebrow">{label}</div>
+      <div className="stat-num text-lg mt-0.5">{value}</div>
     </div>
   );
 }
@@ -373,12 +374,9 @@ function StreakStat({
 }) {
   return (
     <div
-      className="card p-4 relative overflow-hidden"
-      style={
-        big
-          ? { background: "var(--grad-brand-soft)" }
-          : undefined
-      }
+      className={`card p-4 relative overflow-hidden ${
+        big ? "border-l-2 border-l-accent" : ""
+      }`}
     >
       <Icon
         className={`${big ? "text-accent" : "text-muted"}`}
@@ -387,13 +385,15 @@ function StreakStat({
         aria-hidden
       />
       <div
-        className={`font-display font-bold mt-1 ${
-          big ? "num-brand text-4xl sm:text-5xl leading-none" : "num-gradient text-2xl"
+        className={`mt-1 ${
+          big
+            ? "display-num text-4xl sm:text-5xl leading-none"
+            : "stat-num text-2xl"
         }`}
       >
         <AnimatedNumber value={value} />
       </div>
-      <div className="text-xs text-muted mt-0.5">{label}</div>
+      <div className="eyebrow mt-1.5">{label}</div>
     </div>
   );
 }

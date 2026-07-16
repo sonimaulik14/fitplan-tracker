@@ -206,9 +206,9 @@ export default function RemindersSettings({
                     aria-pressed={active}
                     aria-label={label}
                     onClick={() => toggleDay(v)}
-                    className={`flex items-center justify-center h-12 rounded-xl text-xs font-bold border transition-colors ${
+                    className={`flex items-center justify-center h-12 rounded-lg text-xs font-bold border transition-colors ${
                       active
-                        ? "bg-accent text-white border-accent shadow-sm shadow-accent/30"
+                        ? "bg-accent text-accent-ink border-accent"
                         : "bg-surface-2 text-muted border-border active:bg-surface hover:text-foreground hover:border-border-strong"
                     }`}
                   >
@@ -299,7 +299,7 @@ function DeviceRow({
   // on
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="chip text-accent-2 border-accent-2/30 bg-accent-2/10">
+      <span className="chip text-success border-success/30 bg-success/10">
         ✓ Enabled here
       </span>
       <button

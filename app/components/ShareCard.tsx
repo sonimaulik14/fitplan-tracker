@@ -65,15 +65,15 @@ export default function ShareCard({
   return (
     <div>
       {/* The capturable card */}
-      <div className="overflow-hidden rounded-2xl">
+      <div className="overflow-hidden rounded-xl">
         <div
           ref={ref}
           style={{
             background:
-              "radial-gradient(120% 120% at 100% 0%, rgba(47,107,255,0.18), #0a0c12 58%)",
+              "radial-gradient(120% 120% at 100% 0%, rgba(255,122,31,0.2), #0c0b09 58%)",
             padding: "28px",
-            color: "#f4f6fb",
-            fontFamily: "Inter, system-ui, sans-serif",
+            color: "#f2eee6",
+            fontFamily: "var(--font-barlow), system-ui, sans-serif",
           }}
         >
           <div
@@ -86,7 +86,7 @@ export default function ShareCard({
             <div style={{ fontWeight: 800, letterSpacing: "-0.5px" }}>
               Vajra
             </div>
-            <div style={{ fontSize: 12, color: "#99a1b3" }}>{planName}</div>
+            <div style={{ fontSize: 12, color: "#8fa3b8" }}>{planName}</div>
           </div>
 
           <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 20 }}>
@@ -95,7 +95,7 @@ export default function ShareCard({
                 width: 110,
                 height: 110,
                 borderRadius: "50%",
-                background: `conic-gradient(#2f6bff ${adherence * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
+                background: `conic-gradient(#ff7a1f ${adherence * 3.6}deg, rgba(242,238,230,0.08) 0deg)`,
                 display: "grid",
                 placeItems: "center",
                 flexShrink: 0,
@@ -106,7 +106,7 @@ export default function ShareCard({
                   width: 86,
                   height: 86,
                   borderRadius: "50%",
-                  background: "#0a0c12",
+                  background: "#0c0b09",
                   display: "grid",
                   placeItems: "center",
                 }}
@@ -115,11 +115,11 @@ export default function ShareCard({
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 13, color: "#99a1b3" }}>{name}</div>
+              <div style={{ fontSize: 13, color: "#8fa3b8" }}>{name}</div>
               <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.1 }}>
                 {completedWorkouts} workouts done
               </div>
-              <div style={{ fontSize: 13, color: "#99a1b3", marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: "#8fa3b8", marginTop: 4 }}>
                 {fmtVolume(volume, unit)} {unit} total volume lifted
               </div>
             </div>
@@ -131,17 +131,17 @@ export default function ShareCard({
                 key={s.k}
                 style={{
                   flex: 1,
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(242,238,230,0.05)",
+                  border: "1px solid rgba(242,238,230,0.08)",
                   borderRadius: 12,
                   padding: "12px 8px",
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontSize: 20, fontWeight: 800, color: "#f4f6fb" }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#f2eee6" }}>
                   {s.v}
                 </div>
-                <div style={{ fontSize: 10, color: "#99a1b3", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "#8fa3b8", marginTop: 2 }}>
                   {s.k}
                 </div>
               </div>

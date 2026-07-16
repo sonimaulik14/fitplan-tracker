@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { getProgress, est1RM } from "@/lib/metrics";
 import { fmtWeight, muscleStyle, slugify, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
-import PhotoHero from "@/app/components/PhotoHero";
 import { MuscleGlyph } from "@/app/components/icons";
 
 export const metadata = { title: "Personal records" };
@@ -21,11 +20,15 @@ export default async function RecordsPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
-        <PhotoHero
-          queryKey="page:records"
-          title="Personal records"
-          subtitle="Your heaviest lift on every exercise."
-        />
+        <header className="animate-fade-up mb-4">
+          <p className="eyebrow">All-time bests</p>
+          <h1 className="display-hero text-4xl sm:text-5xl mt-1">
+            Personal records
+          </h1>
+          <p className="text-sm text-muted mt-2">
+            Your heaviest lift on every exercise.
+          </p>
+        </header>
         <Link
           href="/history"
           className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
@@ -45,15 +48,12 @@ export default async function RecordsPage() {
                 <Link
                   key={pr.name}
                   href={`/exercise/${slugify(pr.name)}`}
-                  className="card card-hover p-4 flex items-center gap-3"
+                  className="card card-hover p-4 flex items-center gap-3 border-l-2"
+                  style={{ borderLeftColor: st.color }}
                 >
-                  <span className="w-7 text-center font-display font-bold text-muted">
+                  <span className="w-7 text-center stat-num text-muted">
                     {i + 1}
                   </span>
-                  <span
-                    className="w-1.5 h-9 rounded-full shrink-0"
-                    style={{ background: st.color }}
-                  />
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-sm truncate flex items-center gap-1.5">
                       <MuscleGlyph muscle={pr.muscle} size={15} /> {pr.name}
@@ -63,7 +63,7 @@ export default async function RecordsPage() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-display font-bold num-gradient text-lg">
+                    <div className="stat-num text-lg">
                       {fmtWeight(pr.maxWeight, unit)}
                     </div>
                     <div className="text-xs text-muted">× {pr.repsAtMax}</div>

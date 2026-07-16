@@ -41,14 +41,14 @@ export default function Certificate({
     <div>
       <div
         ref={ref}
-        className="relative overflow-hidden rounded-2xl border-2 border-accent/40 p-8 text-center"
+        className="relative overflow-hidden rounded-xl border-2 border-accent/40 p-8 text-center"
         style={{
           background:
             "radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--accent) 14%, var(--surface)) 0%, var(--surface) 60%)",
         }}
       >
         <div className="text-4xl">🏆</div>
-        <div className="text-xs uppercase tracking-[0.3em] text-accent font-semibold mt-3">
+        <div className="text-xs uppercase tracking-[0.3em] text-pr font-semibold mt-3">
           Certificate of Completion
         </div>
         <div className="text-2xl font-display font-bold mt-4">{name}</div>

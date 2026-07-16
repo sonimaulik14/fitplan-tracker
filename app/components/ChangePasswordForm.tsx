@@ -42,12 +42,12 @@ export default function ChangePasswordForm() {
       </div>
 
       {state?.error && (
-        <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2.5">
+        <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2.5">
           {state.error}
         </p>
       )}
       {state?.ok && (
-        <p className="text-sm text-accent-2 bg-accent-2/10 border border-accent-2/30 rounded-xl px-3 py-2.5">
+        <p className="text-sm text-success bg-success/10 border border-success/30 rounded-lg px-3 py-2.5">
           Password updated ✓
         </p>
       )}

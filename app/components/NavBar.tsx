@@ -70,7 +70,7 @@ export default function NavBar({ user }: { user: NavUser }) {
           <div className="flex items-center gap-2">
             {/* mobile: icon-only search → opens the command palette */}
             <button
-              onClick={() => window.dispatchEvent(new Event("fitplan:command"))}
+              onClick={() => window.dispatchEvent(new Event("vajra:command"))}
               aria-label="Search"
               className="sm:hidden grid place-items-center w-9 h-9 rounded-lg border border-border bg-surface-2 text-muted active:scale-95 transition-transform"
             >
@@ -81,7 +81,7 @@ export default function NavBar({ user }: { user: NavUser }) {
             </button>
             <button
               onClick={() =>
-                window.dispatchEvent(new Event("fitplan:command"))
+                window.dispatchEvent(new Event("vajra:command"))
               }
               aria-label="Search (Cmd/Ctrl + K)"
               className="hidden sm:flex items-center gap-2 h-9 pl-2.5 pr-2 rounded-lg border border-border bg-surface-2 text-muted hover:text-foreground hover:border-border-strong transition-colors"

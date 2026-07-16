@@ -23,10 +23,10 @@ export default function PlanTimelineCard({ t }: { t: Timeline }) {
   const statusTone = !t.hasStarted
     ? "text-muted"
     : t.hasFinished
-      ? "text-accent-2"
+      ? "text-success"
       : t.behind > 0
-        ? "text-amber-500"
-        : "text-accent-2";
+        ? "text-warn"
+        : "text-success";
 
   return (
     <Link
@@ -49,9 +49,9 @@ export default function PlanTimelineCard({ t }: { t: Timeline }) {
         </span>
       </div>
 
-      <div className="mt-3 h-2 rounded-full bg-surface-2 overflow-hidden">
+      <div className="mt-3 h-1 rounded-sm bg-surface-2 overflow-hidden">
         <div
-          className="h-full rounded-full bg-accent transition-all"
+          className="h-full bg-accent transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>

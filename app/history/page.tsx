@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { getWorkoutHistory } from "@/lib/metrics";
 import { fmtVolume, type Unit } from "@/lib/ui";
 import NavBar from "@/app/components/NavBar";
-import PhotoHero from "@/app/components/PhotoHero";
 import EmptyState from "@/app/components/EmptyState";
 import { FocusGlyph } from "@/app/components/icons";
 
@@ -26,11 +25,16 @@ export default async function HistoryPage() {
     <>
       <NavBar user={user} />
       <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
-        <PhotoHero
-          queryKey="page:history"
-          title="Workout history"
-          subtitle={`${history.length} logged session${history.length === 1 ? "" : "s"}, newest first.`}
-        />
+        <header className="animate-fade-up mb-4">
+          <p className="eyebrow">Session log</p>
+          <h1 className="display-hero text-4xl sm:text-5xl mt-1">
+            Workout history
+          </h1>
+          <p className="text-sm text-muted mt-2">
+            {history.length} logged session
+            {history.length === 1 ? "" : "s"}, newest first.
+          </p>
+        </header>
         <Link
           href="/records"
           className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
@@ -56,7 +60,7 @@ export default async function HistoryPage() {
                 href={`/workout/${h.dayId}`}
                 className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2 transition-colors"
               >
-                <span className="grid place-items-center w-10 h-10 rounded-xl bg-surface-2 border border-border shrink-0">
+                <span className="grid place-items-center w-10 h-10 rounded-lg bg-surface-2 border border-border shrink-0">
                   <FocusGlyph focus={h.focus} size={20} />
                 </span>
                 <div className="min-w-0 flex-1">
