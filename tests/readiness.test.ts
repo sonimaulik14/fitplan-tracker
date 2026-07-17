@@ -4,6 +4,8 @@ import {
   readinessFactor,
   readinessInfo,
   POOR_DAY_SCORE,
+  lightWeekActive,
+  effectiveTrimFactor,
 } from "@/lib/readiness";
 
 const a = (sleepQuality: number | null, soreness: number | null, energy: number | null) => ({
@@ -80,5 +82,30 @@ describe("readinessInfo", () => {
 describe("POOR_DAY_SCORE", () => {
   it("sits below the trim threshold so nudges are stricter than trims", () => {
     expect(POOR_DAY_SCORE).toBeLessThan(0.5);
+  });
+});
+
+describe("light week", () => {
+  const now = new Date("2026-07-17T12:00:00Z");
+
+  it("is active only until a future date", () => {
+    expect(lightWeekActive(new Date("2026-07-20"), now)).toBe(true);
+    expect(lightWeekActive("2026-07-20T00:00:00Z", now)).toBe(true);
+    expect(lightWeekActive(new Date("2026-07-10"), now)).toBe(false);
+    expect(lightWeekActive(null, now)).toBe(false);
+    expect(lightWeekActive(undefined, now)).toBe(false);
+    expect(lightWeekActive("not-a-date", now)).toBe(false);
+  });
+
+  it("effectiveTrimFactor floors at 0.9 without stacking", () => {
+    expect(effectiveTrimFactor(0.8, true)).toBe(0.9); // good day, LW wins
+    expect(effectiveTrimFactor(0.1, true)).toBe(0.9); // poor day: min, not 0.81
+    expect(effectiveTrimFactor(null, true)).toBe(0.9); // unanswered, LW applies
+  });
+
+  it("passes the readiness factor through when no light week", () => {
+    expect(effectiveTrimFactor(0.8, false)).toBe(1);
+    expect(effectiveTrimFactor(0.4, false)).toBe(0.95);
+    expect(effectiveTrimFactor(0.1, false)).toBe(0.9);
   });
 });

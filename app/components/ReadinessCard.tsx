@@ -2,8 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { Moon, Bandage, Zap } from "lucide-react";
-import { saveReadinessAction } from "@/lib/actions";
-import { readinessScore, readinessInfo } from "@/lib/readiness";
+import {
+  saveReadinessAction,
+  startLightWeekAction,
+  endLightWeekAction,
+} from "@/lib/actions";
+import { readinessScore, readinessInfo, lightWeekActive } from "@/lib/readiness";
 import { toast } from "@/lib/toast";
 
 type Answers = {
@@ -23,12 +27,36 @@ const ROWS = [
 export default function ReadinessCard({
   initial,
   roughPatch,
+  lightWeekUntil = null,
 }: {
   initial: Answers;
   roughPatch: boolean;
+  /** ISO date while a light week is active, else null. */
+  lightWeekUntil?: string | null;
 }) {
   const [answers, setAnswers] = useState<Answers>(initial);
+  const [lwUntil, setLwUntil] = useState<string | null>(lightWeekUntil);
   const [, start] = useTransition();
+  const lwActive = lightWeekActive(lwUntil);
+
+  const startLightWeek = () =>
+    start(async () => {
+      const res = await startLightWeekAction();
+      if (res.ok && res.until) setLwUntil(res.until);
+      else toast(res.error ?? "Couldn't start the light week.", "error");
+    });
+
+  const endLightWeek = () => {
+    const prev = lwUntil;
+    setLwUntil(null); // optimistic
+    start(async () => {
+      const res = await endLightWeekAction();
+      if (!res.ok) {
+        setLwUntil(prev);
+        toast(res.error ?? "Couldn't end the light week.", "error");
+      }
+    });
+  };
 
   const tap = (field: (typeof ROWS)[number]["field"], v: number) => {
     const prev = answers[field];
@@ -101,13 +129,39 @@ export default function ReadinessCard({
         ))}
       </div>
 
-      {roughPatch && (
-        <p className="mt-4 rounded-lg border border-warn/30 bg-warn/10 px-3 py-2 text-xs leading-relaxed">
+      {lwActive ? (
+        <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs leading-relaxed flex items-center gap-2 flex-wrap">
+          <span>
+            <span className="font-semibold text-accent">Light week active</span>{" "}
+            — suggestions trimmed 10%, ends{" "}
+            {new Date(lwUntil!).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+            .
+          </span>
+          <button
+            type="button"
+            onClick={endLightWeek}
+            className="btn-quiet !py-0.5 text-xs ml-auto"
+          >
+            End early
+          </button>
+        </div>
+      ) : roughPatch ? (
+        <div className="mt-4 rounded-lg border border-warn/30 bg-warn/10 px-3 py-2 text-xs leading-relaxed">
           <span className="font-semibold text-warn">Rough patch.</span> Most of
-          your recent check-ins came in low. Consider a light week — trim
-          working weights ~10%, keep the movements, and prioritize sleep.
-        </p>
-      )}
+          your recent check-ins came in low. A light week trims working weights
+          ~10% for 7 days — keep the movements, prioritize sleep.
+          <button
+            type="button"
+            onClick={startLightWeek}
+            className="btn-quiet !py-0.5 text-xs mt-1.5 block"
+          >
+            Start light week →
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

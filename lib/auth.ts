@@ -89,6 +89,7 @@ export const getCurrentUser = cache(async () => {
       remindersOn: true,
       weeklyReviewOn: true,
       timezone: true,
+      lightWeekUntil: true,
       onboardedAt: true,
     },
   });

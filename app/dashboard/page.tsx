@@ -291,6 +291,7 @@ export default async function DashboardPage({
                     }
                   }
                   roughPatch={readiness.roughPatch}
+                  lightWeekUntil={user.lightWeekUntil?.toISOString() ?? null}
                 />
               )}
               <CycleProgress cmp={cycleCmp} unit={user.unit as Unit} />

@@ -12,7 +12,11 @@ import {
 } from "@/lib/metrics";
 import { termInfo, type Unit } from "@/lib/ui";
 import { dayKeyInTz } from "@/lib/date";
-import { readinessScore, readinessFactor } from "@/lib/readiness";
+import {
+  readinessScore,
+  effectiveTrimFactor,
+  lightWeekActive,
+} from "@/lib/readiness";
 import { BatteryMedium } from "lucide-react";
 import NavBar from "@/app/components/NavBar";
 import WorkoutLogger, { type LoggerExercise } from "@/app/components/WorkoutLogger";
@@ -64,7 +68,8 @@ export default async function WorkoutPage({
   const todayScore = readinessScore(
     todayLog ?? { sleepQuality: null, soreness: null, energy: null }
   );
-  const readiness = readinessFactor(todayScore);
+  const lightWeek = lightWeekActive(user.lightWeekUntil);
+  const readiness = effectiveTrimFactor(todayScore, lightWeek);
   const plateauByName = new Map(plateaus.map((p) => [p.name, p]));
 
   const entryMap = new Map(
@@ -179,6 +184,9 @@ export default async function WorkoutPage({
             bodyweight: session?.bodyweight ?? null,
           }}
           readinessFactor={readiness}
+          lightWeekEnds={
+            lightWeek ? user.lightWeekUntil!.toISOString() : null
+          }
         />
       </main>
     </>

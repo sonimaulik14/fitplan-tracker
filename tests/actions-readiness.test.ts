@@ -7,13 +7,20 @@ const prisma = vi.hoisted(() => ({
     findUnique: vi.fn(),
     upsert: vi.fn(),
   },
+  user: {
+    update: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { saveReadinessAction } from "@/lib/actions/readiness";
+import {
+  saveReadinessAction,
+  startLightWeekAction,
+  endLightWeekAction,
+} from "@/lib/actions/readiness";
 import { getCurrentUser } from "@/lib/auth";
 
 const mockUser = (timezone: string | null = null) =>
@@ -75,5 +82,34 @@ describe("saveReadinessAction", () => {
     await saveReadinessAction({ energy: 2 });
     const args = prisma.dailyLog.upsert.mock.calls[0][0];
     expect(args.where.userId_day.day).toBe("2026-07-18");
+  });
+});
+
+describe("light week actions", () => {
+  it("start sets lightWeekUntil ~7 days out", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-17T12:00:00Z"));
+    mockUser();
+    prisma.user.update.mockResolvedValue({});
+    const res = await startLightWeekAction();
+    expect(res.ok).toBe(true);
+    const until = prisma.user.update.mock.calls[0][0].data.lightWeekUntil as Date;
+    expect(until.toISOString().slice(0, 10)).toBe("2026-07-24");
+    expect(res.until).toBe(until.toISOString());
+  });
+
+  it("end clears lightWeekUntil", async () => {
+    mockUser();
+    prisma.user.update.mockResolvedValue({});
+    const res = await endLightWeekAction();
+    expect(res.ok).toBe(true);
+    expect(prisma.user.update.mock.calls[0][0].data).toEqual({ lightWeekUntil: null });
+  });
+
+  it("both actions require auth", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue(null as never);
+    expect((await startLightWeekAction()).ok).toBe(false);
+    expect((await endLightWeekAction()).ok).toBe(false);
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 });

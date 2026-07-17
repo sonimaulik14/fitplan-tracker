@@ -30,6 +30,7 @@ model User {
   lastNotifiedDay String?      // YYYY-MM-DD of the last reminder sent, to dedupe
   weeklyReviewOn  Boolean      @default(true) // Monday "week in review" push digest
   lastWeeklyReviewWeek String? // YYYY-MM-DD of that week's Monday, to dedupe
+  lightWeekUntil DateTime?    // active light week: suggestions trimmed 10% until this date
   onboardedAt  DateTime?
   createdAt    DateTime        @default(now())
   enrollments  Enrollment[]
