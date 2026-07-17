@@ -91,3 +91,31 @@ export async function getProgressPhotos(userId: string) {
     orderBy: { date: "asc" },
   });
 }
+
+export type MeasurementPoint = { date: string; value: number };
+export type MeasurementSeries = Record<MeasurementKey, MeasurementPoint[]>;
+
+/** Pure: per-field time series from BodyMetric rows (asc by date, nulls skipped). */
+export function measurementSeriesFromRows(
+  rows: ({ date: Date } & Partial<Record<MeasurementKey, number | null>>)[]
+): MeasurementSeries {
+  const series = Object.fromEntries(
+    MEASUREMENT_FIELDS.map((f) => [f.key, [] as MeasurementPoint[]])
+  ) as MeasurementSeries;
+  for (const r of [...rows].sort((a, b) => +a.date - +b.date)) {
+    for (const f of MEASUREMENT_FIELDS) {
+      const v = r[f.key];
+      if (v != null) series[f.key].push({ date: ymd(r.date), value: v });
+    }
+  }
+  return series;
+}
+
+/** Per-measurement history for trend sparklines on the physique dashboard. */
+export async function getMeasurementSeries(userId: string): Promise<MeasurementSeries> {
+  const rows = await prisma.bodyMetric.findMany({
+    where: { userId },
+    orderBy: { date: "asc" },
+  });
+  return measurementSeriesFromRows(rows);
+}

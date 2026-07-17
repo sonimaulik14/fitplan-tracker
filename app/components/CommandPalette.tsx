@@ -21,6 +21,7 @@ import {
   Dumbbell,
   TrendingUp,
   Gauge,
+  PersonStanding,
   type LucideIcon,
 } from "lucide-react";
 
@@ -38,6 +39,7 @@ const NAV: Item[] = [
   { label: "This week's targets", href: "/targets", Icon: Target },
   { label: "Exercise library", href: "/library", Icon: BookOpen },
   { label: "Progress", href: "/progress", Icon: Flame },
+  { label: "Physique", href: "/physique", Icon: PersonStanding },
   { label: "Measurements & goals", href: "/measurements", Icon: Ruler },
   { label: "Nutrition", href: "/nutrition", Icon: Apple },
   { label: "Workout history", href: "/history", Icon: CalendarDays },
