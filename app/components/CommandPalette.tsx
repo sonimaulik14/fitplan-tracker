@@ -20,6 +20,7 @@ import {
   Settings,
   Dumbbell,
   TrendingUp,
+  Gauge,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +42,7 @@ const NAV: Item[] = [
   { label: "Nutrition", href: "/nutrition", Icon: Apple },
   { label: "Workout history", href: "/history", Icon: CalendarDays },
   { label: "Personal records", href: "/records", Icon: Medal },
+  { label: "Strength profile", href: "/strength", Icon: Gauge },
   { label: "Achievements", href: "/achievements", Icon: Award },
   { label: "12-Week Wrapped", href: "/wrapped", Icon: Film },
   { label: "Analysis", href: "/analysis", Icon: BarChart3 },

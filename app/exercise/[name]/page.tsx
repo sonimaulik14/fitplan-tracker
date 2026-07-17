@@ -116,6 +116,12 @@ export default async function ExerciseHistoryPage({
                   <div className="text-xs text-muted mt-1">
                     {standard.ratio}× bodyweight
                   </div>
+                  <Link
+                    href="/strength"
+                    className="text-xs text-accent hover:underline mt-1 inline-block"
+                  >
+                    Full profile →
+                  </Link>
                 </div>
               )}
             </div>

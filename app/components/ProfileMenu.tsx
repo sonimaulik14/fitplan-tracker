@@ -111,6 +111,9 @@ export default function ProfileMenu({
             <MenuLink href="/records" onClick={() => setOpen(false)} icon="trophy">
               Personal records
             </MenuLink>
+            <MenuLink href="/strength" onClick={() => setOpen(false)} icon="gauge">
+              Strength profile
+            </MenuLink>
             <MenuLink href="/achievements" onClick={() => setOpen(false)} icon="medal">
               Achievements
             </MenuLink>
@@ -247,6 +250,14 @@ function Icon({ name }: { name: string }) {
         <circle cx="12" cy="12" r="9" />
         <circle cx="12" cy="12" r="4.5" />
         <circle cx="12" cy="12" r="0.5" />
+      </svg>
+    );
+  if (name === "gauge")
+    return (
+      <svg {...common}>
+        <path d="M4 14a8 8 0 1 1 16 0" />
+        <path d="M12 14l3.5-3.5" />
+        <path d="M4 14h2M18 14h2M12 6v2" />
       </svg>
     );
   if (name === "book")

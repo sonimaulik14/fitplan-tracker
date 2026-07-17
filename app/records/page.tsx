@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Gauge } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getProgress, est1RM } from "@/lib/metrics";
@@ -28,12 +28,20 @@ export default async function RecordsPage() {
           subtitle="Your heaviest lift on every exercise."
           className="mb-4"
         />
-        <Link
-          href="/history"
-          className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
-        >
-          <CalendarDays size={15} aria-hidden /> View workout history →
-        </Link>
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link
+            href="/history"
+            className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
+          >
+            <CalendarDays size={15} aria-hidden /> View workout history →
+          </Link>
+          <Link
+            href="/strength"
+            className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline"
+          >
+            <Gauge size={15} aria-hidden /> Strength standards →
+          </Link>
+        </div>
 
         {prs.length === 0 ? (
           <div className="card p-8 mt-6 text-center text-muted">
