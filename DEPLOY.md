@@ -38,10 +38,11 @@ npm run db:seed     # loads the training plan(s)
    - `DIRECT_URL`    (direct)
    - `AUTH_SECRET`
    - *(optional)* `PEXELS_API_KEY` or `UNSPLASH_ACCESS_KEY` for live gym photos
-4. **Deploy.** Vercel runs `npm install` (→ `prisma generate`) then `npm run build`.
-   - Migrations are NOT run during build (safer). When you change the schema later,
-     run `npm run db:deploy` against Neon before deploying — or add it to the
-     Vercel **Build Command**: `prisma migrate deploy && prisma generate && next build`.
+4. **Deploy.** Vercel runs `npm install` (→ `prisma generate`), then the build
+   command from [vercel.json](vercel.json):
+   `prisma migrate deploy && prisma generate && next build` — pending migrations
+   are applied to Neon automatically on every deploy, so code and schema can't
+   drift apart.
 5. Add your **custom domain** under Project → Settings → Domains.
 
 ## 5. Post-deploy checks
