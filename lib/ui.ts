@@ -327,8 +327,28 @@ export function strengthNext(
   bodyweightKg: number | null,
   exerciseName: string
 ): StrengthRank | null {
+  return rankAgainst(oneRMkg, bodyweightKg, findStandard(exerciseName));
+}
+
+/** Rank by category key directly — for tested 1RMs that carry no exercise name. */
+export function strengthNextByKey(
+  oneRMkg: number,
+  bodyweightKg: number | null,
+  key: LiftKey
+): StrengthRank | null {
+  return rankAgainst(
+    oneRMkg,
+    bodyweightKg,
+    STANDARDS.find((s) => s.key === key) ?? null
+  );
+}
+
+function rankAgainst(
+  oneRMkg: number,
+  bodyweightKg: number | null,
+  std: LiftStandard | null
+): StrengthRank | null {
   if (!bodyweightKg || bodyweightKg <= 0 || oneRMkg <= 0) return null;
-  const std = findStandard(exerciseName);
   if (!std) return null;
   const ratio = oneRMkg / bodyweightKg;
   let levelIndex = 0;

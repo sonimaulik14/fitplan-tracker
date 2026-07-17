@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { classifyLift, strengthNext, LEVELS } from "@/lib/ui";
-import { bestLiftsByCategory, type LiftRow } from "@/lib/metrics/strength";
+import {
+  bestLiftsByCategory,
+  testMax,
+  mergeTests,
+  type LiftRow,
+} from "@/lib/metrics/strength";
+import { strengthNextByKey } from "@/lib/ui";
+import { testRamp, KG_PLATES } from "@/lib/plates";
 
 describe("classifyLift", () => {
   it("matches the canonical barbell lifts", () => {
@@ -129,5 +136,87 @@ describe("bestLiftsByCategory", () => {
       row("Barbell Squat", 100, 0, "2026-07-01"),
     ]);
     expect(best.size).toBe(0);
+  });
+});
+
+describe("testMax", () => {
+  it("a tested single counts as its raw weight (no Epley inflation)", () => {
+    expect(testMax({ weightKg: 150, reps: 1 })).toBe(150);
+  });
+  it("multi-rep tests back-calculate via Epley", () => {
+    expect(testMax({ weightKg: 140, reps: 3 })).toBeCloseTo(154, 0);
+  });
+});
+
+describe("mergeTests", () => {
+  const setBest = new Map([
+    [
+      "squat" as const,
+      { exerciseName: "Barbell Squat", e1RMkg: 160, date: new Date("2026-07-01") },
+    ],
+  ]);
+
+  it("a stronger test replaces the set-derived best with a tested flag", () => {
+    const merged = mergeTests(setBest, [
+      { liftKey: "squat", weightKg: 170, reps: 1, date: new Date("2026-07-15") },
+    ]);
+    const squat = merged.get("squat")!;
+    expect(squat.e1RMkg).toBe(170);
+    expect(squat.tested).toBe(true);
+    expect(squat.exerciseName).toBe("1RM test");
+  });
+
+  it("a weaker test is ignored", () => {
+    const merged = mergeTests(setBest, [
+      { liftKey: "squat", weightKg: 150, reps: 1, date: new Date("2026-07-15") },
+    ]);
+    expect(merged.get("squat")!.tested).toBeUndefined();
+    expect(merged.get("squat")!.e1RMkg).toBe(160);
+  });
+
+  it("a test on an unperformed category creates the entry; junk keys ignored", () => {
+    const merged = mergeTests(setBest, [
+      { liftKey: "bench", weightKg: 100, reps: 1, date: new Date("2026-07-15") },
+      { liftKey: "yoga", weightKg: 999, reps: 1, date: new Date("2026-07-15") },
+    ]);
+    expect(merged.get("bench")!.e1RMkg).toBe(100);
+    expect(merged.size).toBe(2);
+  });
+
+  it("does not mutate the input map", () => {
+    mergeTests(setBest, [
+      { liftKey: "squat", weightKg: 200, reps: 1, date: new Date() },
+    ]);
+    expect(setBest.get("squat")!.e1RMkg).toBe(160);
+  });
+});
+
+describe("strengthNextByKey", () => {
+  it("matches the name-based path for the same category", () => {
+    expect(strengthNextByKey(140, 80, "squat")).toEqual(
+      strengthNext(140, 80, "Barbell Squat")
+    );
+  });
+  it("null without bodyweight", () => {
+    expect(strengthNextByKey(140, null, "squat")).toBeNull();
+  });
+});
+
+describe("testRamp", () => {
+  it("builds a bar-to-92% ramp with singles at the top", () => {
+    const ramp = testRamp(150, 20, KG_PLATES);
+    expect(ramp[0]).toEqual({ label: "Bar", weight: 20, reps: 8, pct: 0 });
+    const pcts = ramp.map((r) => r.pct);
+    expect(pcts).toEqual([0, 40, 60, 75, 85, 92]);
+    const last = ramp[ramp.length - 1];
+    expect(last.reps).toBe(1);
+    expect(last.weight).toBeCloseTo(137.5, 1); // 92% of 150 rounded to 2.5
+    // strictly ascending
+    for (let i = 1; i < ramp.length; i++)
+      expect(ramp[i].weight).toBeGreaterThan(ramp[i - 1].weight);
+  });
+  it("collapses tiny targets into the bar", () => {
+    expect(testRamp(25, 20, KG_PLATES).length).toBeLessThanOrEqual(2);
+    expect(testRamp(0, 20, KG_PLATES)).toEqual([]);
   });
 });

@@ -100,7 +100,15 @@ export default async function StrengthPage() {
                     <div className="font-semibold flex items-center gap-1.5">
                       <MuscleGlyph muscle={l.muscle} size={15} /> {l.label}
                     </div>
-                    {l.exerciseName ? (
+                    {l.tested ? (
+                      <div className="text-xs text-muted">
+                        <span className="text-accent font-semibold">
+                          tested 1RM
+                        </span>{" "}
+                        {fmtWeight(l.e1RMkg!, unit)}
+                        {l.date ? ` · ${l.date}` : ""}
+                      </div>
+                    ) : l.exerciseName ? (
                       <Link
                         href={`/exercise/${slugify(l.exerciseName)}`}
                         className="text-xs text-muted hover:underline"
@@ -164,22 +172,32 @@ export default async function StrengthPage() {
                   </div>
                 </div>
 
-                {s?.next ? (
-                  <p className="text-xs text-muted mt-3">
-                    <span className="font-semibold text-foreground">
-                      +{fmtWeight(s.next.deltaKg, unit)}
-                    </span>{" "}
-                    on your est. 1RM to reach {s.next.level} (
-                    {fmtWeight(s.next.targetKg, unit)})
-                  </p>
-                ) : s ? (
-                  <p
-                    className="text-xs mt-3 font-semibold"
-                    style={{ color: "var(--pr)" }}
+                <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
+                  {s?.next ? (
+                    <p className="text-xs text-muted">
+                      <span className="font-semibold text-foreground">
+                        +{fmtWeight(s.next.deltaKg, unit)}
+                      </span>{" "}
+                      on your est. 1RM to reach {s.next.level} (
+                      {fmtWeight(s.next.targetKg, unit)})
+                    </p>
+                  ) : s ? (
+                    <p
+                      className="text-xs font-semibold"
+                      style={{ color: "var(--pr)" }}
+                    >
+                      Elite — {s.ratio}× bodyweight. Top of the ladder.
+                    </p>
+                  ) : (
+                    <span />
+                  )}
+                  <Link
+                    href={`/strength/test/${l.key}`}
+                    className="text-xs text-accent font-semibold hover:underline shrink-0"
                   >
-                    Elite — {s.ratio}× bodyweight. Top of the ladder.
-                  </p>
-                ) : null}
+                    Test 1RM →
+                  </Link>
+                </div>
               </section>
             );
           })}

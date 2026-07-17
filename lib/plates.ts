@@ -80,6 +80,38 @@ export function warmupFill(
  * with falling reps. Steps that land at (or below) the bar collapse into the
  * bar-only step; a ramp for a bar-weight work set is just the bar.
  */
+/**
+ * Warm-up ramp toward a 1RM TEST target — longer and heavier than the
+ * working-set ramp, ending in near-max singles so the first real attempt
+ * isn't a shock. Attempts themselves are separate.
+ */
+export function testRamp(
+  target: number,
+  bar: number,
+  plates: number[] = KG_PLATES
+): RampStep[] {
+  if (!Number.isFinite(target) || target <= 0) return [];
+  const step = Math.min(...plates) * 2;
+  const stages = [
+    { pct: 40, reps: 5 },
+    { pct: 60, reps: 3 },
+    { pct: 75, reps: 2 },
+    { pct: 85, reps: 1 },
+    { pct: 92, reps: 1 },
+  ];
+  const ramp: RampStep[] = [{ label: "Bar", weight: bar, reps: 8, pct: 0 }];
+  for (const s of stages) {
+    const w = Math.min(
+      roundToStep((target * s.pct) / 100, step),
+      roundToStep(target - step, step)
+    );
+    if (w <= bar) continue;
+    if (ramp.some((r) => r.weight === w)) continue;
+    ramp.push({ label: `${s.pct}%`, weight: w, reps: s.reps, pct: s.pct });
+  }
+  return ramp;
+}
+
 export function warmupRamp(
   work: number,
   bar: number,

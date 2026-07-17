@@ -5,6 +5,7 @@ import { getBodyweightSeries } from "./body";
 import {
   classifyLift,
   strengthNext,
+  strengthNextByKey,
   LIFT_CATEGORIES,
   type LiftKey,
   type StrengthRank,
@@ -21,7 +22,43 @@ export type LiftRow = {
   date: Date;
 };
 
-export type BestLift = { exerciseName: string; e1RMkg: number; date: Date };
+export type BestLift = {
+  exerciseName: string;
+  e1RMkg: number;
+  date: Date;
+  tested?: boolean; // came from a 1RM test day, not a working set
+};
+
+/**
+ * A tested single IS the 1RM — Epley on reps=1 would over-credit ~3.3%.
+ * Multi-rep tests back-calculate through the same formula as everything else.
+ */
+export function testMax(t: { weightKg: number; reps: number }): number {
+  return t.reps === 1 ? t.weightKg : est1RM(t.weightKg, t.reps);
+}
+
+/** Merge test-day results into the set-derived bests (mutates nothing). */
+export function mergeTests(
+  best: Map<LiftKey, BestLift>,
+  tests: { liftKey: string; weightKg: number; reps: number; date: Date }[]
+): Map<LiftKey, BestLift> {
+  const merged = new Map(best);
+  for (const t of tests) {
+    const key = t.liftKey as LiftKey;
+    if (!LIFT_CATEGORIES.some((c) => c.key === key)) continue;
+    const max = testMax(t);
+    if (max <= 0) continue;
+    const cur = merged.get(key);
+    if (!cur || max > cur.e1RMkg)
+      merged.set(key, {
+        exerciseName: "1RM test",
+        e1RMkg: max,
+        date: t.date,
+        tested: true,
+      });
+  }
+  return merged;
+}
 
 /** Pure: best est. 1RM per standards category. Skips cardio and accessories. */
 export function bestLiftsByCategory(rows: LiftRow[]): Map<LiftKey, BestLift> {
@@ -45,7 +82,8 @@ export type StrengthLift = {
   thresholds: number[];
   exerciseName: string | null; // null = category never performed
   e1RMkg: number | null;
-  date: string | null; // ymd of the session that produced the best e1RM
+  date: string | null; // ymd of the session/test that produced the best e1RM
+  tested: boolean; // best came from a 1RM test day
   standard: StrengthRank | null; // null when unperformed OR no bodyweight
 };
 
@@ -60,7 +98,7 @@ export type StrengthProfile = {
  * getPlateaus.
  */
 export async function getStrengthProfile(userId: string): Promise<StrengthProfile> {
-  const [entries, swaps, bw] = await Promise.all([
+  const [entries, swaps, bw, tests] = await Promise.all([
     prisma.setEntry.findMany({
       where: {
         done: true,
@@ -81,6 +119,10 @@ export async function getStrengthProfile(userId: string): Promise<StrengthProfil
       select: { planExerciseId: true, name: true },
     }),
     getBodyweightSeries(userId),
+    prisma.liftTest.findMany({
+      where: { userId },
+      select: { liftKey: true, weightKg: true, reps: true, date: true },
+    }),
   ]);
 
   const swapName = new Map(swaps.map((s) => [s.planExerciseId, s.name]));
@@ -91,7 +133,7 @@ export async function getStrengthProfile(userId: string): Promise<StrengthProfil
     reps: e.reps!,
     date: e.session.performedDate,
   }));
-  const best = bestLiftsByCategory(rows);
+  const best = mergeTests(bestLiftsByCategory(rows), tests);
   const latestBwKg = bw.length ? bw[bw.length - 1].weight : null;
 
   const lifts: StrengthLift[] = LIFT_CATEGORIES.map((c) => {
@@ -104,7 +146,12 @@ export async function getStrengthProfile(userId: string): Promise<StrengthProfil
       exerciseName: b?.exerciseName ?? null,
       e1RMkg: b?.e1RMkg ?? null,
       date: b ? ymd(b.date) : null,
-      standard: b ? strengthNext(b.e1RMkg, latestBwKg, b.exerciseName) : null,
+      tested: b?.tested ?? false,
+      standard: b
+        ? b.tested
+          ? strengthNextByKey(b.e1RMkg, latestBwKg, c.key)
+          : strengthNext(b.e1RMkg, latestBwKg, b.exerciseName)
+        : null,
     };
   });
 

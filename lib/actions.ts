@@ -9,3 +9,4 @@ export * from "./actions/body";
 export * from "./actions/cache";
 export * from "./actions/plans";
 export * from "./actions/readiness";
+export * from "./actions/strength";
