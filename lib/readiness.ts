@@ -53,3 +53,31 @@ export function readinessInfo(score: number | null): ReadinessInfo | null {
     return { factor, trimPct: 5, label: "Take it steady", tone: "warn" };
   return { factor, trimPct: 10, label: "Go light today", tone: "warn" };
 }
+
+// ---------- light week ----------
+// One-tap deload: every suggested working weight runs at 90% until the date
+// stored in User.lightWeekUntil, then everything reverts automatically.
+export const LIGHT_WEEK_FACTOR = 0.9;
+export const LIGHT_WEEK_DAYS = 7;
+
+export function lightWeekActive(
+  until: Date | string | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (!until) return false;
+  const d = typeof until === "string" ? new Date(until) : until;
+  return !isNaN(+d) && +d > +now;
+}
+
+/**
+ * The day's trim for suggested weights: the readiness factor and the light
+ * week never stack — a light week floors the factor at 10% off, it doesn't
+ * multiply into a poor-readiness day.
+ */
+export function effectiveTrimFactor(
+  score: number | null,
+  lightWeek: boolean
+): number {
+  const f = readinessFactor(score);
+  return lightWeek ? Math.min(f, LIGHT_WEEK_FACTOR) : f;
+}

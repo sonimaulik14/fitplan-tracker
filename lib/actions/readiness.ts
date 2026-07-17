@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "../prisma";
 import { getCurrentUser } from "../auth";
-import { dayKeyInTz } from "../date";
+import { dayKeyInTz, addDays } from "../date";
+import { LIGHT_WEEK_DAYS } from "../readiness";
 
 // Partial by design: the dashboard card saves one answer per tap, so an
 // update must never clobber the other two fields (or water/supplements).
@@ -35,4 +36,34 @@ export async function saveReadinessAction(input: {
   revalidatePath("/dashboard");
   revalidatePath("/workout/[dayId]", "page");
   return { ok: true, day };
+}
+
+// One-tap deload week: suggestions run at 90% until the stored date.
+export async function startLightWeekAction(): Promise<{
+  ok: boolean;
+  error?: string;
+  until?: string;
+}> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  const until = addDays(new Date(), LIGHT_WEEK_DAYS);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lightWeekUntil: until },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/workout/[dayId]", "page");
+  return { ok: true, until: until.toISOString() };
+}
+
+export async function endLightWeekAction(): Promise<{ ok: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lightWeekUntil: null },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/workout/[dayId]", "page");
+  return { ok: true };
 }

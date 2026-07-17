@@ -275,7 +275,13 @@ export default async function ProgressPage() {
               <div>
                 <h2 className="section-title">Progress photos</h2>
                 <p className="text-xs text-muted mt-0.5">
-                  Stored privately on your account.
+                  Stored privately on your account ·{" "}
+                  <Link
+                    href="/physique"
+                    className="text-accent font-semibold hover:underline"
+                  >
+                    Physique dashboard →
+                  </Link>
                 </p>
               </div>
               <PhotoUploader />

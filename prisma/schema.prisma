@@ -30,6 +30,7 @@ model User {
   lastNotifiedDay String?      // YYYY-MM-DD of the last reminder sent, to dedupe
   weeklyReviewOn  Boolean      @default(true) // Monday "week in review" push digest
   lastWeeklyReviewWeek String? // YYYY-MM-DD of that week's Monday, to dedupe
+  lightWeekUntil DateTime?    // active light week: suggestions trimmed 10% until this date
   onboardedAt  DateTime?
   createdAt    DateTime        @default(now())
   enrollments  Enrollment[]
@@ -39,7 +40,21 @@ model User {
   photos       ProgressPhoto[]
   resetTokens  PasswordResetToken[]
   pushSubscriptions PushSubscription[]
+  liftTests    LiftTest[]
   customPlans  Plan[]          @relation("CustomPlans")
+}
+
+// Tested 1RM attempts from guided test days (outside the plan structure).
+model LiftTest {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  liftKey  String // LiftKey: squat | deadlift | bench | ohp | row | curl
+  weightKg Float
+  reps     Int      @default(1)
+  date     DateTime @default(now())
+
+  @@index([userId])
 }
 
 model PushSubscription {

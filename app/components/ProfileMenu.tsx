@@ -95,6 +95,9 @@ export default function ProfileMenu({
             <div className="h-px bg-border my-1.5" />
 
             <div className="eyebrow px-3 pt-1 pb-0.5">Body</div>
+            <MenuLink href="/physique" onClick={() => setOpen(false)} icon="body">
+              Physique
+            </MenuLink>
             <MenuLink href="/measurements" onClick={() => setOpen(false)} icon="ruler">
               Measurements
             </MenuLink>
@@ -110,6 +113,9 @@ export default function ProfileMenu({
             </MenuLink>
             <MenuLink href="/records" onClick={() => setOpen(false)} icon="trophy">
               Personal records
+            </MenuLink>
+            <MenuLink href="/strength" onClick={() => setOpen(false)} icon="gauge">
+              Strength profile
             </MenuLink>
             <MenuLink href="/achievements" onClick={() => setOpen(false)} icon="medal">
               Achievements
@@ -247,6 +253,23 @@ function Icon({ name }: { name: string }) {
         <circle cx="12" cy="12" r="9" />
         <circle cx="12" cy="12" r="4.5" />
         <circle cx="12" cy="12" r="0.5" />
+      </svg>
+    );
+  if (name === "gauge")
+    return (
+      <svg {...common}>
+        <path d="M4 14a8 8 0 1 1 16 0" />
+        <path d="M12 14l3.5-3.5" />
+        <path d="M4 14h2M18 14h2M12 6v2" />
+      </svg>
+    );
+  if (name === "body")
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="5" r="2.5" />
+        <path d="M12 8v6" />
+        <path d="M7 10.5c3 1.5 7 1.5 10 0" />
+        <path d="M12 14l-3 7M12 14l3 7" />
       </svg>
     );
   if (name === "book")

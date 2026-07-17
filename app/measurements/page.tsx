@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getMeasurements, getBodyweightSeries } from "@/lib/metrics";
@@ -50,6 +51,12 @@ export default async function MeasurementsPage() {
           title="Measurements & goals"
           subtitle="Track your body alongside your training."
         />
+        <Link
+          href="/physique"
+          className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:underline -mt-4"
+        >
+          Physique dashboard →
+        </Link>
 
         {/* Goal weight */}
         <section className="card p-6 animate-fade-up">

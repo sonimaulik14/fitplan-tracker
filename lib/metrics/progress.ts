@@ -8,7 +8,7 @@ export type DayProgress = {
   weekNumber: number;
   label: string;
   focus: string;
-  status: "not_started" | "in_progress" | "completed";
+  status: "not_started" | "in_progress" | "completed" | "skipped";
   prescribedSets: number;
   doneSets: number;
   exerciseCount: number;
@@ -238,7 +238,9 @@ export async function getProgress(userId: string) {
         ? "not_started"
         : session.status === "completed"
           ? "completed"
-          : "in_progress";
+          : session.status === "skipped"
+            ? "skipped"
+            : "in_progress";
       if (status === "completed") {
         completedWorkouts += 1;
         wa.completedWorkouts += 1;
@@ -400,7 +402,9 @@ export function buildTimeline(p: ProgressResult, today: Date = new Date()): Time
       isToday,
       isPast,
       isFuture: +date > +t,
-      missed: isPast && !isRest && d.status !== "completed",
+      // A consciously skipped day is not "missed" — the user chose to move on.
+      missed:
+        isPast && !isRest && d.status !== "completed" && d.status !== "skipped",
     };
   });
 
@@ -408,7 +412,10 @@ export function buildTimeline(p: ProgressResult, today: Date = new Date()): Time
   const currentDayIndex = Math.min(Math.max(daysElapsed + 1, 1), totalDays || 1);
   const endDate = addDays(start, Math.max(totalDays - 1, 0));
 
-  const dueByToday = days.filter((d) => !d.isRest && !d.isFuture).length;
+  // Skipped days drop out of the schedule debt entirely.
+  const dueByToday = days.filter(
+    (d) => !d.isRest && !d.isFuture && d.status !== "skipped"
+  ).length;
   const doneByToday = days.filter(
     (d) => !d.isRest && !d.isFuture && d.status === "completed"
   ).length;
@@ -453,11 +460,13 @@ export async function isProgramComplete(
     .filter((d) => !d.focus.toLowerCase().includes("rest"))
     .map((d) => d.id);
   if (trainingIds.length === 0) return false;
+  // Consciously skipped days count toward closing the cycle — a skip must not
+  // permanently block the program-complete celebration.
   const done = await prisma.workoutSession.count({
     where: {
       enrollmentId,
       workoutDayId: { in: trainingIds },
-      status: "completed",
+      status: { in: ["completed", "skipped"] },
     },
   });
   return done >= trainingIds.length;

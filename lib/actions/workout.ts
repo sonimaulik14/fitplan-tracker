@@ -452,3 +452,127 @@ export async function startNextCycleAction(): Promise<{
   revalidatePath("/plan");
   return { ok: true, cycle: next.cycle };
 }
+
+// ---------- catch-up flow ----------
+
+/**
+ * Consciously skip a missed day: an empty session with status "skipped" so the
+ * day stops counting as behind/missed. Refuses once real sets exist.
+ */
+export async function skipDayAction(
+  workoutDayId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  const day = await prisma.workoutDay.findUnique({
+    where: { id: workoutDayId },
+    include: { week: true },
+  });
+  if (!day) return { ok: false, error: "Workout not found." };
+  const enrollment = await getActiveEnrollment(user.id, day.week.planId);
+  if (!enrollment) return { ok: false, error: "Not enrolled." };
+
+  const existing = await prisma.workoutSession.findUnique({
+    where: {
+      enrollmentId_workoutDayId: {
+        enrollmentId: enrollment.id,
+        workoutDayId: day.id,
+      },
+    },
+    include: { setEntries: { where: { done: true }, take: 1 } },
+  });
+  if (existing?.setEntries.length)
+    return { ok: false, error: "Already started — finish or reset it instead." };
+
+  await prisma.workoutSession.upsert({
+    where: {
+      enrollmentId_workoutDayId: {
+        enrollmentId: enrollment.id,
+        workoutDayId: day.id,
+      },
+    },
+    create: {
+      enrollmentId: enrollment.id,
+      workoutDayId: day.id,
+      status: "skipped",
+    },
+    update: { status: "skipped" },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/timeline");
+  revalidatePath("/plan");
+  return { ok: true };
+}
+
+/** Undo a skip — deletes the empty skipped session so the day reopens. */
+export async function unskipDayAction(
+  workoutDayId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  const day = await prisma.workoutDay.findUnique({
+    where: { id: workoutDayId },
+    include: { week: true },
+  });
+  if (!day) return { ok: false, error: "Workout not found." };
+  const enrollment = await getActiveEnrollment(user.id, day.week.planId);
+  if (!enrollment) return { ok: false, error: "Not enrolled." };
+
+  await prisma.workoutSession.deleteMany({
+    where: {
+      enrollmentId: enrollment.id,
+      workoutDayId: day.id,
+      status: "skipped",
+    },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/timeline");
+  revalidatePath("/plan");
+  return { ok: true };
+}
+
+/**
+ * Push the whole schedule forward by the number of workouts behind — the
+ * timeline re-anchors so today lines up with where the user actually is.
+ * Computed server-side from the timeline; nothing is taken from the client.
+ */
+export async function pushScheduleAction(): Promise<{
+  ok: boolean;
+  error?: string;
+  shiftedDays?: number;
+}> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  const { getProgress, buildTimeline } = await import("../metrics/progress");
+  const p = await getProgress(user.id);
+  if (!p || !p.enrolled || !p.startedAt)
+    return { ok: false, error: "No started plan." };
+  const t = buildTimeline(p);
+  if (t.behind <= 0) return { ok: false, error: "You're not behind." };
+
+  // Re-anchor so the FIRST open training day lands on today (exact, even with
+  // rest days between the missed workouts).
+  const firstOpen = t.days.find(
+    (d) => !d.isRest && d.status !== "completed" && d.status !== "skipped"
+  );
+  if (!firstOpen) return { ok: false, error: "Nothing left to schedule." };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const shiftDays = Math.round(
+    (+today - +firstOpen.date) / 86_400_000
+  );
+  if (shiftDays <= 0) return { ok: false, error: "You're not behind." };
+
+  const enrollment = await getActiveEnrollment(user.id);
+  if (!enrollment) return { ok: false, error: "No active plan." };
+  const shifted = new Date(p.startedAt);
+  shifted.setDate(shifted.getDate() + shiftDays);
+  await prisma.enrollment.update({
+    where: { id: enrollment.id },
+    data: { startedAt: shifted },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/timeline");
+  revalidatePath("/plan");
+  return { ok: true, shiftedDays: shiftDays };
+}

@@ -210,32 +210,184 @@ export function lenToCm(value: number, unit: Unit): number {
 // overloadSuggestion grew into the progression engine — see lib/progression.ts
 // (prescribe): RPE- and plateau-aware, same double-progression core.
 
-// Rough bodyweight-ratio thresholds for recognised barbell lifts (general).
-const STANDARDS: { match: RegExp; t: number[] }[] = [
-  { match: /deadlift/, t: [1.0, 1.5, 2.0, 2.5] },
-  { match: /squat/, t: [0.75, 1.25, 1.75, 2.25] },
-  { match: /bench/, t: [0.5, 0.75, 1.0, 1.5] },
-  { match: /(overhead|military|shoulder) press/, t: [0.35, 0.55, 0.8, 1.05] },
-  { match: /(barbell row|bent[- ]over row|pendlay)/, t: [0.5, 0.75, 1.0, 1.4] },
-  { match: /(curl)/, t: [0.2, 0.35, 0.5, 0.65] },
-];
-const LEVELS = ["Beginner", "Novice", "Intermediate", "Advanced", "Elite"];
+// Bodyweight-ratio strength standards for the recognised barbell lifts.
+// `match` is a positive anchor and `exclude` vetoes variants that share the
+// substring but train something else entirely (leg curls are not biceps
+// curls; hack squats are not back squats) — loose matching here used to rank
+// machine accessories as "Elite" barbell lifts.
+export type LiftKey = "squat" | "deadlift" | "bench" | "ohp" | "row" | "curl";
+export const LEVELS = [
+  "Beginner",
+  "Novice",
+  "Intermediate",
+  "Advanced",
+  "Elite",
+] as const;
+export type StrengthLevel = (typeof LEVELS)[number];
 
+type LiftStandard = {
+  key: LiftKey;
+  label: string;
+  muscle: string; // keys MUSCLE_STYLE for tinting
+  match: RegExp;
+  exclude?: RegExp;
+  t: number[]; // 4 ascending bodyweight ratios -> 5 bands
+};
+
+const STANDARDS: LiftStandard[] = [
+  {
+    key: "squat",
+    label: "Back Squat",
+    muscle: "Legs",
+    match: /squat/,
+    exclude:
+      /hack|split|smith|dumbbell|goblet|kettlebell|bulgarian|pistol|sissy|jump|front|overhead|zercher/,
+    t: [0.75, 1.25, 1.75, 2.25],
+  },
+  {
+    key: "deadlift",
+    label: "Deadlift",
+    muscle: "Back",
+    match: /deadlift/,
+    exclude:
+      /stiff|straight[- ]leg|romanian|\brdl\b|single[- ]leg|one[- ]leg|dumbbell|kettlebell/,
+    t: [1.0, 1.5, 2.0, 2.5],
+  },
+  {
+    key: "bench",
+    label: "Bench Press",
+    muscle: "Chest",
+    match: /bench press/,
+    exclude: /incline|decline|close[- ]grip|dumbbell|smith|machine|floor|board|reverse/,
+    t: [0.5, 0.75, 1.0, 1.5],
+  },
+  {
+    key: "ohp",
+    label: "Overhead Press",
+    muscle: "Shoulders",
+    match: /(overhead|military|shoulder|strict) press|\bohp\b/,
+    exclude:
+      /dumbbell|smith|machine|cable|leverage|arnold|kettlebell|single|one[- ]arm|pike|handstand|leg/,
+    t: [0.35, 0.55, 0.8, 1.05],
+  },
+  {
+    key: "row",
+    label: "Barbell Row",
+    muscle: "Back",
+    match: /barbell row|bent[- ]over row|pendlay/,
+    exclude: /upright|dumbbell|cable|machine|smith|inverted|single|one[- ]arm|t[- ]bar/,
+    t: [0.5, 0.75, 1.0, 1.4],
+  },
+  {
+    key: "curl",
+    label: "Barbell Curl",
+    muscle: "Arms",
+    match: /barbell curl|ez[- ]?bar curl/,
+    exclude: /leg|wrist|reverse|preacher|lying|cable|machine|spider|drag/,
+    t: [0.2, 0.35, 0.5, 0.65],
+  },
+];
+
+/** Read-only category view (no regexes) so pages can enumerate all lifts. */
+export const LIFT_CATEGORIES = STANDARDS.map(({ key, label, muscle, t }) => ({
+  key,
+  label,
+  muscle,
+  thresholds: t,
+}));
+
+function findStandard(exerciseName: string): LiftStandard | null {
+  const n = exerciseName.toLowerCase();
+  return STANDARDS.find((s) => s.match.test(n) && !s.exclude?.test(n)) ?? null;
+}
+
+/** Which standards category a lift belongs to, or null for accessories. */
+export function classifyLift(exerciseName: string): LiftKey | null {
+  return findStandard(exerciseName)?.key ?? null;
+}
+
+export type StrengthRank = {
+  key: LiftKey;
+  label: string;
+  level: StrengthLevel;
+  levelIndex: number; // 0..4
+  ratio: number; // e1RM / bodyweight, 2dp
+  thresholds: number[];
+  bandProgress: number; // 0..1 within the current band; 1 at Elite
+  next: {
+    level: StrengthLevel;
+    thresholdRatio: number;
+    targetKg: number;
+    deltaKg: number;
+  } | null;
+};
+
+export function strengthNext(
+  oneRMkg: number,
+  bodyweightKg: number | null,
+  exerciseName: string
+): StrengthRank | null {
+  return rankAgainst(oneRMkg, bodyweightKg, findStandard(exerciseName));
+}
+
+/** Rank by category key directly — for tested 1RMs that carry no exercise name. */
+export function strengthNextByKey(
+  oneRMkg: number,
+  bodyweightKg: number | null,
+  key: LiftKey
+): StrengthRank | null {
+  return rankAgainst(
+    oneRMkg,
+    bodyweightKg,
+    STANDARDS.find((s) => s.key === key) ?? null
+  );
+}
+
+function rankAgainst(
+  oneRMkg: number,
+  bodyweightKg: number | null,
+  std: LiftStandard | null
+): StrengthRank | null {
+  if (!bodyweightKg || bodyweightKg <= 0 || oneRMkg <= 0) return null;
+  if (!std) return null;
+  const ratio = oneRMkg / bodyweightKg;
+  let levelIndex = 0;
+  // Epsilon so an exact-threshold ratio (140/80 === 1.75) ranks up despite
+  // float noise from real bodyweights.
+  for (const thr of std.t) if (ratio >= thr - 1e-9) levelIndex++;
+  const lower = levelIndex === 0 ? 0 : std.t[levelIndex - 1];
+  const upper = levelIndex < std.t.length ? std.t[levelIndex] : null;
+  const bandProgress =
+    upper === null ? 1 : Math.min(1, Math.max(0, (ratio - lower) / (upper - lower)));
+  const next =
+    upper === null
+      ? null
+      : {
+          level: LEVELS[levelIndex + 1],
+          thresholdRatio: upper,
+          targetKg: upper * bodyweightKg,
+          deltaKg: Math.max(0, upper * bodyweightKg - oneRMkg),
+        };
+  return {
+    key: std.key,
+    label: std.label,
+    level: LEVELS[levelIndex],
+    levelIndex,
+    ratio: Math.round(ratio * 100) / 100,
+    thresholds: std.t,
+    bandProgress,
+    next,
+  };
+}
+
+/** Back-compat wrapper — the exercise page's level card keeps working. */
 export function strengthStandard(
   oneRMkg: number,
   bodyweightKg: number | null,
   exerciseName: string
 ): { ratio: number; level: string } | null {
-  if (!bodyweightKg || bodyweightKg <= 0) return null;
-  const name = exerciseName.toLowerCase();
-  const std = STANDARDS.find((s) => s.match.test(name));
-  if (!std) return null;
-  const ratio = oneRMkg / bodyweightKg;
-  let level = LEVELS[0];
-  std.t.forEach((thr, i) => {
-    if (ratio >= thr) level = LEVELS[i + 1];
-  });
-  return { ratio: Math.round(ratio * 100) / 100, level };
+  const r = strengthNext(oneRMkg, bodyweightKg, exerciseName);
+  return r ? { ratio: r.ratio, level: r.level } : null;
 }
 
 // ---------- training-term glossary ----------

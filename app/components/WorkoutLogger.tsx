@@ -83,14 +83,17 @@ export default function WorkoutLogger({
   initialStatus,
   initialMeta,
   readinessFactor = 1,
+  lightWeekEnds = null,
 }: {
   dayId: string;
   unit: Unit;
   exercises: LoggerExercise[];
   initialStatus: "in_progress" | "completed";
   initialMeta: Meta;
-  /** Today's readiness trim from readinessFactor() — 1 = no adjustment. */
+  /** Today's readiness trim from effectiveTrimFactor() — 1 = no adjustment. */
   readinessFactor?: number;
+  /** ISO end date of an active light week; wins over the readiness banner. */
+  lightWeekEnds?: string | null;
 }) {
   // Convert incoming kg weights → display unit for editing.
   const [exercises, setExercises] = useState<LoggerExercise[]>(() =>
@@ -871,18 +874,36 @@ export default function WorkoutLogger({
       </div>
       )}
 
-      {readinessFactor < 1 && !isLightDay && (
-        <div className="card border-warn/30 px-4 py-3 flex items-center gap-2.5 text-sm">
-          <BatteryLow size={15} className="text-warn shrink-0" aria-hidden />
-          <span>
-            Low readiness — today&apos;s suggested weights are trimmed{" "}
-            <span className="stat-num">
-              {Math.round((1 - readinessFactor) * 100)}%
+      {readinessFactor < 1 &&
+        !isLightDay &&
+        (lightWeekEnds ? (
+          <div className="card border-accent/30 px-4 py-3 flex items-center gap-2.5 text-sm">
+            <Timer size={15} className="text-accent shrink-0" aria-hidden />
+            <span>
+              Light week — suggested weights trimmed{" "}
+              <span className="stat-num">
+                {Math.round((1 - readinessFactor) * 100)}%
+              </span>
+              , ends{" "}
+              {new Date(lightWeekEnds).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+              .
             </span>
-            .
-          </span>
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="card border-warn/30 px-4 py-3 flex items-center gap-2.5 text-sm">
+            <BatteryLow size={15} className="text-warn shrink-0" aria-hidden />
+            <span>
+              Low readiness — today&apos;s suggested weights are trimmed{" "}
+              <span className="stat-num">
+                {Math.round((1 - readinessFactor) * 100)}%
+              </span>
+              .
+            </span>
+          </div>
+        ))}
 
       {renderBlocks.map((block) => {
         const inner = block.items.map(({ ex, idx }) => {

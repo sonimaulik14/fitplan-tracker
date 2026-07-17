@@ -21,10 +21,12 @@ export default async function PlanPage() {
 
   // status per day + the "up next" training day
   const statusByDay = new Map(p?.days.map((d) => [d.dayId, d.status]) ?? []);
+  const open = (d: { status: string }) =>
+    d.status !== "completed" && d.status !== "skipped";
   const nextDay =
     p?.days.find(
-      (d) => d.status !== "completed" && !d.focus.toLowerCase().includes("rest")
-    ) ?? p?.days.find((d) => d.status !== "completed");
+      (d) => open(d) && !d.focus.toLowerCase().includes("rest")
+    ) ?? p?.days.find(open);
 
   // Distinct training styles in week order, with which weeks use each, for the
   // legend (the program rotates protocols across blocks).
@@ -86,11 +88,13 @@ export default async function PlanPage() {
                           ? "bg-success border-success text-background"
                           : status === "in_progress"
                             ? "bg-warn/15 border-warn/40 text-warn"
-                            : rest
-                              ? "bg-surface-2 border-border text-muted/50"
-                              : nextDay?.dayId === day.id
-                                ? "border-accent text-accent"
-                                : "bg-surface-2 border-border text-muted";
+                            : status === "skipped"
+                              ? "bg-surface-2 border-border text-muted/40 opacity-70"
+                              : rest
+                                ? "bg-surface-2 border-border text-muted/50"
+                                : nextDay?.dayId === day.id
+                                  ? "border-accent text-accent"
+                                  : "bg-surface-2 border-border text-muted";
                       return (
                         <Link
                           key={day.id}
