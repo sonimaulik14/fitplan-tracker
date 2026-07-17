@@ -11,6 +11,7 @@ import {
   type DraftExercise,
 } from "@/lib/actions/plans";
 import { ALTERNATIVES } from "@/lib/alternatives";
+import { inferGroups, groupIndex, pairingHints } from "@/lib/supersets";
 import { toast } from "@/lib/toast";
 
 const MUSCLES = [
@@ -114,21 +115,39 @@ function NumField({
   );
 }
 
+// The exact strings the logger's pairing inference recognises (any other
+// stored label round-trips untouched via the "Custom" option below).
+const CANONICAL_TECHNIQUES = ["Superset", "Giant Set"];
+
 function ExerciseRow({
   ex,
   locked,
   onChange,
   onRemove,
+  pairTag,
+  onAddPair,
 }: {
   ex: DraftExercise;
   locked: boolean;
   onChange: (patch: Partial<DraftExercise>) => void;
   onRemove: () => void;
+  /** "A1"/"A2"… when the live inference groups this row; null otherwise. */
+  pairTag?: string | null;
+  /** Insert a partner exercise directly below; null hides the button. */
+  onAddPair?: (() => void) | null;
 }) {
-  const [showLabel, setShowLabel] = useState(false);
   return (
-    <div className="rounded-xl border border-border bg-surface-2/60 p-3">
+    <div
+      className={`rounded-xl border p-3 ${
+        pairTag ? "border-success/30 bg-success/[0.04]" : "border-border bg-surface-2/60"
+      }`}
+    >
       <div className="flex items-center gap-2">
+        {pairTag && (
+          <span className="chip text-success border-success/30 bg-success/10 !py-0.5 stat-num shrink-0">
+            {pairTag}
+          </span>
+        )}
         <input
           list={LIST_ID}
           value={ex.name}
@@ -200,7 +219,12 @@ function ExerciseRow({
             onChange={(e) =>
               onChange(
                 e.target.checked
-                  ? { isCardio: true, warmupSets: 0, workingSets: Math.max(1, ex.workingSets) }
+                  ? {
+                      isCardio: true,
+                      warmupSets: 0,
+                      workingSets: Math.max(1, ex.workingSets),
+                      groupLabel: null, // cardio can't join a superset
+                    }
                   : { isCardio: false }
               )
             }
@@ -208,25 +232,30 @@ function ExerciseRow({
           />
           Cardio
         </label>
-        {showLabel || ex.groupLabel ? (
-          <input
-            value={ex.groupLabel ?? ""}
-            onChange={(e) => onChange({ groupLabel: e.target.value || null })}
-            placeholder="e.g. Superset A"
-            maxLength={30}
-            disabled={locked}
-            className="input !py-1.5 !px-2.5 text-xs w-36"
-          />
-        ) : (
-          !locked && (
-            <button
-              type="button"
-              onClick={() => setShowLabel(true)}
-              className="btn-quiet !py-1 text-xs"
+        {!ex.isCardio && (
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-muted">
+            Technique
+            <select
+              value={ex.groupLabel ?? ""}
+              onChange={(e) => onChange({ groupLabel: e.target.value || null })}
+              disabled={locked}
+              className="input !py-1.5 !px-2.5 text-xs w-32"
             >
-              + label
-            </button>
-          )
+              <option value="">None</option>
+              <option value="Superset">Superset</option>
+              <option value="Giant Set">Giant set</option>
+              {/* Legacy round-trip: any other stored label stays selectable so
+                  saving preserves it byte-for-byte, never silently rewritten. */}
+              {ex.groupLabel && !CANONICAL_TECHNIQUES.includes(ex.groupLabel) && (
+                <option value={ex.groupLabel}>Custom: {ex.groupLabel}</option>
+              )}
+            </select>
+          </label>
+        )}
+        {onAddPair && (
+          <button type="button" onClick={onAddPair} className="btn-quiet !py-1 text-xs">
+            <Plus size={12} aria-hidden /> Paired exercise
+          </button>
         )}
       </div>
     </div>
@@ -259,6 +288,49 @@ function DayCard({
       ],
     });
   };
+
+  // Insert a partner directly below row i with the same technique/scheme —
+  // adjacency is what makes the logger pair them, and orderIndex follows
+  // array order at save.
+  const addPairAfter = (i: number) => {
+    const src = day.exercises[i];
+    onChange({
+      ...day,
+      exercises: [
+        ...day.exercises.slice(0, i + 1),
+        {
+          name: "",
+          muscle: src.muscle,
+          groupLabel: src.groupLabel,
+          warmupSets: src.warmupSets,
+          workingSets: src.workingSets,
+          repTarget: src.repTarget,
+          isCardio: false,
+        },
+        ...day.exercises.slice(i + 1),
+      ],
+    });
+  };
+
+  // Live pairing preview: run the logger's ACTUAL inference over the draft
+  // (array index as id) so the A1/A2 tags can never lie about what will pair.
+  const previewGroups = inferGroups(
+    day.exercises.map((e, i) => ({
+      id: String(i),
+      groupLabel: e.groupLabel ?? null,
+      isCardio: e.isCardio,
+    }))
+  );
+  const previewByIdx = groupIndex(previewGroups);
+  const tagFor = (i: number): string | null => {
+    const g = previewByIdx.get(String(i));
+    if (!g) return null;
+    const letter = String.fromCharCode(65 + previewGroups.indexOf(g)); // A, B, …
+    return `${letter}${g.memberIds.indexOf(String(i)) + 1}`;
+  };
+  const groupable = (label: string | null | undefined) =>
+    ["superset", "giant set"].includes(label?.trim().toLowerCase() ?? "");
+  const hints = rest ? [] : pairingHints(day.exercises.map((e) => ({ ...e, groupLabel: e.groupLabel ?? null })));
   return (
     <section className={`card p-4 ${rest ? "opacity-75" : ""}`}>
       <div className="flex items-center justify-between gap-2">
@@ -312,6 +384,12 @@ function DayCard({
                   key={i}
                   ex={ex}
                   locked={locked}
+                  pairTag={tagFor(i)}
+                  onAddPair={
+                    !locked && groupable(ex.groupLabel) && day.exercises.length < 15
+                      ? () => addPairAfter(i)
+                      : null
+                  }
                   onChange={(patch) =>
                     onChange({
                       ...day,
@@ -325,6 +403,16 @@ function DayCard({
               ))}
             </div>
           )}
+          {hints.map((h) => (
+            <p
+              key={h.message}
+              className={`text-xs mt-2 ${
+                h.tone === "warn" ? "text-warn font-semibold" : "text-muted"
+              }`}
+            >
+              {h.message}
+            </p>
+          ))}
           {!locked && (
             <div className="flex items-center gap-2 mt-3">
               {day.exercises.length < 15 && (

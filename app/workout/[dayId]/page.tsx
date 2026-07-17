@@ -11,6 +11,9 @@ import {
   getPlateaus,
 } from "@/lib/metrics";
 import { termInfo, type Unit } from "@/lib/ui";
+import { dayKeyInTz } from "@/lib/date";
+import { readinessScore, readinessFactor } from "@/lib/readiness";
+import { BatteryMedium } from "lucide-react";
 import NavBar from "@/app/components/NavBar";
 import WorkoutLogger, { type LoggerExercise } from "@/app/components/WorkoutLogger";
 import DaySupplements from "@/app/components/DaySupplements";
@@ -46,12 +49,22 @@ export default async function WorkoutPage({
     include: { setEntries: true },
   });
 
-  const [lastTime, swaps, daySupplements, plateaus] = await Promise.all([
+  const [lastTime, swaps, daySupplements, plateaus, todayLog] = await Promise.all([
     getLastTimeByExercise(user.id, day.week.planId, day.id),
     getSwaps(user.id, day.week.planId),
     getDaySupplements(user.id, day.id),
     getPlateaus(user.id),
+    prisma.dailyLog.findUnique({
+      where: {
+        userId_day: { userId: user.id, day: dayKeyInTz(user.timezone) },
+      },
+      select: { sleepQuality: true, soreness: true, energy: true },
+    }),
   ]);
+  const todayScore = readinessScore(
+    todayLog ?? { sleepQuality: null, soreness: null, energy: null }
+  );
+  const readiness = readinessFactor(todayScore);
   const plateauByName = new Map(plateaus.map((p) => [p.name, p]));
 
   const entryMap = new Map(
@@ -135,6 +148,22 @@ export default async function WorkoutPage({
           )}
         </div>
 
+        {todayScore == null && (
+          <Link
+            href="/dashboard#checkin"
+            className="card flex items-center gap-3 px-4 py-3 mb-5 text-sm card-hover"
+          >
+            <BatteryMedium size={15} className="text-accent shrink-0" aria-hidden />
+            <span className="flex-1">
+              10-second check-in → today&apos;s suggestions adapt to how
+              you&apos;re feeling.
+            </span>
+            <span className="text-accent font-semibold text-xs shrink-0">
+              Check in →
+            </span>
+          </Link>
+        )}
+
         <div className="mb-5">
           <DaySupplements workoutDayId={day.id} supplements={daySupplements} />
         </div>
@@ -149,6 +178,7 @@ export default async function WorkoutPage({
             mood: session?.mood ?? "",
             bodyweight: session?.bodyweight ?? null,
           }}
+          readinessFactor={readiness}
         />
       </main>
     </>

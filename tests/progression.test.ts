@@ -114,3 +114,88 @@ describe("prescribe — plateau deload", () => {
     expect(p.tone).toBe("beat");
   });
 });
+
+describe("prescribe — readiness trim", () => {
+  const base = { repTarget: "8-12", isCardio: false };
+
+  it("readiness 1 or undefined changes nothing", () => {
+    const last = { weight: 100, reps: 10, rpe: 7 };
+    const plain = prescribe({ ...base, last });
+    expect(prescribe({ ...base, last, readiness: 1 })).toEqual(plain);
+    expect(prescribe({ ...base, last, readiness: undefined })).toEqual(plain);
+  });
+
+  it("never inflates: factor above 1 is clamped", () => {
+    const last = { weight: 100, reps: 10, rpe: 7 };
+    expect(prescribe({ ...base, last, readiness: 1.2 })).toEqual(
+      prescribe({ ...base, last })
+    );
+  });
+
+  it("an earned jump trimmed below last weight flips to Go lighter today", () => {
+    // Topped the range: up to 102.5; ×0.9 = 92.3 <= 100 → honest relabel.
+    const p = prescribe({
+      ...base,
+      last: { weight: 100, reps: 12, rpe: 8 },
+      readiness: 0.9,
+    })!;
+    expect(p.weight).toBeCloseTo(92.3, 5);
+    expect(p.reps).toBe(8);
+    expect(p.label).toBe("Go lighter today");
+    expect(p.tone).toBe("hold");
+  });
+
+  it("a small-weight jump that stays above last keeps its up tone", () => {
+    // 40 → 42.5; ×0.95 = 40.4 > 40 → still an increase, label stands.
+    const p = prescribe({
+      ...base,
+      last: { weight: 40, reps: 12, rpe: 8 },
+      readiness: 0.95,
+    })!;
+    expect(p.weight).toBeCloseTo(40.4, 5);
+    expect(p.tone).toBe("up");
+    expect(p.reason).toContain("Trimmed 5%");
+  });
+
+  it("hold and beat branches trim weight and append the reason", () => {
+    const hold = prescribe({
+      ...base,
+      last: { weight: 100, reps: 6, rpe: 7 },
+      readiness: 0.9,
+    })!;
+    expect(hold.weight).toBeCloseTo(90, 5);
+    expect(hold.tone).toBe("hold");
+    expect(hold.reason).toContain("Trimmed 10%");
+
+    const beat = prescribe({
+      ...base,
+      last: { weight: 100, reps: 10, rpe: 7 },
+      readiness: 0.95,
+    })!;
+    expect(beat.weight).toBeCloseTo(95, 5);
+    expect(beat.reps).toBe(11);
+    expect(beat.tone).toBe("beat");
+  });
+
+  it("the grinder consolidate branch trims too", () => {
+    const p = prescribe({
+      ...base,
+      last: { weight: 100, reps: 10, rpe: 9.5 },
+      readiness: 0.9,
+    })!;
+    expect(p.weight).toBeCloseTo(90, 5);
+    expect(p.label).toBe("Consolidate");
+  });
+
+  it("plateau deload is never double-trimmed", () => {
+    const p = prescribe({
+      ...base,
+      last: { weight: 100, reps: 8, rpe: 8 },
+      plateau: { deloadKg: 90, sessionsStalled: 4 },
+      readiness: 0.9,
+    })!;
+    expect(p.weight).toBe(90);
+    expect(p.tone).toBe("deload");
+    expect(p.reason).not.toContain("Trimmed");
+  });
+});

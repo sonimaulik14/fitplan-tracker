@@ -84,6 +84,71 @@ export function groupIndex(groups: SupersetGroup[]): Map<string, SupersetGroup> 
   return map;
 }
 
+export type PairingHint = { message: string; tone: "warn" | "info" };
+
+/**
+ * Builder-side guidance: which groupLabel runs WON'T pair the way the user
+ * probably expects. Mirrors inferGroups' run-walking + normalisation; purely
+ * advisory — saving is never blocked (inference degrades safely to ungrouped).
+ */
+export function pairingHints(
+  exercises: { name?: string; groupLabel: string | null; isCardio: boolean }[]
+): PairingHint[] {
+  const hints: PairingHint[] = [];
+
+  const flush = (label: string, len: number) => {
+    const norm = label.trim().toLowerCase();
+    if (norm === "superset") {
+      if (len === 1)
+        hints.push({
+          message:
+            "A Superset needs a partner — add the next exercise with the same technique directly below.",
+          tone: "warn",
+        });
+      else if (len % 2 === 1)
+        hints.push({
+          message: `Odd Superset run of ${len} — the last exercise folds into the final pair as a triple.`,
+          tone: "info",
+        });
+    } else if (norm === "giant set") {
+      if (len === 1)
+        hints.push({
+          message: "A Giant set needs 2–5 exercises back-to-back.",
+          tone: "warn",
+        });
+      else if (len > MAX_GIANT_SET)
+        hints.push({
+          message: `${len} Giant set exercises in a row won't group — split the run with a normal exercise.`,
+          tone: "warn",
+        });
+    }
+  };
+
+  let runLabel: string | null = null;
+  let runLen = 0;
+  for (const ex of exercises) {
+    const norm = ex.groupLabel?.trim().toLowerCase() ?? null;
+    const groupable = norm !== null && GROUPABLE.has(norm);
+    if (ex.isCardio && groupable) {
+      hints.push({
+        message: `${ex.name?.trim() || "A cardio exercise"} can't join a superset — cardio breaks the pairing.`,
+        tone: "warn",
+      });
+    }
+    const inRun = groupable && !ex.isCardio;
+    if (inRun && norm === runLabel?.trim().toLowerCase()) {
+      runLen += 1;
+      continue;
+    }
+    if (runLabel) flush(runLabel, runLen);
+    runLabel = inRun ? ex.groupLabel : null;
+    runLen = inRun ? 1 : 0;
+  }
+  if (runLabel) flush(runLabel, runLen);
+
+  return hints;
+}
+
 type RoundExercise = {
   id: string;
   warmupSets: number;

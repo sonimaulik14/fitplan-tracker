@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { inferGroups, groupIndex, nextInRound } from "@/lib/supersets";
+import { inferGroups, groupIndex, nextInRound, pairingHints } from "@/lib/supersets";
 
 const ex = (id: string, groupLabel: string | null = null, isCardio = false) => ({
   id,
@@ -159,5 +159,54 @@ describe("nextInRound", () => {
   it("returns null for unknown exercises", () => {
     const A = member("A", 0, [false]);
     expect(nextInRound([A], "zz", 1)).toBeNull();
+  });
+});
+
+describe("pairingHints", () => {
+  const px = (groupLabel: string | null, isCardio = false, name = "Ex") => ({
+    name,
+    groupLabel,
+    isCardio,
+  });
+
+  it("is silent for clean pairs and ungrouped exercises", () => {
+    expect(
+      pairingHints([px(null), px("Superset"), px("Superset"), px(null)])
+    ).toEqual([]);
+  });
+
+  it("warns on a lone Superset", () => {
+    const h = pairingHints([px("Superset"), px(null)]);
+    expect(h).toHaveLength(1);
+    expect(h[0].tone).toBe("warn");
+    expect(h[0].message).toContain("needs a partner");
+  });
+
+  it("notes an odd run folding into a triple", () => {
+    const h = pairingHints([px("Superset"), px("Superset"), px("Superset")]);
+    expect(h).toHaveLength(1);
+    expect(h[0].tone).toBe("info");
+    expect(h[0].message).toContain("triple");
+  });
+
+  it("warns on lone and oversized Giant set runs", () => {
+    expect(pairingHints([px("Giant Set")])[0].message).toContain("2–5");
+    const six = Array.from({ length: 6 }, () => px("Giant Set"));
+    expect(pairingHints(six)[0].message).toContain("won't group");
+  });
+
+  it("warns when cardio carries a groupable label", () => {
+    const h = pairingHints([px("Superset", true, "Treadmill")]);
+    expect(h.some((x) => x.message.includes("Treadmill"))).toBe(true);
+  });
+
+  it("builder contract: two adjacent Superset draft rows group as one pair", () => {
+    // Mirrors PlanBuilder's preview call — string indices as ids.
+    const draft = [px("Superset"), px("Superset")];
+    const groups = inferGroups(
+      draft.map((e, i) => ({ id: String(i), groupLabel: e.groupLabel, isCardio: e.isCardio }))
+    );
+    expect(groups).toHaveLength(1);
+    expect(groups[0].memberIds).toEqual(["0", "1"]);
   });
 });

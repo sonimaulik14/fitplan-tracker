@@ -16,6 +16,7 @@ import {
   Timer,
   Pin,
   Flame,
+  BatteryLow,
 } from "lucide-react";
 import { getRestPref, setRestPref } from "@/lib/restPrefs";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
@@ -81,12 +82,15 @@ export default function WorkoutLogger({
   exercises: initial,
   initialStatus,
   initialMeta,
+  readinessFactor = 1,
 }: {
   dayId: string;
   unit: Unit;
   exercises: LoggerExercise[];
   initialStatus: "in_progress" | "completed";
   initialMeta: Meta;
+  /** Today's readiness trim from readinessFactor() — 1 = no adjustment. */
+  readinessFactor?: number;
 }) {
   // Convert incoming kg weights → display unit for editing.
   const [exercises, setExercises] = useState<LoggerExercise[]>(() =>
@@ -602,6 +606,7 @@ export default function WorkoutLogger({
           repTarget: ex.repTarget,
           isCardio: ex.isCardio,
           plateau: ex.plateau,
+          readiness: readinessFactor,
         });
         const work =
           firstWork?.weight ??
@@ -866,6 +871,19 @@ export default function WorkoutLogger({
       </div>
       )}
 
+      {readinessFactor < 1 && !isLightDay && (
+        <div className="card border-warn/30 px-4 py-3 flex items-center gap-2.5 text-sm">
+          <BatteryLow size={15} className="text-warn shrink-0" aria-hidden />
+          <span>
+            Low readiness — today&apos;s suggested weights are trimmed{" "}
+            <span className="stat-num">
+              {Math.round((1 - readinessFactor) * 100)}%
+            </span>
+            .
+          </span>
+        </div>
+      )}
+
       {renderBlocks.map((block) => {
         const inner = block.items.map(({ ex, idx }) => {
         const sg = prescribe({
@@ -873,6 +891,7 @@ export default function WorkoutLogger({
           repTarget: ex.repTarget,
           isCardio: ex.isCardio,
           plateau: ex.plateau,
+          readiness: readinessFactor,
         });
         const sgWeight = sg ? weightNum(sg.weight, unit) : 0;
         const isCollapsed = collapsed[ex.id] ?? false;

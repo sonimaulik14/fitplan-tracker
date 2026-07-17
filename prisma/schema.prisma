@@ -87,6 +87,11 @@ model DailyLog {
   day              String // YYYY-MM-DD
   waterMl          Int    @default(0)
   supplementsTaken String @default("") // CSV of supplement names taken
+  // Readiness check-in, 1-5 each; null = unanswered that day.
+  // sleepQuality/energy: higher = better. soreness: higher = MORE sore.
+  sleepQuality     Int?
+  soreness         Int?
+  energy           Int?
 
   @@unique([userId, day])
   @@index([userId])

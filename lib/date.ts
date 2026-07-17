@@ -13,6 +13,32 @@ export function todayKey(): string {
   return ymd(new Date());
 }
 
+/**
+ * "YYYY-MM-DD" for `now` in an IANA timezone — so an early-morning check-in
+ * lands on the user's calendar day, not the server's. Missing/invalid tz falls
+ * back to the server-local key (ymd), matching todayKey() for users without a
+ * stored timezone; write and read paths stay consistent as long as both
+ * resolve the day through this one function.
+ */
+export function dayKeyInTz(tz: string | null | undefined, now: Date = new Date()): string {
+  if (!tz) return ymd(now);
+  try {
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+        .formatToParts(now)
+        .map((x) => [x.type, x.value])
+    );
+    return `${p.year}-${p.month}-${p.day}`;
+  } catch {
+    return ymd(now); // invalid tz string
+  }
+}
+
 /** A copy of `d` at local midnight (00:00:00.000). */
 export function startOfDay(d: Date): Date {
   const c = new Date(d);

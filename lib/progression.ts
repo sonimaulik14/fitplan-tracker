@@ -51,12 +51,16 @@ export function prescribe(args: {
   isCardio: boolean;
   plateau?: PlateauState | null;
   increment?: number; // kg added on progression (default 2.5)
+  /** Day readiness factor from readinessFactor(). >=1/undefined = no change. Never inflates. */
+  readiness?: number;
 }): Prescription | null {
   const { last, repTarget, isCardio, plateau, increment = 2.5 } = args;
   if (isCardio || !last || !last.weight) return null;
   const r = parseRepRange(repTarget);
   if (!r) return null;
+  const f = Math.min(1, args.readiness ?? 1);
 
+  // Plateau deload is already a ~10% cut — never stack the readiness trim on it.
   if (plateau && plateau.deloadKg > 0) {
     return {
       weight: plateau.deloadKg,
@@ -72,42 +76,84 @@ export function prescribe(args: {
   if (last.reps >= r.max) {
     const easy = rpe != null && rpe <= EASY_RPE;
     const bump = easy ? increment * 2 : increment;
-    return {
-      weight: Math.round((last.weight + bump) * 10) / 10,
-      reps: r.min,
-      label: easy ? "Felt easy — jump up 🚀" : "Add weight 💪",
-      reason: easy
-        ? `Topped the range at RPE ${rpe} — take the double jump.`
-        : "Topped the rep range — time to load more.",
-      tone: "up",
-    };
+    return trimForReadiness(
+      {
+        weight: Math.round((last.weight + bump) * 10) / 10,
+        reps: r.min,
+        label: easy ? "Felt easy — jump up 🚀" : "Add weight 💪",
+        reason: easy
+          ? `Topped the range at RPE ${rpe} — take the double jump.`
+          : "Topped the rep range — time to load more.",
+        tone: "up",
+      },
+      f,
+      last.weight
+    );
   }
 
   if (last.reps < r.min) {
-    return {
-      weight: last.weight,
-      reps: r.min,
-      label: "Hold & hit reps",
-      reason: "Same weight until the bottom of the range is yours.",
-      tone: "hold",
-    };
+    return trimForReadiness(
+      {
+        weight: last.weight,
+        reps: r.min,
+        label: "Hold & hit reps",
+        reason: "Same weight until the bottom of the range is yours.",
+        tone: "hold",
+      },
+      f,
+      last.weight
+    );
   }
 
   if (rpe != null && rpe >= GRINDER_RPE) {
-    return {
+    return trimForReadiness(
+      {
+        weight: last.weight,
+        reps: last.reps,
+        label: "Consolidate",
+        reason: `Last set was RPE ${rpe} — repeat it crisper before adding reps.`,
+        tone: "hold",
+      },
+      f,
+      last.weight
+    );
+  }
+
+  return trimForReadiness(
+    {
       weight: last.weight,
-      reps: last.reps,
-      label: "Consolidate",
-      reason: `Last set was RPE ${rpe} — repeat it crisper before adding reps.`,
+      reps: Math.min(r.max, last.reps + 1),
+      label: "Beat it by a rep",
+      reason: "Mid-range — add one rep at this weight.",
+      tone: "beat",
+    },
+    f,
+    last.weight
+  );
+}
+
+/**
+ * Apply the day's readiness trim to a prescription. An "up" whose trimmed
+ * weight lands at/below last time's isn't "Add weight" any more — relabel
+ * honestly. Nothing is lost: prescriptions are computed, never stored, so the
+ * earned jump re-derives from `last` next session.
+ */
+function trimForReadiness(
+  p: Prescription,
+  f: number,
+  lastWeight: number
+): Prescription {
+  if (f >= 1) return p;
+  const weight = Math.round(p.weight * f * 10) / 10;
+  const pct = Math.round((1 - f) * 100);
+  if (p.tone === "up" && weight <= lastWeight) {
+    return {
+      weight,
+      reps: p.reps,
+      label: "Go lighter today",
+      reason: `You earned a jump, but readiness is low — trim ${pct}% and bank a crisp session.`,
       tone: "hold",
     };
   }
-
-  return {
-    weight: last.weight,
-    reps: Math.min(r.max, last.reps + 1),
-    label: "Beat it by a rep",
-    reason: "Mid-range — add one rep at this weight.",
-    tone: "beat",
-  };
+  return { ...p, weight, reason: `${p.reason} Trimmed ${pct}% — low readiness.` };
 }
