@@ -202,6 +202,24 @@ export default async function AnalysisPage() {
           subtitle={`How closely you're following ${p.plan.name}.`}
         />
 
+        <Link
+          href="/review"
+          className="card card-hover px-5 py-4 flex items-center gap-3 animate-fade-up"
+        >
+          <span className="grid place-items-center w-9 h-9 rounded-full brand-bg shrink-0">
+            📊
+          </span>
+          <span className="min-w-0">
+            <span className="block font-semibold text-sm">Weekly review</span>
+            <span className="block text-xs text-muted">
+              Last 7 days vs the week before — volume, muscles, strength PRs.
+            </span>
+          </span>
+          <span className="ml-auto text-accent text-sm font-semibold shrink-0">
+            Open →
+          </span>
+        </Link>
+
         {/* Insights — the dense charts below, in one glance */}
         <section className="card p-6 animate-fade-up">
           <h2 className="section-title">Highlights</h2>

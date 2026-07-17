@@ -11,3 +11,4 @@ export * from "./metrics/body";
 export * from "./metrics/nutrition";
 export * from "./metrics/activity";
 export * from "./metrics/insights";
+export * from "./metrics/review";

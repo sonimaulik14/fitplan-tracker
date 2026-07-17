@@ -38,12 +38,25 @@ npm run db:seed     # loads the training plan(s)
    - `DIRECT_URL`    (direct)
    - `AUTH_SECRET`
    - *(optional)* `PEXELS_API_KEY` or `UNSPLASH_ACCESS_KEY` for live gym photos
+   - *(for push + crons)* `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+     `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (same value as the public key),
+     `VAPID_SUBJECT` (e.g. `mailto:you@example.com`), and `CRON_SECRET`
+     (`openssl rand -hex 32`) — Vercel Cron automatically sends
+     `Authorization: Bearer $CRON_SECRET` to the cron routes.
 4. **Deploy.** Vercel runs `npm install` (→ `prisma generate`), then the build
    command from [vercel.json](vercel.json):
    `prisma migrate deploy && prisma generate && next build` — pending migrations
    are applied to Neon automatically on every deploy, so code and schema can't
    drift apart.
 5. Add your **custom domain** under Project → Settings → Domains.
+6. **Crons** come from [vercel.json](vercel.json): daily workout reminders
+   (`/api/cron/reminders`, hourly — per-user local-time gating + daily dedupe
+   live in the route) and the Monday week-in-review digest (`/api/cron/weekly`,
+   daily at 03:30 UTC — sends once per user per week inside their local
+   Mon–Wed ≥ 08:00 window). Note: the **Hobby plan limits cron frequency to
+   daily** — on Hobby, change the reminders schedule to a fixed daily time
+   (e.g. `30 12 * * *` ≈ 18:00 IST) or trigger it from an external scheduler
+   with the same bearer header.
 
 ## 5. Post-deploy checks
 

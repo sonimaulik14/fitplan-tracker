@@ -28,6 +28,8 @@ model User {
   remindersOn  Boolean         @default(false)
   timezone        String?      // IANA tz (e.g. "Asia/Kolkata") for local reminder time
   lastNotifiedDay String?      // YYYY-MM-DD of the last reminder sent, to dedupe
+  weeklyReviewOn  Boolean      @default(true) // Monday "week in review" push digest
+  lastWeeklyReviewWeek String? // YYYY-MM-DD of that week's Monday, to dedupe
   onboardedAt  DateTime?
   createdAt    DateTime        @default(now())
   enrollments  Enrollment[]
@@ -147,6 +149,9 @@ model Plan {
   // custom program, visible only to its owner.
   ownerId     String?
   owner       User?        @relation("CustomPlans", fields: [ownerId], references: [id], onDelete: Cascade)
+  // Unguessable public-share handle. Null = private; set = anyone with
+  // /p/<token> can view the program read-only and clone it.
+  shareToken  String?      @unique
   weeks       Week[]
   enrollments Enrollment[]
 

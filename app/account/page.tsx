@@ -54,6 +54,7 @@ export default async function AccountPage() {
                 .map((s) => Number(s.trim()))
                 .filter((d) => !Number.isNaN(d))
             }
+            weeklyReviewOn={user.weeklyReviewOn}
           />
         </section>
 

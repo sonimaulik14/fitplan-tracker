@@ -4,8 +4,8 @@
 
 import { parseRepRange } from "./reps";
 
-// parseRepRange moved to lib/reps.ts; re-exported so existing importers (and
-// overloadSuggestion below) keep working unchanged.
+// parseRepRange moved to lib/reps.ts; re-exported so existing importers keep
+// working unchanged.
 export { parseRepRange };
 
 export type MuscleStyle = { icon: string; color: string; key: string };
@@ -180,41 +180,8 @@ export function lenToCm(value: number, unit: Unit): number {
   return unit === "lb" ? value * CM_PER_IN : value;
 }
 
-export type Suggestion = {
-  weight: number;
-  reps: number;
-  label: string;
-  tone: "up" | "hold" | "beat";
-};
-
-/** Progressive-overload suggestion from last time's performance + the rep target. */
-export function overloadSuggestion(
-  last: { weight: number; reps: number } | null,
-  repTarget: string,
-  isCardio: boolean,
-  increment = 2.5
-): Suggestion | null {
-  if (isCardio || !last || !last.weight) return null;
-  const r = parseRepRange(repTarget);
-  if (!r) return null;
-  if (last.reps >= r.max) {
-    return {
-      weight: Math.round((last.weight + increment) * 10) / 10,
-      reps: r.min,
-      label: "Add weight 💪",
-      tone: "up",
-    };
-  }
-  if (last.reps < r.min) {
-    return { weight: last.weight, reps: r.min, label: "Hold & hit reps", tone: "hold" };
-  }
-  return {
-    weight: last.weight,
-    reps: Math.min(r.max, last.reps + 1),
-    label: "Beat it by a rep",
-    tone: "beat",
-  };
-}
+// overloadSuggestion grew into the progression engine — see lib/progression.ts
+// (prescribe): RPE- and plateau-aware, same double-progression core.
 
 // Rough bodyweight-ratio thresholds for recognised barbell lifts (general).
 const STANDARDS: { match: RegExp; t: number[] }[] = [

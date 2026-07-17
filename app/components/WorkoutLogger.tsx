@@ -10,7 +10,13 @@ import {
   celebrateWeek,
   celebrateProgram,
 } from "@/lib/celebrate";
-import { ArrowLeftRight, Target as TargetIcon, Timer, Pin } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Target as TargetIcon,
+  Timer,
+  Pin,
+  Flame,
+} from "lucide-react";
 import { getRestPref, setRestPref } from "@/lib/restPrefs";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
 import {
@@ -24,13 +30,15 @@ import PlateCalc from "./PlateCalc";
 import SwapControl from "./SwapControl";
 import SwipeToSwap from "./SwipeToSwap";
 import WorkoutSummary from "./WorkoutSummary";
+import { weightNum, unitToKg, termInfo, type Unit } from "@/lib/ui";
+import { prescribe, est1RM } from "@/lib/progression";
 import {
-  overloadSuggestion,
-  weightNum,
-  unitToKg,
-  termInfo,
-  type Unit,
-} from "@/lib/ui";
+  warmupFill,
+  KG_PLATES,
+  LB_PLATES,
+  KG_BARS,
+  LB_BARS,
+} from "@/lib/plates";
 import InfoTip from "./InfoTip";
 import { MuscleGlyph } from "./icons";
 import { ExerciseDemoInline } from "./ExerciseDemo";
@@ -58,7 +66,9 @@ export type LoggerExercise = {
   isCardio: boolean;
   warmupSets: number;
   workingSets: number;
-  lastTime: { weight: number; reps: number } | null; // kg
+  lastTime: { weight: number; reps: number; rpe?: number | null } | null; // kg
+  bestE1rm: number; // all-time best est. 1RM in kg (0 = no history)
+  plateau: { deloadKg: number; sessionsStalled: number } | null;
   rows: Row[]; // weight in kg from server
 };
 
@@ -452,10 +462,37 @@ export default function WorkoutLogger({
     router.refresh();
   };
 
+  // Session-best est. 1RM per exercise (kg), seeded from all-time history —
+  // lets us celebrate a strength PR the moment the set is checked, once.
+  const prBestRef = useRef<Record<string, number>>({});
+
   const toggleDone = (exId: string, setNumber: number, currentlyDone: boolean) => {
     update(exId, setNumber, { done: !currentlyDone });
     if (!currentlyDone && typeof navigator !== "undefined" && navigator.vibrate)
       navigator.vibrate(15);
+    if (!currentlyDone) {
+      // Live strength-PR check: did this set's est. 1RM top everything before?
+      const exNow = exRef.current.find((e) => e.id === exId);
+      const rowNow = exNow?.rows.find((r) => r.setNumber === setNumber);
+      if (
+        exNow &&
+        rowNow &&
+        !exNow.isCardio &&
+        exNow.bestE1rm > 0 &&
+        rowNow.weight &&
+        rowNow.reps
+      ) {
+        const e1 = est1RM(unitToKg(rowNow.weight, unit), rowNow.reps);
+        const prevBest = prBestRef.current[exId] ?? exNow.bestE1rm;
+        if (e1 > prevBest + 0.01) {
+          prBestRef.current[exId] = e1;
+          celebratePR();
+          toast(
+            `New strength record on ${exNow.name} — est. 1RM ${weightNum(e1, unit)} ${unit}!`
+          );
+        }
+      }
+    }
     if (!currentlyDone) {
       // Kick off a rest countdown (skip cardio — those aren't rest-paced sets).
       const ex = exRef.current.find((e) => e.id === exId);
@@ -520,6 +557,56 @@ export default function WorkoutLogger({
       )
     );
     queueAutosave();
+  };
+
+  // One-tap warm-up ramp: derive today's working weight (entered > prescribed
+  // > last time), build the ramp, and pour it into the warm-up rows.
+  const fillWarmups = (exId: string) => {
+    let filled = 0;
+    setExercises((prev) =>
+      prev.map((ex) => {
+        if (ex.id !== exId) return ex;
+        const firstWork = ex.rows.find((r) => r.setType === "work" && r.weight);
+        const pres = prescribe({
+          last: ex.lastTime,
+          repTarget: ex.repTarget,
+          isCardio: ex.isCardio,
+          plateau: ex.plateau,
+        });
+        const work =
+          firstWork?.weight ??
+          (pres
+            ? weightNum(pres.weight, unit)
+            : ex.lastTime
+              ? weightNum(ex.lastTime.weight, unit)
+              : null);
+        if (!work) return ex;
+        const ramp = warmupFill(
+          work,
+          unit === "lb" ? LB_BARS[0] : KG_BARS[0],
+          ex.rows.filter((r) => r.setType === "warmup" && !r.done).length,
+          unit === "lb" ? LB_PLATES : KG_PLATES
+        );
+        if (!ramp.length) return ex;
+        let i = 0;
+        return {
+          ...ex,
+          rows: ex.rows.map((r) => {
+            if (r.setType !== "warmup" || r.done) return r;
+            const step = ramp[i++];
+            if (!step) return r;
+            filled++;
+            return { ...r, weight: step.weight, reps: step.reps };
+          }),
+        };
+      })
+    );
+    if (filled) {
+      queueAutosave();
+      toast("Warm-ups filled — ramp to your working weight.");
+    } else {
+      toast("Enter a working weight first.", "error");
+    }
   };
 
   // Append an extra working set at the end of an exercise.
@@ -607,13 +694,16 @@ export default function WorkoutLogger({
           let beat = 0;
           for (const { r, e } of doneRows)
             if (!e.isCardio && r.weight && r.reps) volume += r.weight * r.reps;
+          // Strength PRs: session's best est. 1RM topped the all-time best.
           for (const e of exRef.current) {
-            if (e.isCardio || !e.lastTime) continue;
+            if (e.isCardio || e.bestE1rm <= 0) continue;
             const best = Math.max(
               0,
-              ...e.rows.filter((r) => r.done && r.weight).map((r) => r.weight || 0)
+              ...e.rows
+                .filter((r) => r.done && r.weight && r.reps)
+                .map((r) => est1RM(unitToKg(r.weight!, unit), r.reps!))
             );
-            if (best > weightNum(e.lastTime.weight, unit)) beat += 1;
+            if (best > e.bestE1rm + 0.01) beat += 1;
           }
           // A queued (offline) completion shows the local recap; week/program
           // milestones only come from the server, so their celebration fires
@@ -722,7 +812,12 @@ export default function WorkoutLogger({
       )}
 
       {exercises.map((ex, idx) => {
-        const sg = overloadSuggestion(ex.lastTime, ex.repTarget, ex.isCardio);
+        const sg = prescribe({
+          last: ex.lastTime,
+          repTarget: ex.repTarget,
+          isCardio: ex.isCardio,
+          plateau: ex.plateau,
+        });
         const sgWeight = sg ? weightNum(sg.weight, unit) : 0;
         const isCollapsed = collapsed[ex.id] ?? false;
         const exDone = ex.rows.filter((r) => r.done).length;
@@ -792,6 +887,16 @@ export default function WorkoutLogger({
                       exerciseName={ex.name}
                       initialWeight={plateWeight}
                     />
+                  )}
+                  {!ex.isCardio && ex.warmupSets > 0 && !isCollapsed && (
+                    <button
+                      type="button"
+                      onClick={() => fillWarmups(ex.id)}
+                      title="Fill warm-up sets with a ramp to your working weight"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 py-1 text-xs font-semibold text-muted hover:text-foreground hover:border-border-strong transition-colors"
+                    >
+                      <Flame size={13} aria-hidden /> Fill warm-ups
+                    </button>
                   )}
                   {ex.swapped && (
                     <span className="inline-flex items-center gap-1 text-xs text-success">
@@ -872,26 +977,38 @@ export default function WorkoutLogger({
             )}
 
             {!isCollapsed && sg && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2">
-                <TargetIcon size={14} className="text-accent shrink-0" aria-hidden />
-                <div className="text-sm flex-1 min-w-0">
-                  <span className="text-muted">Tip: </span>
-                  <span className="font-semibold">{sg.label}</span>
-                  <span className="text-muted">
-                    {" "}
-                    → try{" "}
-                    <span className="text-foreground stat-num">
-                      {sgWeight} × {sg.reps}
+              <div
+                className={`mt-4 rounded-lg border px-3 py-2 ${
+                  sg.tone === "deload"
+                    ? "border-warn/40 bg-warn/10"
+                    : "border-accent/30 bg-accent/5"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <TargetIcon
+                    size={14}
+                    className={`shrink-0 ${sg.tone === "deload" ? "text-warn" : "text-accent"}`}
+                    aria-hidden
+                  />
+                  <div className="text-sm flex-1 min-w-0">
+                    <span className="font-semibold">{sg.label}</span>
+                    <span className="text-muted">
+                      {" "}
+                      →{" "}
+                      <span className="text-foreground stat-num">
+                        {sgWeight} × {sg.reps}
+                      </span>
                     </span>
-                  </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => applyToEmpty(ex.id, sgWeight, sg.reps)}
+                    className="btn-quiet shrink-0 text-xs"
+                  >
+                    Apply
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => applyToEmpty(ex.id, sgWeight, sg.reps)}
-                  className="btn-quiet shrink-0 text-xs"
-                >
-                  Apply
-                </button>
+                <p className="text-xs text-muted mt-1 pl-6">{sg.reason}</p>
               </div>
             )}
 

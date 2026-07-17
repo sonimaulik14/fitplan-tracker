@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "../prisma";
 import { getCurrentUser } from "../auth";
@@ -201,6 +202,102 @@ export async function deletePlanAction(
   revalidatePath("/plans");
   revalidatePath("/dashboard");
   return { ok: true };
+}
+
+/** Publish a custom program at /p/<token> (owner only). Idempotent. */
+export async function sharePlanAction(
+  planId: string
+): Promise<{ ok: boolean; error?: string; token?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  const plan = await prisma.plan.findUnique({
+    where: { id: planId },
+    select: { ownerId: true, shareToken: true },
+  });
+  if (!plan || plan.ownerId !== user.id)
+    return { ok: false, error: "Program not found." };
+  if (plan.shareToken) return { ok: true, token: plan.shareToken };
+  // 18 random bytes → 24 url-safe chars. Unguessable; the link IS the access.
+  const token = randomBytes(18).toString("base64url");
+  await prisma.plan.update({ where: { id: planId }, data: { shareToken: token } });
+  revalidatePath("/plans");
+  return { ok: true, token };
+}
+
+/** Turn a share link off — the old URL stops working immediately. */
+export async function unsharePlanAction(
+  planId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+  const plan = await prisma.plan.findUnique({
+    where: { id: planId },
+    select: { ownerId: true },
+  });
+  if (!plan || plan.ownerId !== user.id)
+    return { ok: false, error: "Program not found." };
+  await prisma.plan.update({ where: { id: planId }, data: { shareToken: null } });
+  revalidatePath("/plans");
+  return { ok: true };
+}
+
+/** Deep-copy a shared program into the signed-in user's library. */
+export async function clonePlanAction(
+  token: string
+): Promise<{ ok: boolean; error?: string; code?: "auth"; planId?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, code: "auth", error: "Sign in to clone." };
+  const plan = await prisma.plan.findUnique({
+    where: { shareToken: token },
+    include: {
+      weeks: {
+        orderBy: { number: "asc" },
+        include: {
+          days: {
+            orderBy: { dayNumber: "asc" },
+            include: { exercises: { orderBy: { orderIndex: "asc" } } },
+          },
+        },
+      },
+    },
+  });
+  if (!plan) return { ok: false, error: "This share link is no longer active." };
+  const copy = await prisma.plan.create({
+    data: {
+      name: plan.name,
+      description: plan.description,
+      totalWeeks: plan.totalWeeks,
+      ownerId: user.id,
+      weeks: {
+        create: plan.weeks.map((w) => ({
+          number: w.number,
+          style: w.style,
+          days: {
+            create: w.days.map((d) => ({
+              dayNumber: d.dayNumber,
+              label: d.label,
+              focus: d.focus,
+              orderIndex: d.orderIndex,
+              exercises: {
+                create: d.exercises.map((ex) => ({
+                  name: ex.name,
+                  muscle: ex.muscle,
+                  groupLabel: ex.groupLabel,
+                  orderIndex: ex.orderIndex,
+                  warmupSets: ex.warmupSets,
+                  workingSets: ex.workingSets,
+                  repTarget: ex.repTarget,
+                  isCardio: ex.isCardio,
+                })),
+              },
+            })),
+          },
+        })),
+      },
+    },
+  });
+  revalidatePath("/plans");
+  return { ok: true, planId: copy.id };
 }
 
 /** Full draft for the edit screen (owner only). */

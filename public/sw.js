@@ -111,8 +111,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Page navigations → network-first, fall back to offline page when offline.
+  // Page navigations → network-first with a runtime page cache: every page you
+  // visit is kept (per build), so in a dead-signal gym the workout you opened
+  // this morning still loads. Fallback chain: network → cached copy of that
+  // page → /offline shell.
   if (req.mode === "navigate") {
-    event.respondWith(fetch(req).catch(() => caches.match("/offline")));
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches
+            .match(req, { ignoreSearch: true })
+            .then((hit) => hit || caches.match("/offline"))
+        )
+    );
   }
 });

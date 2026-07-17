@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   platesPerSide,
   warmupRamp,
+  warmupFill,
   roundToStep,
   KG_PLATES,
   LB_PLATES,
@@ -92,5 +93,42 @@ describe("roundToStep", () => {
     expect(roundToStep(61.3, 2.5)).toBe(62.5); // 24.52 steps → 25
     expect(roundToStep(66.24, 2.5)).toBe(65); // 26.496 steps → 26
     expect(roundToStep(67.5, 2.5)).toBe(67.5); // already on-step
+  });
+});
+
+describe("warmupFill", () => {
+  it("more slots than ramp steps → all steps, extras left empty", () => {
+    // 100 kg ramp has 4 warm-up steps (Bar/45/65/85)
+    const fill = warmupFill(100, 20, 6, KG_PLATES);
+    expect(fill.map((r) => r.weight)).toEqual([20, 45, 65, 85]);
+  });
+
+  it("exactly enough slots → the full ramp", () => {
+    const fill = warmupFill(100, 20, 4, KG_PLATES);
+    expect(fill.map((r) => r.weight)).toEqual([20, 45, 65, 85]);
+  });
+
+  it("2 slots → spread ends at the heaviest step", () => {
+    const fill = warmupFill(100, 20, 2, KG_PLATES);
+    expect(fill[0].weight).toBe(20);
+    expect(fill[fill.length - 1].weight).toBe(85);
+  });
+
+  it("1 slot → a single middle-ish step, never the work weight", () => {
+    const fill = warmupFill(100, 20, 1, KG_PLATES);
+    expect(fill).toHaveLength(1);
+    expect(fill[0].weight).toBeGreaterThan(20);
+    expect(fill[0].weight).toBeLessThan(100);
+  });
+
+  it("0 slots or nonsense → []", () => {
+    expect(warmupFill(100, 20, 0, KG_PLATES)).toEqual([]);
+    expect(warmupFill(100, 20, NaN, KG_PLATES)).toEqual([]);
+  });
+
+  it("reps fall as the ramp climbs", () => {
+    const fill = warmupFill(100, 20, 4, KG_PLATES);
+    const reps = fill.map((r) => r.reps);
+    expect([...reps].sort((a, b) => b - a)).toEqual(reps);
   });
 });

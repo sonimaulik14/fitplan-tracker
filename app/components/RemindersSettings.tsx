@@ -47,14 +47,17 @@ export default function RemindersSettings({
   remindersOn: initialOn,
   reminderTime: initialTime,
   trainingDays: initialDays,
+  weeklyReviewOn: initialWeekly = true,
 }: {
   remindersOn: boolean;
   reminderTime: string;
   trainingDays: number[];
+  weeklyReviewOn?: boolean;
 }) {
   const [on, setOn] = useState(initialOn);
   const [time, setTime] = useState(initialTime || "18:00");
   const [days, setDays] = useState<number[]>(initialDays);
+  const [weekly, setWeekly] = useState(initialWeekly);
   const [push, setPush] = useState<PushState>("loading");
   const [busy, setBusy] = useState(false);
   const [saving, startSave] = useTransition();
@@ -96,6 +99,7 @@ export default function RemindersSettings({
         remindersOn: on,
         reminderTime: time,
         trainingDays: days,
+        weeklyReviewOn: weekly,
         timezone: tz(),
       });
       if (res.ok) toast("Reminder settings saved");
@@ -227,6 +231,23 @@ export default function RemindersSettings({
           </div>
         </>
       )}
+
+      {/* Weekly digest toggle */}
+      <label className="flex items-center justify-between gap-4 cursor-pointer">
+        <span>
+          <span className="font-semibold text-sm">Weekly review</span>
+          <span className="block text-xs text-muted">
+            A Monday digest — volume, adherence and strength PRs vs last week.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={weekly}
+          onChange={(e) => setWeekly(e.target.checked)}
+          className="sr-only peer"
+        />
+        <span className="relative w-11 h-6 rounded-full bg-surface-2 border border-border peer-checked:bg-accent peer-checked:border-accent transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" />
+      </label>
 
       <button
         onClick={save}

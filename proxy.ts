@@ -16,6 +16,7 @@ const PUBLIC_PREFIXES = [
   "/forgot",
   "/reset/", // token pages; validity checked by the page itself
   "/offline", // PWA fallback shell
+  "/p/", // shared program pages; the unguessable token is the access control
   "/api/cron/", // bearer CRON_SECRET, checked in-route
   "/api/push/", // session-checked in-route (also called from the SW context)
 ];
