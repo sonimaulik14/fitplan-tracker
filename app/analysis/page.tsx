@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress } from "@/lib/metrics";
+import { getProgress, buildTimeline } from "@/lib/metrics";
 import {
   muscleStyle,
   slugify,
@@ -25,6 +25,8 @@ import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
 import InfoTip from "@/app/components/InfoTip";
 import { MuscleGlyph } from "@/app/components/icons";
+import MuscleMap from "@/app/components/MuscleMap";
+import MuscleTrendGrid from "@/app/components/MuscleTrendGrid";
 import { AnimatedRing, AnimatedNumber } from "@/app/components/motion";
 
 export const metadata = { title: "Analysis" };
@@ -59,18 +61,18 @@ export default async function AnalysisPage() {
   const maxVolume = Math.max(1, ...Object.values(p.volumeByMuscle));
   const maxWeekVol = Math.max(1, ...p.weekly.map((x) => x.volume));
 
-  // Weekly working-set landmarks: average done sets/week per muscle vs MEV–MRV.
-  const weeksTrained = Math.max(
-    1,
-    p.weekly.filter((w) => w.doneSets > 0).length
-  );
+  // Weekly working-set landmarks: average *working* sets/week per muscle vs
+  // MEV–MRV. Uses doneWorkByMuscle (working, non-cardio) — warmups and cardio
+  // don't count toward the landmarks, matching how MEV/MRV are defined.
+  const weeksTrained = p.weeksTrained;
   const landmarks = muscles
     .filter((m) => VOLUME_LANDMARKS[m])
     .map((m) => {
       const l = VOLUME_LANDMARKS[m];
-      const weekly = (p.setsByMuscle[m].done ?? 0) / weeksTrained;
+      const weekly = (p.doneWorkByMuscle[m] ?? 0) / weeksTrained;
       return { muscle: m, weekly, l, verdict: landmarkVerdict(weekly, l) };
     });
+  const currentWeek = buildTimeline(p).currentWeek;
 
   // Per-style breakdown: aggregate the weekly rows by training style (the
   // program rotates YT3 / Y3T / FST-7 / GVT / HIT / DTP Extreme across blocks).
@@ -201,6 +203,24 @@ export default async function AnalysisPage() {
           title="Analysis"
           subtitle={`How closely you're following ${p.plan.name}.`}
         />
+
+        <Link
+          href="/review"
+          className="card card-hover px-5 py-4 flex items-center gap-3 animate-fade-up"
+        >
+          <span className="grid place-items-center w-9 h-9 rounded-full brand-bg shrink-0">
+            📊
+          </span>
+          <span className="min-w-0">
+            <span className="block font-semibold text-sm">Weekly review</span>
+            <span className="block text-xs text-muted">
+              Last 7 days vs the week before — volume, muscles, strength PRs.
+            </span>
+          </span>
+          <span className="ml-auto text-accent text-sm font-semibold shrink-0">
+            Open →
+          </span>
+        </Link>
 
         {/* Insights — the dense charts below, in one glance */}
         <section className="card p-6 animate-fade-up">
@@ -386,6 +406,26 @@ export default async function AnalysisPage() {
           </div>
         </section>
 
+        {/* Muscle map — body heatmap of weekly volume */}
+        {landmarks.length > 0 && (
+          <section className="card p-6 animate-fade-up">
+            <h2 className="section-title">Muscle map</h2>
+            <p className="text-xs text-muted mt-0.5 mb-5">
+              Where your weekly volume is landing, across {weeksTrained} trained
+              week{weeksTrained === 1 ? "" : "s"}.
+            </p>
+            <MuscleMap
+              muscles={landmarks.map((x) => ({
+                muscle: x.muscle,
+                avg: x.weekly,
+                l: x.l,
+                verdict: x.verdict,
+              }))}
+              weeksTrained={weeksTrained}
+            />
+          </section>
+        )}
+
         {/* Weekly volume landmarks */}
         {landmarks.length > 0 && (
           <section className="card p-6 animate-fade-up">
@@ -457,6 +497,18 @@ export default async function AnalysisPage() {
                 );
               })}
             </div>
+          </section>
+        )}
+
+        {/* Volume trend by week — muscles × weeks heatmap grid */}
+        {p.muscleWeekly.length > 0 && (
+          <section className="card p-6 animate-fade-up">
+            <h2 className="section-title">Volume trend by week</h2>
+            <p className="text-xs text-muted mt-0.5 mb-5">
+              Working sets per muscle each week. Darker = more volume; this week
+              is outlined.
+            </p>
+            <MuscleTrendGrid rows={p.muscleWeekly} currentWeek={currentWeek} />
           </section>
         )}
 

@@ -78,3 +78,55 @@ export function reminderDecision(user: ReminderUser, now: Date = new Date()): Re
 
   return { kind: "due", localDate: local.date };
 }
+
+// ---------------------------------------------------------------------------
+// Weekly "week in review" digest gating.
+
+export type WeeklyReviewUser = {
+  timezone: string | null;
+  lastWeeklyReviewWeek: string | null;
+};
+
+export type WeeklyReviewDecision = {
+  kind: "due" | "skip-already-sent" | "skip-outside-window";
+  /** Monday (local, YYYY-MM-DD) identifying this week — the dedupe key. */
+  weekKey: string;
+  localDate: string;
+};
+
+/** The Monday (YYYY-MM-DD) of the week containing `date` with `weekday`. */
+function mondayOf(date: string, weekday: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((weekday + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Should this user get the weekly digest now? The cron runs once a day, so the
+ * send window is deliberately wide — Monday through Wednesday, from 08:00
+ * local — and dedupes on the week's Monday. Whichever daily run first lands
+ * inside a user's window delivers their digest; the rest of the week is quiet.
+ */
+export function weeklyReviewDecision(
+  user: WeeklyReviewUser,
+  now: Date = new Date()
+): WeeklyReviewDecision {
+  const tz = user.timezone || "UTC";
+  let local;
+  try {
+    local = localNow(tz, now);
+  } catch {
+    local = localNow("UTC", now);
+  }
+  const weekKey = mondayOf(local.date, local.weekday);
+
+  if (user.lastWeeklyReviewWeek === weekKey)
+    return { kind: "skip-already-sent", weekKey, localDate: local.date };
+
+  const inWindow =
+    local.weekday >= 1 && local.weekday <= 3 && local.hm >= "08:00";
+  if (!inWindow)
+    return { kind: "skip-outside-window", weekKey, localDate: local.date };
+
+  return { kind: "due", weekKey, localDate: local.date };
+}

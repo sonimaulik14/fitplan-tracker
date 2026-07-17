@@ -1,6 +1,11 @@
 import { prisma } from "../prisma";
 import { ymd } from "../date";
+import { est1RM } from "../progression";
 import { getBodyweightSeries } from "./body";
+
+// est1RM moved to lib/progression.ts (pure, client-safe); re-exported so
+// existing `@/lib/metrics` importers keep working unchanged.
+export { est1RM };
 
 /** Logged sessions, newest first, with per-session totals. Bounded by `take`
  *  (covers multi-year history while capping memory) and selects only the
@@ -82,7 +87,16 @@ export async function getLastTimeByExercise(
 
   const swapName = new Map(swaps.map((s) => [s.planExerciseId, s.name]));
 
-  const map: Record<string, { weight: number; reps: number; date: Date }> = {};
+  const map: Record<
+    string,
+    {
+      weight: number;
+      reps: number;
+      rpe: number | null;
+      date: Date;
+      bestE1rm: number; // all-time best est. 1RM (kg) — powers live PR detection
+    }
+  > = {};
   for (const e of entries) {
     // key by the effective (possibly swapped) movement name
     const name = swapName.get(e.planExerciseId) ?? e.planExercise.name;
@@ -90,16 +104,14 @@ export async function getLastTimeByExercise(
       map[name] = {
         weight: e.weight!,
         reps: e.reps!,
+        rpe: e.rpe,
         date: e.session.performedDate,
+        bestE1rm: 0,
       };
     }
+    map[name].bestE1rm = Math.max(map[name].bestE1rm, est1RM(e.weight!, e.reps!));
   }
   return map;
-}
-
-/** Epley estimated 1-rep max. */
-export function est1RM(weightKg: number, reps: number): number {
-  return weightKg * (1 + reps / 30);
 }
 
 export async function getExerciseHistory(userId: string, name: string) {

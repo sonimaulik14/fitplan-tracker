@@ -1,12 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { getProgress, getLastTimeByExercise } from "@/lib/metrics";
-import {
-  overloadSuggestion,
-  fmtWeight,
-  type Unit,
-} from "@/lib/ui";
+import { getProgress, getLastTimeByExercise, getPlateaus } from "@/lib/metrics";
+import { fmtWeight, type Unit } from "@/lib/ui";
+import { prescribe } from "@/lib/progression";
 import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
 import { MuscleGlyph } from "@/app/components/icons";
@@ -17,6 +14,7 @@ const toneCls: Record<string, string> = {
   up: "text-success border-success/30 bg-success/10",
   beat: "text-accent border-accent/30 bg-accent/10",
   hold: "text-warn border-warn/30 bg-warn/10",
+  deload: "text-warn border-warn/30 bg-warn/10",
 };
 
 export default async function TargetsPage() {
@@ -27,7 +25,11 @@ export default async function TargetsPage() {
   const p = await getProgress(user.id);
   if (!p || !p.enrolled || !p.plan) redirect("/dashboard");
 
-  const lastTime = await getLastTimeByExercise(user.id, p.plan.id, "");
+  const [lastTime, plateaus] = await Promise.all([
+    getLastTimeByExercise(user.id, p.plan.id, ""),
+    getPlateaus(user.id),
+  ]);
+  const plateauByName = new Map(plateaus.map((pl) => [pl.name, pl]));
 
   // The week containing the next unfinished training day.
   const next =
@@ -74,11 +76,18 @@ export default async function TargetsPage() {
                 <div className="space-y-1.5">
                   {lifts.map((ex) => {
                     const last = lastTime[ex.name] ?? null;
-                    const sug = overloadSuggestion(
-                      last ? { weight: last.weight, reps: last.reps } : null,
-                      ex.repTarget,
-                      ex.isCardio
-                    );
+                    const plateau = plateauByName.get(ex.name);
+                    const sug = prescribe({
+                      last,
+                      repTarget: ex.repTarget,
+                      isCardio: ex.isCardio,
+                      plateau: plateau
+                        ? {
+                            deloadKg: plateau.deloadKg,
+                            sessionsStalled: plateau.sessionsStalled,
+                          }
+                        : null,
+                    });
                     return (
                       <div
                         key={ex.id}

@@ -1,5 +1,6 @@
 import { prisma } from "../prisma";
-import { ymd } from "../date";
+import { ymd, addDays, dayKeyInTz } from "../date";
+import { readinessScore, POOR_DAY_SCORE } from "../readiness";
 import { est1RM } from "./history";
 import { getActiveEnrollment } from "./enrollment";
 
@@ -221,5 +222,57 @@ export async function getCycleComparison(
     currVolumeKg: Math.round(currVolumeKg),
     prevWorkouts,
     currWorkouts,
+  };
+}
+
+export type ReadinessState = {
+  today: {
+    sleepQuality: number | null;
+    soreness: number | null;
+    energy: number | null;
+  } | null;
+  todayScore: number | null;
+  roughPatch: boolean; // >=3 of the last 5 answered days scored poor
+  poorDays: number;
+  sampleSize: number;
+};
+
+/**
+ * Today's check-in (may be partially answered) plus a rough-patch signal from
+ * the last 5 fully-answered days in a 14-day window. Day keys are tz-local so
+ * they match what saveReadinessAction writes.
+ */
+export async function getReadiness(
+  userId: string,
+  timezone: string | null
+): Promise<ReadinessState> {
+  const today = dayKeyInTz(timezone);
+  const since = ymd(addDays(new Date(), -14)); // string-comparable; ±1d skew is immaterial
+  const [todayLog, recent] = await Promise.all([
+    prisma.dailyLog.findUnique({
+      where: { userId_day: { userId, day: today } },
+      select: { sleepQuality: true, soreness: true, energy: true },
+    }),
+    prisma.dailyLog.findMany({
+      where: {
+        userId,
+        day: { lte: today, gte: since },
+        sleepQuality: { not: null },
+        soreness: { not: null },
+        energy: { not: null },
+      },
+      orderBy: { day: "desc" },
+      take: 5,
+      select: { sleepQuality: true, soreness: true, energy: true },
+    }),
+  ]);
+  const scores = recent.map((r) => readinessScore(r)!);
+  const poorDays = scores.filter((s) => s < POOR_DAY_SCORE).length;
+  return {
+    today: todayLog,
+    todayScore: todayLog ? readinessScore(todayLog) : null,
+    roughPatch: poorDays >= 3,
+    poorDays,
+    sampleSize: scores.length,
   };
 }

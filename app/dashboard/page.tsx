@@ -9,6 +9,7 @@ import {
   getActiveEnrollment,
   getPlateaus,
   getCycleComparison,
+  getReadiness,
 } from "@/lib/metrics";
 import {
   focusKey,
@@ -27,6 +28,7 @@ import PlanPicker from "@/app/components/PlanPicker";
 import ProgramCompleteCard from "@/app/components/ProgramCompleteCard";
 import CoachCard from "@/app/components/CoachCard";
 import CycleProgress from "@/app/components/CycleProgress";
+import ReadinessCard from "@/app/components/ReadinessCard";
 import {
   Reveal,
   AnimatedNumber,
@@ -87,9 +89,13 @@ export default async function DashboardPage({
 
   // Coaching insights — stalled lifts + cycle-over-cycle deltas (both are
   // cheap no-ops for fresh accounts).
-  const [plateaus, cycleCmp] = p?.enrolled
-    ? await Promise.all([getPlateaus(user.id), getCycleComparison(user.id)])
-    : [[], null];
+  const [plateaus, cycleCmp, readiness] = p?.enrolled
+    ? await Promise.all([
+        getPlateaus(user.id),
+        getCycleComparison(user.id),
+        getReadiness(user.id, user.timezone),
+      ])
+    : [[], null, null];
 
   // "Up next" = first not-completed training day (skip rest days if possible).
   const nextDay =
@@ -269,17 +275,27 @@ export default async function DashboardPage({
               </Reveal>
             )}
 
-            {/* Coaching insights — cycle deltas + plateau watch */}
-            {(cycleCmp || plateaus.length > 0) && (
-              <div
-                className={`grid gap-4 mt-4 ${
-                  cycleCmp && plateaus.length > 0 ? "md:grid-cols-2" : ""
-                }`}
-              >
-                <CycleProgress cmp={cycleCmp} unit={user.unit as Unit} />
-                <CoachCard plateaus={plateaus} unit={user.unit as Unit} />
-              </div>
-            )}
+            {/* Coaching insights — daily check-in + cycle deltas + plateau watch */}
+            <div
+              className={`grid gap-4 mt-4 ${
+                cycleCmp || plateaus.length > 0 ? "md:grid-cols-2" : ""
+              }`}
+            >
+              {readiness && (
+                <ReadinessCard
+                  initial={
+                    readiness.today ?? {
+                      sleepQuality: null,
+                      soreness: null,
+                      energy: null,
+                    }
+                  }
+                  roughPatch={readiness.roughPatch}
+                />
+              )}
+              <CycleProgress cmp={cycleCmp} unit={user.unit as Unit} />
+              <CoachCard plateaus={plateaus} unit={user.unit as Unit} />
+            </div>
 
             {/* Hero: adherence ring + stats — only once there's data to show */}
             <section

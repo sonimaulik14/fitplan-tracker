@@ -52,6 +52,30 @@ export type RampStep = {
 };
 
 /**
+ * Fit the warm-up ramp into a fixed number of set slots (the day's warm-up
+ * rows). Fewer ramp steps than slots → return them all (extra slots stay
+ * empty). More steps than slots → an even spread across the ramp, always
+ * ending at the heaviest step so the last warm-up primes the work weight.
+ */
+export function warmupFill(
+  work: number,
+  bar: number,
+  slots: number,
+  plates: number[] = KG_PLATES
+): RampStep[] {
+  if (!Number.isFinite(slots) || slots <= 0) return [];
+  const steps = warmupRamp(work, bar, plates).filter((r) => r.pct !== 100);
+  if (steps.length <= slots) return steps;
+  if (slots === 1) return [steps[Math.floor(steps.length / 2)]];
+  const picked: RampStep[] = [];
+  for (let i = 0; i < slots; i++) {
+    const s = steps[Math.round((i * (steps.length - 1)) / (slots - 1))];
+    if (!picked.some((p) => p.weight === s.weight)) picked.push(s);
+  }
+  return picked;
+}
+
+/**
  * Classic warm-up ramp toward a working weight: empty bar, then ~45/65/85%
  * with falling reps. Steps that land at (or below) the bar collapse into the
  * bar-only step; a ramp for a bar-weight work set is just the bar.

@@ -69,7 +69,11 @@ export default async function PlansPage() {
                         {p.daysPerWeek > 0 && ` · ${p.daysPerWeek} days / week`}
                       </p>
                     </div>
-                    <CustomPlanActions planId={p.id} planName={p.name} />
+                    <CustomPlanActions
+                      planId={p.id}
+                      planName={p.name}
+                      shareToken={p.shareToken}
+                    />
                   </div>
                 ))}
             </div>

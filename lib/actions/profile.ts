@@ -84,6 +84,7 @@ export async function updateRemindersAction(input: {
   reminderTime: string;
   trainingDays: number[];
   timezone?: string;
+  weeklyReviewOn?: boolean;
 }) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
@@ -101,6 +102,9 @@ export async function updateRemindersAction(input: {
       remindersOn: input.remindersOn,
       reminderTime: time,
       trainingDays: days.length ? days.join(",") : null,
+      ...(typeof input.weeklyReviewOn === "boolean"
+        ? { weeklyReviewOn: input.weeklyReviewOn }
+        : {}),
       ...(input.timezone && input.timezone.length < 64
         ? { timezone: input.timezone }
         : {}),

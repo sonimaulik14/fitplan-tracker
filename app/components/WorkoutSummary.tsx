@@ -56,7 +56,7 @@ export default function WorkoutSummary({
       Icon: Package,
     },
     {
-      label: "Beat last time",
+      label: "Strength PRs",
       value: `${summary.beat} lift${summary.beat === 1 ? "" : "s"}`,
       Icon: TrendingUp,
     },
@@ -100,7 +100,7 @@ export default function WorkoutSummary({
             : weekDone
               ? "A full training week in the books. Outstanding."
               : summary.beat > 0
-                ? "New ground today — you outlifted last time."
+                ? "New ground today — estimated 1RM records fell."
                 : "Another session done. Consistency is everything."}
         </p>
       </div>

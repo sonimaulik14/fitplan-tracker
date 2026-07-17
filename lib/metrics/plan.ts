@@ -48,6 +48,7 @@ export async function getAllPlans(userId?: string) {
     description: pl.description,
     totalWeeks: pl.totalWeeks,
     custom: pl.ownerId != null,
+    shareToken: pl.shareToken,
     builtWeeks: pl._count.weeks,
     daysPerWeek: pl.weeks[0]
       ? pl.weeks[0].days.filter(

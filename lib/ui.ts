@@ -4,8 +4,8 @@
 
 import { parseRepRange } from "./reps";
 
-// parseRepRange moved to lib/reps.ts; re-exported so existing importers (and
-// overloadSuggestion below) keep working unchanged.
+// parseRepRange moved to lib/reps.ts; re-exported so existing importers keep
+// working unchanged.
 export { parseRepRange };
 
 export type MuscleStyle = { icon: string; color: string; key: string };
@@ -48,6 +48,33 @@ export function landmarkVerdict(
   if (weeklySets < l.mev) return { label: "Below MEV", tone: "low" };
   if (weeklySets > l.mrv) return { label: "Over MRV", tone: "high" };
   return { label: "Productive", tone: "good" };
+}
+
+// The CSS var for a verdict's tone — shared by the landmarks bars, the body
+// map outlines, and the trend grid.
+export function toneColor(tone: "low" | "good" | "high"): string {
+  return tone === "good"
+    ? "var(--success)"
+    : tone === "high"
+      ? "var(--danger)"
+      : "var(--warn)";
+}
+
+// 0..1 fill intensity for a heat cell: sets scaled against MRV (the visual
+// ceiling), so "full colour" ≈ at/above max recoverable volume.
+export function heatIntensity(sets: number, l: { mrv: number }): number {
+  if (!(sets > 0) || l.mrv <= 0) return 0;
+  return Math.min(1, sets / l.mrv);
+}
+
+// Muscle colour at a given intensity, using the color-mix ramp idiom from
+// globals.css. Zero intensity falls back to the neutral surface so empty
+// regions/cells stay visible but muted. `minPct` keeps low-but-nonzero heat
+// legible instead of near-invisible.
+export function muscleTint(muscle: string, intensity: number): string {
+  if (!(intensity > 0)) return "var(--surface-2)";
+  const pct = Math.round(8 + Math.min(1, intensity) * 82); // ~8% → 90%
+  return `color-mix(in srgb, ${muscleStyle(muscle).color} ${pct}%, transparent)`;
 }
 
 export const HERO_KEY = "hero";
@@ -180,41 +207,8 @@ export function lenToCm(value: number, unit: Unit): number {
   return unit === "lb" ? value * CM_PER_IN : value;
 }
 
-export type Suggestion = {
-  weight: number;
-  reps: number;
-  label: string;
-  tone: "up" | "hold" | "beat";
-};
-
-/** Progressive-overload suggestion from last time's performance + the rep target. */
-export function overloadSuggestion(
-  last: { weight: number; reps: number } | null,
-  repTarget: string,
-  isCardio: boolean,
-  increment = 2.5
-): Suggestion | null {
-  if (isCardio || !last || !last.weight) return null;
-  const r = parseRepRange(repTarget);
-  if (!r) return null;
-  if (last.reps >= r.max) {
-    return {
-      weight: Math.round((last.weight + increment) * 10) / 10,
-      reps: r.min,
-      label: "Add weight 💪",
-      tone: "up",
-    };
-  }
-  if (last.reps < r.min) {
-    return { weight: last.weight, reps: r.min, label: "Hold & hit reps", tone: "hold" };
-  }
-  return {
-    weight: last.weight,
-    reps: Math.min(r.max, last.reps + 1),
-    label: "Beat it by a rep",
-    tone: "beat",
-  };
-}
+// overloadSuggestion grew into the progression engine — see lib/progression.ts
+// (prescribe): RPE- and plateau-aware, same double-progression core.
 
 // Rough bodyweight-ratio thresholds for recognised barbell lifts (general).
 const STANDARDS: { match: RegExp; t: number[] }[] = [

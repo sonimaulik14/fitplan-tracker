@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ymd, streakLength } from "@/lib/date";
+import { ymd, streakLength, dayKeyInTz } from "@/lib/date";
 
 const k = (y: number, m: number, d: number) => ymd(new Date(y, m, d));
 
@@ -7,6 +7,22 @@ describe("ymd", () => {
   it("formats local date as zero-padded YYYY-MM-DD", () => {
     expect(ymd(new Date(2026, 0, 5))).toBe("2026-01-05");
     expect(ymd(new Date(2026, 11, 31))).toBe("2026-12-31");
+  });
+});
+
+describe("dayKeyInTz", () => {
+  // 22:30 UTC: already tomorrow in Kolkata (+5:30), still today in LA (-7).
+  const now = new Date("2026-07-17T22:30:00Z");
+  it("resolves the calendar day in the given timezone", () => {
+    expect(dayKeyInTz("Asia/Kolkata", now)).toBe("2026-07-18");
+    expect(dayKeyInTz("America/Los_Angeles", now)).toBe("2026-07-17");
+  });
+  it("falls back to the server-local key without a timezone", () => {
+    expect(dayKeyInTz(null, now)).toBe(ymd(now));
+    expect(dayKeyInTz(undefined, now)).toBe(ymd(now));
+  });
+  it("falls back on an invalid timezone string", () => {
+    expect(dayKeyInTz("Not/AZone", now)).toBe(ymd(now));
   });
 });
 

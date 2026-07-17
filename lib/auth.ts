@@ -87,6 +87,8 @@ export const getCurrentUser = cache(async () => {
       trainingDays: true,
       reminderTime: true,
       remindersOn: true,
+      weeklyReviewOn: true,
+      timezone: true,
       onboardedAt: true,
     },
   });

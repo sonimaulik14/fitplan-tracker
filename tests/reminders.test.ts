@@ -123,3 +123,95 @@ describe("reminderDecision — localDate format", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+
+import { weeklyReviewDecision, type WeeklyReviewUser } from "@/lib/reminders";
+
+const weeklyUser = (
+  overrides: Partial<WeeklyReviewUser> = {}
+): WeeklyReviewUser => ({
+  timezone: "Asia/Kolkata",
+  lastWeeklyReviewWeek: null,
+  ...overrides,
+});
+
+describe("weeklyReviewDecision", () => {
+  // 2026-07-13 is a Monday. 03:30 UTC = 09:00 IST.
+  it("due on Monday morning local time", () => {
+    const now = new Date(Date.UTC(2026, 6, 13, 3, 30));
+    const d = weeklyReviewDecision(weeklyUser(), now);
+    expect(d).toEqual({
+      kind: "due",
+      weekKey: "2026-07-13",
+      localDate: "2026-07-13",
+    });
+  });
+
+  it("skips before 08:00 local even on Monday", () => {
+    // 02:00 UTC = 07:30 IST.
+    const now = new Date(Date.UTC(2026, 6, 13, 2, 0));
+    expect(weeklyReviewDecision(weeklyUser(), now).kind).toBe(
+      "skip-outside-window"
+    );
+  });
+
+  it("catches up on Tuesday/Wednesday, keyed to the same Monday", () => {
+    const tue = new Date(Date.UTC(2026, 6, 14, 3, 30));
+    const wed = new Date(Date.UTC(2026, 6, 15, 3, 30));
+    expect(weeklyReviewDecision(weeklyUser(), tue)).toMatchObject({
+      kind: "due",
+      weekKey: "2026-07-13",
+    });
+    expect(weeklyReviewDecision(weeklyUser(), wed)).toMatchObject({
+      kind: "due",
+      weekKey: "2026-07-13",
+    });
+  });
+
+  it("outside the window Thursday through Sunday", () => {
+    for (const day of [16, 17, 18, 19]) {
+      const now = new Date(Date.UTC(2026, 6, day, 3, 30));
+      expect(weeklyReviewDecision(weeklyUser(), now).kind).toBe(
+        "skip-outside-window"
+      );
+    }
+  });
+
+  it("dedupes once the week's Monday is recorded", () => {
+    const now = new Date(Date.UTC(2026, 6, 14, 3, 30)); // Tuesday
+    const d = weeklyReviewDecision(
+      weeklyUser({ lastWeeklyReviewWeek: "2026-07-13" }),
+      now
+    );
+    expect(d.kind).toBe("skip-already-sent");
+  });
+
+  it("a stale key from LAST week does not block this week", () => {
+    const now = new Date(Date.UTC(2026, 6, 13, 3, 30));
+    const d = weeklyReviewDecision(
+      weeklyUser({ lastWeeklyReviewWeek: "2026-07-06" }),
+      now
+    );
+    expect(d.kind).toBe("due");
+  });
+
+  it("timezone shifts the window: 03:30 UTC Monday is Sunday evening in LA", () => {
+    const now = new Date(Date.UTC(2026, 6, 13, 3, 30));
+    const d = weeklyReviewDecision(
+      weeklyUser({ timezone: "America/Los_Angeles" }),
+      now
+    );
+    expect(d.kind).toBe("skip-outside-window");
+    // …but Monday 16:00 UTC = Monday 09:00 PDT is due.
+    const later = new Date(Date.UTC(2026, 6, 13, 16, 0));
+    expect(weeklyReviewDecision(weeklyUser({ timezone: "America/Los_Angeles" }), later).kind).toBe("due");
+  });
+
+  it("falls back to UTC on a bad timezone", () => {
+    const now = new Date(Date.UTC(2026, 6, 13, 9, 0));
+    expect(
+      weeklyReviewDecision(weeklyUser({ timezone: "Not/AZone" }), now).kind
+    ).toBe("due");
+  });
+});

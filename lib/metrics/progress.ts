@@ -16,6 +16,74 @@ export type DayProgress = {
   performedDate: Date | null;
 };
 
+export type MuscleWeekRow = { weekNumber: number; byMuscle: Record<string, number> };
+export type WeeklyMuscleSets = {
+  weekly: MuscleWeekRow[]; // working sets per muscle, per week (sorted asc)
+  doneWorkByMuscle: Record<string, number>; // working sets per muscle, whole cycle
+  weeksTrained: number; // weeks with >= 1 working set logged
+};
+
+type MuscleSetPlan = {
+  weeks: {
+    number: number;
+    days: {
+      id: string;
+      exercises: { id: string; muscle: string; isCardio: boolean }[];
+    }[];
+  }[];
+};
+type MuscleSetSession = {
+  setEntries: { planExerciseId: string; setType: string; done: boolean }[];
+};
+
+/**
+ * Working sets per muscle, per plan week. A working set = done, setType "work",
+ * and the exercise is not cardio (matches lib/metrics/review.ts). Bodyweight
+ * sets count — no weight/reps requirement — since they still drive volume vs
+ * the MEV/MRV landmarks. Warmups and cardio are excluded, which is why the
+ * total here (doneWorkByMuscle) differs from setsByMuscle[m].done. Pure so it's
+ * unit-testable without a DB.
+ */
+export function weeklyMuscleSets(
+  plan: MuscleSetPlan,
+  sessionByDay: Map<string, MuscleSetSession>
+): WeeklyMuscleSets {
+  const exMuscle = new Map<string, string>();
+  const exCardio = new Map<string, boolean>();
+  for (const w of plan.weeks)
+    for (const d of w.days)
+      for (const ex of d.exercises) {
+        exMuscle.set(ex.id, ex.muscle);
+        exCardio.set(ex.id, ex.isCardio);
+      }
+
+  const doneWorkByMuscle: Record<string, number> = {};
+  let weeksTrained = 0;
+
+  const weekly = [...plan.weeks]
+    .sort((a, b) => a.number - b.number)
+    .map((w) => {
+      const byMuscle: Record<string, number> = {};
+      let weekTotal = 0;
+      for (const d of w.days) {
+        const s = sessionByDay.get(d.id);
+        if (!s) continue;
+        for (const e of s.setEntries) {
+          if (!e.done || e.setType !== "work") continue;
+          if (exCardio.get(e.planExerciseId)) continue;
+          const m = exMuscle.get(e.planExerciseId) ?? "Other";
+          byMuscle[m] = (byMuscle[m] ?? 0) + 1;
+          doneWorkByMuscle[m] = (doneWorkByMuscle[m] ?? 0) + 1;
+          weekTotal += 1;
+        }
+      }
+      if (weekTotal > 0) weeksTrained += 1;
+      return { weekNumber: w.number, byMuscle };
+    });
+
+  return { weekly, doneWorkByMuscle, weeksTrained: Math.max(1, weeksTrained) };
+}
+
 export async function getProgress(userId: string) {
   const plan = await getActivePlan(userId);
   if (!plan) return null;
@@ -222,6 +290,10 @@ export async function getProgress(userId: string) {
 
   const prs = [...prByName.values()].sort((a, b) => b.maxWeight - a.maxWeight);
 
+  // Per-week-per-muscle working sets (for the body map + trend grid). Separate
+  // in-memory pass over already-loaded data — no extra query.
+  const muscleSets = weeklyMuscleSets(plan, sessionByDay);
+
   // Streak + loggedToday (derived here so the dashboard needs only one scan).
   const activeDates = new Set<string>();
   for (const s of enrollment?.sessions ?? [])
@@ -254,6 +326,9 @@ export async function getProgress(userId: string) {
     totalVolume,
     weekly,
     prs,
+    muscleWeekly: muscleSets.weekly,
+    doneWorkByMuscle: muscleSets.doneWorkByMuscle,
+    weeksTrained: muscleSets.weeksTrained,
   };
 }
 
