@@ -54,6 +54,11 @@ const statusMeta: Record<
     cls: "text-muted border-border bg-surface-2",
     dot: "bg-muted",
   },
+  skipped: {
+    label: "Skipped",
+    cls: "text-muted border-border bg-surface-2 opacity-70",
+    dot: "bg-muted",
+  },
 };
 
 export const metadata = { title: "Dashboard" };
@@ -77,13 +82,15 @@ export default async function DashboardPage({
   const fresh = !!p?.enrolled && hasWorkouts && p.completedWorkouts === 0;
   const timeline = p?.enrolled && hasWorkouts ? buildTimeline(p) : null;
 
-  // Day-85: every training day of the block is complete.
+  // Day-85: every training day of the block is complete (or consciously skipped).
   const programDone =
     !!p?.enrolled &&
     hasWorkouts &&
     p.days.every(
       (d) =>
-        d.focus.toLowerCase().includes("rest") || d.status === "completed"
+        d.focus.toLowerCase().includes("rest") ||
+        d.status === "completed" ||
+        d.status === "skipped"
     );
   const activeEnrollment = programDone ? await getActiveEnrollment(user.id) : null;
 
@@ -97,12 +104,14 @@ export default async function DashboardPage({
       ])
     : [[], null, null];
 
-  // "Up next" = first not-completed training day (skip rest days if possible).
+  // "Up next" = first open training day (not completed, not consciously skipped).
+  const open = (d: { status: string }) =>
+    d.status !== "completed" && d.status !== "skipped";
   const nextDay =
     p?.days.find(
-      (d) => d.status !== "completed" && !d.focus.toLowerCase().includes("rest")
+      (d) => open(d) && !d.focus.toLowerCase().includes("rest")
     ) ??
-    p?.days.find((d) => d.status !== "completed") ??
+    p?.days.find(open) ??
     p?.days[0];
 
   // The week containing the next workout (default view + hero day index).

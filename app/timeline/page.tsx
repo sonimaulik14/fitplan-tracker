@@ -9,6 +9,7 @@ import NavBar from "@/app/components/NavBar";
 import PhotoHero from "@/app/components/PhotoHero";
 import StartDateEditor from "@/app/components/StartDateEditor";
 import StartProgram from "@/app/components/StartProgram";
+import CatchUpCard from "@/app/components/CatchUpCard";
 
 export const metadata = { title: "Timeline" };
 
@@ -29,6 +30,7 @@ function cellClass(d: TimelineDay): string {
   if (d.isToday) return "border-accent bg-accent/10 ring-2 ring-accent/40";
   if (d.isRest) return "border-border bg-surface-2/60 text-muted";
   if (d.status === "completed") return "border-success/45 bg-success/10";
+  if (d.status === "skipped") return "border-border bg-surface-2 text-muted opacity-60";
   if (d.status === "in_progress") return "border-accent/40 bg-accent/5";
   if (d.missed) return "border-warn/40 bg-warn/10";
   return "border-border bg-surface-2 text-muted"; // upcoming
@@ -142,6 +144,24 @@ export default async function TimelinePage() {
             </div>
             <StartProgram className="mt-4 sm:mt-0 shrink-0 sm:w-56" />
           </section>
+        )}
+
+        {/* Catch-up: real options when behind */}
+        {t.started && !t.hasFinished && t.behind > 0 && (
+          <CatchUpCard
+            behind={t.behind}
+            missed={t.days
+              .filter((d) => d.missed)
+              .map((d) => ({
+                dayId: d.dayId,
+                focus: d.focus,
+                weekNumber: d.weekNumber,
+                dateLabel: d.date.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                }),
+              }))}
+          />
         )}
 
         {/* Calendar grid */}

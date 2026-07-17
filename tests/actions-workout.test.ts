@@ -39,7 +39,12 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-import { saveWorkoutAction, startNextCycleAction } from "@/lib/actions/workout";
+import {
+  saveWorkoutAction,
+  startNextCycleAction,
+  skipDayAction,
+  unskipDayAction,
+} from "@/lib/actions/workout";
 import { getCurrentUser } from "@/lib/auth";
 import { getActiveEnrollment } from "@/lib/metrics/enrollment";
 import { isProgramComplete } from "@/lib/metrics/progress";
@@ -347,5 +352,44 @@ describe("startNextCycleAction", () => {
     vi.mocked(getCurrentUser).mockResolvedValue(null as never);
     const res = await startNextCycleAction();
     expect(res).toEqual({ ok: false, error: "Not signed in." });
+  });
+});
+
+describe("skipDayAction / unskipDayAction", () => {
+  it("skips an untouched day with an empty skipped session", async () => {
+    mockHappyPath();
+    prisma.workoutSession.findUnique.mockResolvedValue(null);
+    const res = await skipDayAction("d1");
+    expect(res.ok).toBe(true);
+    const args = prisma.workoutSession.upsert.mock.calls[0][0];
+    expect(args.create.status).toBe("skipped");
+    expect(args.update).toEqual({ status: "skipped" });
+  });
+
+  it("refuses to skip a day with logged sets", async () => {
+    mockHappyPath();
+    prisma.workoutSession.findUnique.mockResolvedValue({
+      id: "s1",
+      setEntries: [{ id: "x" }],
+    });
+    const res = await skipDayAction("d1");
+    expect(res.ok).toBe(false);
+    expect(prisma.workoutSession.upsert).not.toHaveBeenCalled();
+  });
+
+  it("unskip deletes only the skipped session row", async () => {
+    mockHappyPath();
+    prisma.workoutSession.deleteMany.mockResolvedValue({ count: 1 });
+    const res = await unskipDayAction("d1");
+    expect(res.ok).toBe(true);
+    expect(prisma.workoutSession.deleteMany).toHaveBeenCalledWith({
+      where: { enrollmentId: "e1", workoutDayId: "day1", status: "skipped" },
+    });
+  });
+
+  it("both require auth", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue(null as never);
+    expect((await skipDayAction("d1")).ok).toBe(false);
+    expect((await unskipDayAction("d1")).ok).toBe(false);
   });
 });

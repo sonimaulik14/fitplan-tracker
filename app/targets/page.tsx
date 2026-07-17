@@ -32,11 +32,11 @@ export default async function TargetsPage() {
   const plateauByName = new Map(plateaus.map((pl) => [pl.name, pl]));
 
   // The week containing the next unfinished training day.
+  const open = (d: { status: string }) =>
+    d.status !== "completed" && d.status !== "skipped";
   const next =
-    p.days.find(
-      (d) => d.status !== "completed" && !d.focus.toLowerCase().includes("rest")
-    ) ??
-    p.days.find((d) => d.status !== "completed") ??
+    p.days.find((d) => open(d) && !d.focus.toLowerCase().includes("rest")) ??
+    p.days.find(open) ??
     p.days[0];
   const currentWeek = next?.weekNumber ?? p.weekly[0]?.weekNumber ?? 1;
   const week = p.plan.weeks.find((w) => w.number === currentWeek);
