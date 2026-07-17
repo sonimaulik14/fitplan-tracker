@@ -50,6 +50,33 @@ export function landmarkVerdict(
   return { label: "Productive", tone: "good" };
 }
 
+// The CSS var for a verdict's tone — shared by the landmarks bars, the body
+// map outlines, and the trend grid.
+export function toneColor(tone: "low" | "good" | "high"): string {
+  return tone === "good"
+    ? "var(--success)"
+    : tone === "high"
+      ? "var(--danger)"
+      : "var(--warn)";
+}
+
+// 0..1 fill intensity for a heat cell: sets scaled against MRV (the visual
+// ceiling), so "full colour" ≈ at/above max recoverable volume.
+export function heatIntensity(sets: number, l: { mrv: number }): number {
+  if (!(sets > 0) || l.mrv <= 0) return 0;
+  return Math.min(1, sets / l.mrv);
+}
+
+// Muscle colour at a given intensity, using the color-mix ramp idiom from
+// globals.css. Zero intensity falls back to the neutral surface so empty
+// regions/cells stay visible but muted. `minPct` keeps low-but-nonzero heat
+// legible instead of near-invisible.
+export function muscleTint(muscle: string, intensity: number): string {
+  if (!(intensity > 0)) return "var(--surface-2)";
+  const pct = Math.round(8 + Math.min(1, intensity) * 82); // ~8% → 90%
+  return `color-mix(in srgb, ${muscleStyle(muscle).color} ${pct}%, transparent)`;
+}
+
 export const HERO_KEY = "hero";
 
 // An icon that represents a whole training day based on its focus text.
