@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition, useEffect, useCallback } from "react";
+import { useState, useRef, useTransition, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   restChime,
@@ -40,6 +40,7 @@ import {
   LB_BARS,
 } from "@/lib/plates";
 import InfoTip from "./InfoTip";
+import { inferGroups, groupIndex, nextInRound } from "@/lib/supersets";
 import { MuscleGlyph } from "./icons";
 import { ExerciseDemoInline } from "./ExerciseDemo";
 import { toast } from "@/lib/toast";
@@ -111,6 +112,12 @@ export default function WorkoutLogger({
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   // Which exercise's swap sheet is open (driven by the Swap button or a swipe).
   const [swapFor, setSwapFor] = useState<string | null>(null);
+  // Superset/giant-set pairing, inferred from groupLabel adjacency — purely a
+  // presentation/guidance concern; the plan itself is never touched.
+  const supersetGroups = useMemo(() => inferGroups(initial), [initial]);
+  const groupById = useMemo(() => groupIndex(supersetGroups), [supersetGroups]);
+  // Mid-round cue: the partner exercise to move to instead of resting.
+  const [nextUp, setNextUp] = useState<string | null>(null);
   const [summary, setSummary] = useState<{
     week: number | null;
     sets: number;
@@ -501,13 +508,36 @@ export default function WorkoutLogger({
         if (row.setType === "warmup") {
           startRest(REST_DEFAULTS.warmup);
         } else {
-          // Work sets honor the exercise's saved rest (keyed by effective
-          // name, so it follows swaps); the pin on the rest bar saves it.
-          startRest(getRestPref(ex.name) ?? REST_DEFAULTS.work, ex.name);
+          // Inside a superset/giant set, a work set mid-round means NO rest —
+          // go straight to the partner exercise; the countdown only starts
+          // once every exercise in the round is done. (nextInRound treats the
+          // just-checked set as done, so the stale exRef snapshot is fine.)
+          const g = groupById.get(ex.id);
+          const partner = g
+            ? nextInRound(
+                g.memberIds
+                  .map((id) => exRef.current.find((e) => e.id === id))
+                  .filter((m): m is LoggerExercise => !!m),
+                ex.id,
+                setNumber
+              )
+            : null;
+          if (g && partner) {
+            const p = exRef.current.find((e) => e.id === partner.id);
+            stopRest();
+            setNextUp(partner.id);
+            toast(`${g.label} — no rest: ${p?.name ?? "next exercise"} now`);
+          } else {
+            // Work sets honor the exercise's saved rest (keyed by effective
+            // name, so it follows swaps); the pin on the rest bar saves it.
+            setNextUp(null);
+            startRest(getRestPref(ex.name) ?? REST_DEFAULTS.work, ex.name);
+          }
         }
       }
     } else {
       // Unchecking the set that's resting → cancel the timer.
+      setNextUp(null);
       stopRest();
     }
     // auto-collapse an exercise once all its sets are checked off
@@ -750,6 +780,31 @@ export default function WorkoutLogger({
     0
   );
   const pct = totalRows ? Math.round((doneRows / totalRows) * 100) : 0;
+
+  // Render blocks: superset/giant-set members share one bordered container so
+  // the pairing is visible; everything else renders as a standalone card.
+  // Rebuilt each render (cheap) so the items are the live state objects.
+  const renderBlocks: {
+    group: { key: string; label: string } | null;
+    items: { ex: LoggerExercise; idx: number }[];
+  }[] = [];
+  {
+    const seen = new Set<string>();
+    exercises.forEach((ex, idx) => {
+      if (seen.has(ex.id)) return;
+      const g = groupById.get(ex.id);
+      if (!g) {
+        renderBlocks.push({ group: null, items: [{ ex, idx }] });
+        return;
+      }
+      const items = g.memberIds.flatMap((id) => {
+        const i = exercises.findIndex((e) => e.id === id);
+        return i === -1 ? [] : [{ ex: exercises[i], idx: i }];
+      });
+      items.forEach((x) => seen.add(x.ex.id));
+      renderBlocks.push({ group: g, items });
+    });
+  }
   // Active rest / cardio days are all-cardio — skip the lifting chrome
   // (progress header, focus mode, plate calculator, "how did it go?").
   const isLightDay = exercises.length > 0 && exercises.every((e) => e.isCardio);
@@ -811,7 +866,8 @@ export default function WorkoutLogger({
       </div>
       )}
 
-      {exercises.map((ex, idx) => {
+      {renderBlocks.map((block) => {
+        const inner = block.items.map(({ ex, idx }) => {
         const sg = prescribe({
           last: ex.lastTime,
           repTarget: ex.repTarget,
@@ -839,7 +895,9 @@ export default function WorkoutLogger({
             onSwipe={() => setSwapFor(ex.id)}
           >
           <div
-            className="card p-5 sm:p-6 relative overflow-hidden animate-fade-up"
+            className={`card p-5 sm:p-6 relative overflow-hidden animate-fade-up transition-shadow ${
+              nextUp === ex.id ? "ring-2 ring-success/60" : ""
+            }`}
             style={{ animationDelay: `${idx * 30}ms` }}
           >
             <div className="flex items-start justify-between gap-3">
@@ -848,26 +906,38 @@ export default function WorkoutLogger({
                   <span className="text-xs text-muted flex items-center gap-1">
                     <MuscleGlyph muscle={ex.muscle} size={14} /> {ex.muscle}
                   </span>
-                  {ex.groupLabel &&
-                    (() => {
-                      const info = termInfo(ex.groupLabel);
-                      const chip = (
-                        <span className="chip text-success border-success/30 bg-success/10 !py-0.5">
-                          {ex.groupLabel}
+                  {(() => {
+                    // Inside an inferred group the container header already
+                    // names the technique — the card gets a position tag (A1,
+                    // A2…) instead. Ungrouped exercises keep the label chip.
+                    const grp = groupById.get(ex.id);
+                    if (grp) {
+                      const pos = grp.memberIds.indexOf(ex.id);
+                      return (
+                        <span className="chip text-success border-success/30 bg-success/10 !py-0.5 stat-num">
+                          A{pos + 1}
                         </span>
                       );
-                      return info ? (
-                        <InfoTip
-                          title={info.title}
-                          desc={info.desc}
-                          className="text-success"
-                        >
-                          {chip}
-                        </InfoTip>
-                      ) : (
-                        chip
-                      );
-                    })()}
+                    }
+                    if (!ex.groupLabel) return null;
+                    const info = termInfo(ex.groupLabel);
+                    const chip = (
+                      <span className="chip text-success border-success/30 bg-success/10 !py-0.5">
+                        {ex.groupLabel}
+                      </span>
+                    );
+                    return info ? (
+                      <InfoTip
+                        title={info.title}
+                        desc={info.desc}
+                        className="text-success"
+                      >
+                        {chip}
+                      </InfoTip>
+                    ) : (
+                      chip
+                    );
+                  })()}
                 </div>
                 <h3 className="font-display font-semibold text-xl mt-1 flex items-center gap-2 flex-wrap">
                   {ex.name}
@@ -1160,6 +1230,35 @@ export default function WorkoutLogger({
             )}
           </div>
           </SwipeToSwap>
+        );
+        });
+
+        if (!block.group) return inner[0];
+        const info = termInfo(block.group.label);
+        const chip = (
+          <span className="chip text-success border-success/30 bg-success/10 !py-0.5">
+            {block.group.label} · {block.items.length} exercises
+          </span>
+        );
+        return (
+          <div
+            key={block.group.key}
+            className="rounded-2xl border border-success/30 bg-success/[0.04] p-2 sm:p-3 space-y-3"
+          >
+            <div className="flex items-center gap-2 flex-wrap px-2 pt-1.5">
+              {info ? (
+                <InfoTip title={info.title} desc={info.desc} className="text-success">
+                  {chip}
+                </InfoTip>
+              ) : (
+                chip
+              )}
+              <span className="text-xs text-muted">
+                Alternate exercises — rest after each round
+              </span>
+            </div>
+            {inner}
+          </div>
         );
       })}
 
