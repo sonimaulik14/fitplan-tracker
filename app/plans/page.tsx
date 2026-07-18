@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getAllPlans, getActiveEnrollment } from "@/lib/metrics";
 import { resetProgramAction } from "@/lib/actions";
@@ -39,16 +39,27 @@ export default async function PlansPage() {
           <PlanPicker plans={plans} currentPlanId={active?.planId} />
         )}
 
-        {/* Build-your-own entry point */}
-        <Link
-          href="/plans/new"
-          className="group mt-4 flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border-strong px-5 py-6 text-sm font-semibold text-muted hover:text-foreground hover:border-accent transition-colors animate-fade-up"
-        >
-          <span className="grid place-items-center w-8 h-8 rounded-full brand-bg group-hover:scale-110 transition-transform">
-            <Plus size={17} aria-hidden />
-          </span>
-          Create your own program
-        </Link>
+        {/* Build-your-own / generate entry points */}
+        <div className="grid sm:grid-cols-2 gap-3 mt-4">
+          <Link
+            href="/plans/generate"
+            className="group flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-accent/50 px-5 py-6 text-sm font-semibold text-accent hover:border-accent transition-colors animate-fade-up"
+          >
+            <span className="grid place-items-center w-8 h-8 rounded-full brand-bg group-hover:scale-110 transition-transform">
+              <Sparkles size={16} aria-hidden />
+            </span>
+            Generate a program for me
+          </Link>
+          <Link
+            href="/plans/new"
+            className="group flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border-strong px-5 py-6 text-sm font-semibold text-muted hover:text-foreground hover:border-accent transition-colors animate-fade-up"
+          >
+            <span className="grid place-items-center w-8 h-8 rounded-full brand-bg group-hover:scale-110 transition-transform">
+              <Plus size={17} aria-hidden />
+            </span>
+            Create your own program
+          </Link>
+        </div>
 
         {/* Manage user-created programs */}
         {plans.some((p) => p.custom) && (
