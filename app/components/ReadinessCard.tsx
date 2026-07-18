@@ -79,7 +79,7 @@ export default function ReadinessCard({
         <h2 className="section-title">Daily check-in</h2>
         {info ? (
           <span
-            className={`chip border ${
+            className={`chip ${
               info.tone === "success"
                 ? "text-success border-success/30 bg-success/10"
                 : "text-warn border-warn/30 bg-warn/10"
@@ -143,7 +143,7 @@ export default function ReadinessCard({
           <button
             type="button"
             onClick={endLightWeek}
-            className="btn-quiet !py-0.5 text-xs ml-auto"
+            className="btn-quiet !py-1 text-xs ml-auto"
           >
             End early
           </button>
@@ -156,7 +156,7 @@ export default function ReadinessCard({
           <button
             type="button"
             onClick={startLightWeek}
-            className="btn-quiet !py-0.5 text-xs mt-1.5 block"
+            className="btn-quiet !py-1 text-xs mt-1.5 block"
           >
             Start light week →
           </button>

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getStrengthProfile, getProgress } from "@/lib/metrics";
@@ -33,14 +32,14 @@ export default async function GeneratePage() {
       <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <Link
           href="/plans"
-          className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-solid py-1.5 pl-2 pr-3.5 text-sm font-medium text-foreground/80 hover:text-foreground hover:border-border-strong transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
         >
-          <ChevronLeft size={16} /> Programs
+          ← Back to programs
         </Link>
         <div className="mt-6 mb-6">
           <p className="eyebrow">Program generator</p>
-          <h1 className="display-hero text-4xl mt-2">
-            Let Vajra write your next block
+          <h1 className="display-hero text-4xl sm:text-5xl mt-2">
+            Your next training block
           </h1>
           <p className="text-sm text-muted mt-3 leading-relaxed max-w-xl">
             Four questions, one personalized program — built from your training

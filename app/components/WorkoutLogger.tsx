@@ -1230,7 +1230,7 @@ export default function WorkoutLogger({
                     aria-label="mark set done"
                     className={`w-12 h-12 rounded-lg border flex items-center justify-center transition-all active:scale-90 ${
                       r.done
-                        ? "bg-success border-success text-[#05231a]"
+                        ? "bg-success border-success text-success-ink"
                         : "border-border text-muted hover:border-success/50"
                     }`}
                   >

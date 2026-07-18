@@ -24,10 +24,16 @@ function Segmented<T extends string | number>({
   onChange: (v: T) => void;
   render?: (v: T) => string;
 }) {
+  // Joined-bar segmented control — the ThemeToggle idiom: one bordered track,
+  // rounded-md buttons, accent fill on the active choice.
   return (
     <div>
       <span className="label !mb-1.5">{label}</span>
-      <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={label}>
+      <div
+        className="inline-flex rounded-lg border border-border bg-surface-2 p-0.5 flex-wrap"
+        role="radiogroup"
+        aria-label={label}
+      >
         {options.map((o) => (
           <button
             key={String(o)}
@@ -35,9 +41,9 @@ function Segmented<T extends string | number>({
             role="radio"
             aria-checked={o === value}
             onClick={() => onChange(o)}
-            className={`chip transition-colors ${
+            className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
               o === value
-                ? "!bg-accent !border-accent text-accent-ink font-bold"
+                ? "bg-accent text-accent-ink"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -139,7 +145,7 @@ export default function GeneratorWizard({
                 onClick={() => togglePriority(m)}
                 className={`chip transition-colors ${
                   on
-                    ? "text-success border-success/40 bg-success/10 font-bold"
+                    ? "text-accent border-accent/30 bg-accent/10 font-bold"
                     : "text-muted hover:text-foreground"
                 }`}
               >

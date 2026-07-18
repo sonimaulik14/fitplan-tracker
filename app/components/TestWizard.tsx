@@ -140,14 +140,14 @@ export default function TestWizard({
                 onClick={() => setRampDone((d) => ({ ...d, [i]: !d[i] }))}
                 className={`w-full flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
                   rampDone[i]
-                    ? "border-success/40 bg-success/10"
+                    ? "border-success/30 bg-success/10"
                     : "border-border bg-surface-2 hover:border-border-strong"
                 }`}
               >
                 <span
                   className={`grid place-items-center w-6 h-6 rounded-md border ${
                     rampDone[i]
-                      ? "bg-success border-success text-[#05231a]"
+                      ? "bg-success border-success text-success-ink"
                       : "border-border text-transparent"
                   }`}
                 >
@@ -232,7 +232,7 @@ export default function TestWizard({
                   }
                   className={`h-12 rounded-lg border grid place-items-center transition-all ${
                     a.success
-                      ? "bg-success border-success text-[#05231a]"
+                      ? "bg-success border-success text-success-ink"
                       : "border-border text-muted hover:border-success/50"
                   }`}
                 >
