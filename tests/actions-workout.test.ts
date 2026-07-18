@@ -44,6 +44,7 @@ import {
   startNextCycleAction,
   skipDayAction,
   unskipDayAction,
+  resetProgramAction,
 } from "@/lib/actions/workout";
 import { getCurrentUser } from "@/lib/auth";
 import { getActiveEnrollment } from "@/lib/metrics/enrollment";
@@ -391,5 +392,20 @@ describe("skipDayAction / unskipDayAction", () => {
     vi.mocked(getCurrentUser).mockResolvedValue(null as never);
     expect((await skipDayAction("d1")).ok).toBe(false);
     expect((await unskipDayAction("d1")).ok).toBe(false);
+  });
+});
+
+describe("resetProgramAction", () => {
+  it("deletes sessions AND clears startedAt so the timeline re-anchors", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue(user as never);
+    vi.mocked(getActiveEnrollment).mockResolvedValue({ id: "e1" } as never);
+    prisma.workoutSession.deleteMany.mockResolvedValue({ count: 5 });
+    prisma.enrollment.update.mockResolvedValue({});
+    await expect(resetProgramAction()).rejects.toThrow("REDIRECT:/dashboard");
+    expect(prisma.workoutSession.deleteMany).toHaveBeenCalledWith({
+      where: { enrollmentId: "e1" },
+    });
+    const args = prisma.enrollment.update.mock.calls[0][0];
+    expect(args.data.startedAt).toBeNull();
   });
 });
