@@ -157,3 +157,73 @@ function trimForReadiness(
   }
   return { ...p, weight, reason: `${p.reason} Trimmed ${pct}% — low readiness.` };
 }
+
+// ---------- live set coach ----------
+
+export type NextSetAdvice = {
+  weight: number; // suggested next-set weight, in the caller's display unit
+  delta: number; // weight - last set's weight
+  note: string; // one-line coaching reason
+  tone: "up" | "hold" | "down";
+  extraRest: number; // seconds to add to the next rest countdown
+};
+
+/**
+ * Intra-workout advice: given the set just logged, what should the NEXT set
+ * look like? Speaks only when something should change — a normal in-range set
+ * returns null so the logger stays quiet. Pure and unit-agnostic: weights go
+ * in and come out in the caller's display unit, rounded to `step`.
+ */
+export function nextSet(args: {
+  weight: number | null;
+  reps: number | null;
+  rpe: number | null;
+  repTarget: string;
+  isCardio: boolean;
+  step?: number; // 2.5 for kg, 5 for lb
+}): NextSetAdvice | null {
+  const { weight, reps, rpe, repTarget, isCardio, step = 2.5 } = args;
+  if (isCardio || !weight || weight <= 0 || !reps || reps <= 0) return null;
+  const r = parseRepRange(repTarget);
+  if (!r) return null;
+  const snap = (w: number) => Math.round(w / step) * step;
+
+  if (reps < r.min) {
+    const severe = reps <= Math.max(1, Math.floor(r.min / 2));
+    // A drop must actually drop — clamp below the weight just lifted.
+    const w = Math.min(snap(weight * (severe ? 0.9 : 0.925)), weight - step);
+    if (w <= 0) return null;
+    return {
+      weight: w,
+      delta: w - weight,
+      note: severe
+        ? "Well below the range — strip it back and finish with clean reps."
+        : "Below the range — drop a touch and own the reps.",
+      tone: "down",
+      extraRest: rpe != null && rpe >= GRINDER_RPE ? 30 : 0,
+    };
+  }
+
+  if (reps >= r.max && rpe != null && rpe <= EASY_RPE) {
+    const w = snap(weight + step);
+    return {
+      weight: w,
+      delta: w - weight,
+      note: `Topped the range at RPE ${rpe} — room to add a little.`,
+      tone: "up",
+      extraRest: 0,
+    };
+  }
+
+  if (rpe != null && rpe >= GRINDER_RPE) {
+    return {
+      weight,
+      delta: 0,
+      note: "That was a grinder — same weight, take the extra rest.",
+      tone: "hold",
+      extraRest: 30,
+    };
+  }
+
+  return null;
+}
