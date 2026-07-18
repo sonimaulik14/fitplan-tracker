@@ -68,13 +68,13 @@ export default async function StrengthPage() {
           <div className="flex flex-wrap gap-2 mt-4">
             {LEVELS.map((lv, i) =>
               levelCounts[i] === 0 ? null : lv === "Elite" ? (
-                <span key={lv} className="chip border" style={goldChip}>
+                <span key={lv} className="chip" style={goldChip}>
                   {levelCounts[i]} × Elite
                 </span>
               ) : (
                 <span
                   key={lv}
-                  className="chip text-accent border border-accent/30 bg-accent/10"
+                  className="chip text-accent border-accent/30 bg-accent/10"
                 >
                   {levelCounts[i]} × {lv}
                 </span>
@@ -125,11 +125,11 @@ export default async function StrengthPage() {
                   </div>
                   {s &&
                     (s.level === "Elite" ? (
-                      <span className="chip border shrink-0" style={goldChip}>
+                      <span className="chip shrink-0" style={goldChip}>
                         Elite
                       </span>
                     ) : (
-                      <span className="chip text-accent border border-accent/30 bg-accent/10 shrink-0">
+                      <span className="chip text-accent border-accent/30 bg-accent/10 shrink-0">
                         {s.level}
                       </span>
                     ))}

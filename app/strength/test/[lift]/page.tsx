@@ -28,7 +28,7 @@ export default async function TestDayPage({
   return (
     <>
       <NavBar user={user} />
-      <main className="flex-1 max-w-xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
+      <main className="flex-1 max-w-2xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <Link
           href="/strength"
           className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-solid py-1.5 pl-2 pr-3.5 text-sm font-medium text-foreground/80 hover:text-foreground hover:border-border-strong transition-colors"
@@ -37,7 +37,7 @@ export default async function TestDayPage({
         </Link>
         <div className="mt-6 mb-6">
           <p className="eyebrow">1RM test day</p>
-          <h1 className="display-hero text-4xl mt-2">{cat.label}</h1>
+          <h1 className="display-hero text-4xl sm:text-5xl mt-2">{cat.label}</h1>
         </div>
         <TestWizard
           lift={cat.key as LiftKey}

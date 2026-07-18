@@ -77,7 +77,7 @@ export default function DaySupplements({
             <span
               className={`grid place-items-center w-5 h-5 rounded-md shrink-0 transition-colors ${
                 s.taken
-                  ? "bg-success text-[#05231a]"
+                  ? "bg-success text-success-ink"
                   : "border border-border-strong"
               }`}
             >

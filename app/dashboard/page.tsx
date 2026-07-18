@@ -284,13 +284,11 @@ export default async function DashboardPage({
               </Reveal>
             )}
 
-            {/* Coaching insights — daily check-in + cycle deltas + plateau watch */}
-            <div
-              className={`grid gap-4 mt-4 ${
-                cycleCmp || plateaus.length > 0 ? "md:grid-cols-2" : ""
-              }`}
-            >
-              {readiness && (
+            {/* Coaching insights: check-in full-width, then the two insight
+                cards side by side (each renders null without data — no
+                orphaned grid cells or lopsided columns). */}
+            {readiness && (
+              <div className="mt-6">
                 <ReadinessCard
                   initial={
                     readiness.today ?? {
@@ -302,14 +300,22 @@ export default async function DashboardPage({
                   roughPatch={readiness.roughPatch}
                   lightWeekUntil={user.lightWeekUntil?.toISOString() ?? null}
                 />
-              )}
-              <CycleProgress cmp={cycleCmp} unit={user.unit as Unit} />
-              <CoachCard plateaus={plateaus} unit={user.unit as Unit} />
-            </div>
+              </div>
+            )}
+            {(cycleCmp || plateaus.length > 0) && (
+              <div
+                className={`grid gap-4 mt-6 ${
+                  cycleCmp && plateaus.length > 0 ? "md:grid-cols-2" : ""
+                }`}
+              >
+                <CycleProgress cmp={cycleCmp} unit={user.unit as Unit} />
+                <CoachCard plateaus={plateaus} unit={user.unit as Unit} />
+              </div>
+            )}
 
             {/* Hero: adherence ring + stats — only once there's data to show */}
             <section
-              className={`card p-6 sm:p-8 mt-4 animate-fade-up ${fresh ? "hidden" : ""}`}
+              className={`card p-6 sm:p-8 mt-6 animate-fade-up ${fresh ? "hidden" : ""}`}
             >
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <AnimatedRing pct={p.workoutAdherence} size={150} stroke={14}>
