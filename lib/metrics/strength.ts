@@ -75,6 +75,77 @@ export function bestLiftsByCategory(rows: LiftRow[]): Map<LiftKey, BestLift> {
   return best;
 }
 
+export type TrendPoint = { date: Date; e1RMkg: number };
+
+/** Per-category best est. 1RM per calendar day, sorted ascending. */
+export function dailyBestSeries(rows: LiftRow[]): Map<LiftKey, TrendPoint[]> {
+  const byKeyDay = new Map<LiftKey, Map<string, TrendPoint>>();
+  for (const r of rows) {
+    if (r.isCardio || r.weight <= 0 || r.reps <= 0) continue;
+    const key = classifyLift(r.name);
+    if (!key) continue;
+    const e = est1RM(r.weight, r.reps);
+    const day = ymd(r.date);
+    let m = byKeyDay.get(key);
+    if (!m) byKeyDay.set(key, (m = new Map()));
+    const cur = m.get(day);
+    if (!cur || e > cur.e1RMkg) m.set(day, { date: r.date, e1RMkg: e });
+  }
+  const out = new Map<LiftKey, TrendPoint[]>();
+  for (const [key, m] of byKeyDay)
+    out.set(
+      key,
+      [...m.values()].sort((a, b) => +a.date - +b.date)
+    );
+  return out;
+}
+
+// Projection guards: enough history to mean something, a genuinely rising
+// trend, and a crossing close enough to be motivating rather than fictional.
+const MIN_POINTS = 3;
+const MIN_SPAN_DAYS = 14;
+const MIN_SLOPE_KG_PER_DAY = 0.01; // ≈ 3.7 kg/year
+const MAX_HORIZON_DAYS = 365;
+
+/**
+ * Least-squares trend over a lift's e1RM history; the date the trend line
+ * crosses `targetKg`, or null when the data doesn't support a projection.
+ */
+export function projectCrossing(
+  points: TrendPoint[],
+  targetKg: number,
+  now: Date
+): Date | null {
+  if (points.length < MIN_POINTS) return null;
+  const t0 = +points[0].date;
+  const span = (+points[points.length - 1].date - t0) / 86_400_000;
+  if (span < MIN_SPAN_DAYS) return null;
+
+  const xs = points.map((p) => (+p.date - t0) / 86_400_000);
+  const ys = points.map((p) => p.e1RMkg);
+  const n = points.length;
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (xs[i] - mx) * (ys[i] - my);
+    den += (xs[i] - mx) ** 2;
+  }
+  if (den === 0) return null;
+  const slope = num / den; // kg per day
+  if (slope < MIN_SLOPE_KG_PER_DAY) return null;
+  const intercept = my - slope * mx;
+
+  const tNow = (+now - t0) / 86_400_000;
+  const valueNow = intercept + slope * tNow;
+  const daysTo = (targetKg - valueNow) / slope;
+  if (daysTo <= 0 || daysTo > MAX_HORIZON_DAYS) return null;
+  const d = new Date(now);
+  d.setDate(d.getDate() + Math.ceil(daysTo));
+  return d;
+}
+
 export type StrengthLift = {
   key: LiftKey;
   label: string;
@@ -85,6 +156,8 @@ export type StrengthLift = {
   date: string | null; // ymd of the session/test that produced the best e1RM
   tested: boolean; // best came from a 1RM test day
   standard: StrengthRank | null; // null when unperformed OR no bodyweight
+  /** "On pace for {level} by {date}" — null when the trend doesn't support it. */
+  projection: { level: string; date: string } | null;
 };
 
 export type StrengthProfile = {
@@ -136,8 +209,28 @@ export async function getStrengthProfile(userId: string): Promise<StrengthProfil
   const best = mergeTests(bestLiftsByCategory(rows), tests);
   const latestBwKg = bw.length ? bw[bw.length - 1].weight : null;
 
+  // Trend series per category: session bests plus tested maxes as points.
+  const series = dailyBestSeries(rows);
+  for (const t of tests) {
+    const key = t.liftKey as LiftKey;
+    if (!LIFT_CATEGORIES.some((c) => c.key === key)) continue;
+    const pts = series.get(key) ?? [];
+    pts.push({ date: t.date, e1RMkg: testMax(t) });
+    pts.sort((a, b) => +a.date - +b.date);
+    series.set(key, pts);
+  }
+  const now = new Date();
+
   const lifts: StrengthLift[] = LIFT_CATEGORIES.map((c) => {
     const b = best.get(c.key);
+    const standard = b
+      ? b.tested
+        ? strengthNextByKey(b.e1RMkg, latestBwKg, c.key)
+        : strengthNext(b.e1RMkg, latestBwKg, b.exerciseName)
+      : null;
+    const crossing = standard?.next
+      ? projectCrossing(series.get(c.key) ?? [], standard.next.targetKg, now)
+      : null;
     return {
       key: c.key,
       label: c.label,
@@ -147,11 +240,11 @@ export async function getStrengthProfile(userId: string): Promise<StrengthProfil
       e1RMkg: b?.e1RMkg ?? null,
       date: b ? ymd(b.date) : null,
       tested: b?.tested ?? false,
-      standard: b
-        ? b.tested
-          ? strengthNextByKey(b.e1RMkg, latestBwKg, c.key)
-          : strengthNext(b.e1RMkg, latestBwKg, b.exerciseName)
-        : null,
+      standard,
+      projection:
+        crossing && standard?.next
+          ? { level: standard.next.level, date: ymd(crossing) }
+          : null,
     };
   });
 

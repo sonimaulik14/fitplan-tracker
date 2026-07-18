@@ -4,7 +4,10 @@ import {
   bestLiftsByCategory,
   testMax,
   mergeTests,
+  dailyBestSeries,
+  projectCrossing,
   type LiftRow,
+  type TrendPoint,
 } from "@/lib/metrics/strength";
 import { strengthNextByKey } from "@/lib/ui";
 import { testRamp, KG_PLATES } from "@/lib/plates";
@@ -18,6 +21,7 @@ describe("classifyLift", () => {
       ["Barbell Deadlift", "deadlift"],
       ["Barbell Bench Press — Medium Grip", "bench"],
       ["Seated Barbell Military Press", "ohp"],
+      ["Overhead Barbell Press", "ohp"],
       ["Standing Military Press", "ohp"],
       ["Bent-Over Barbell Row", "row"],
       ["Pendlay Row", "row"],
@@ -46,6 +50,7 @@ describe("classifyLift", () => {
       "Dumbbell Shoulder Press",
       "Seated Cable Shoulder Press",
       "Smith Machine Overhead Shoulder Press",
+      "Overhead Dumbbell Extension", // triceps work, not a press
       "Dumbbell Bench Press",
       "Close-Grip Barbell Bench Press",
       "Smith Machine Bench Press",
@@ -218,5 +223,77 @@ describe("testRamp", () => {
   it("collapses tiny targets into the bar", () => {
     expect(testRamp(25, 20, KG_PLATES).length).toBeLessThanOrEqual(2);
     expect(testRamp(0, 20, KG_PLATES)).toEqual([]);
+  });
+});
+
+describe("dailyBestSeries", () => {
+  const row = (name: string, weight: number, reps: number, date: string): LiftRow => ({
+    name,
+    isCardio: false,
+    weight,
+    reps,
+    date: new Date(date),
+  });
+
+  it("keeps the best e1RM per category per day, sorted by date", () => {
+    const s = dailyBestSeries([
+      row("Barbell Squat", 100, 5, "2026-07-10"),
+      row("Barbell Squat", 110, 5, "2026-07-10"), // same day, better
+      row("Barbell Squat", 105, 5, "2026-07-03"),
+      row("Lying Leg Curl", 200, 10, "2026-07-10"), // unclassified
+    ]);
+    const squat = s.get("squat")!;
+    expect(squat).toHaveLength(2);
+    expect(squat[0].date.toISOString().slice(0, 10)).toBe("2026-07-03");
+    expect(squat[1].e1RMkg).toBeCloseTo(110 * (1 + 5 / 30), 1);
+    expect(s.has("curl")).toBe(false);
+  });
+});
+
+describe("projectCrossing", () => {
+  const pt = (date: string, e1RMkg: number): TrendPoint => ({
+    date: new Date(date),
+    e1RMkg,
+  });
+  const now = new Date("2026-07-22");
+
+  it("projects a steady climb onto the target date", () => {
+    // +1 kg/day trend from 100 on Jul 1 → value(now Jul 22) = 121.
+    const points = [
+      pt("2026-07-01", 100),
+      pt("2026-07-08", 107),
+      pt("2026-07-15", 114),
+      pt("2026-07-22", 121),
+    ];
+    const d = projectCrossing(points, 130, now)!;
+    // 9 kg to go at 1 kg/day → ~9 days out.
+    expect(d.toISOString().slice(0, 10)).toBe("2026-07-31");
+  });
+
+  it("needs at least 3 points across 14+ days", () => {
+    expect(projectCrossing([pt("2026-07-01", 100), pt("2026-07-20", 120)], 130, now)).toBeNull();
+    expect(
+      projectCrossing(
+        [pt("2026-07-18", 100), pt("2026-07-20", 105), pt("2026-07-21", 110)],
+        130,
+        now
+      )
+    ).toBeNull();
+  });
+
+  it("stays silent on flat or falling trends", () => {
+    const flat = [pt("2026-07-01", 100), pt("2026-07-10", 100), pt("2026-07-20", 100)];
+    expect(projectCrossing(flat, 130, now)).toBeNull();
+    const falling = [pt("2026-07-01", 110), pt("2026-07-10", 105), pt("2026-07-20", 100)];
+    expect(projectCrossing(falling, 130, now)).toBeNull();
+  });
+
+  it("caps the horizon at a year and skips already-crossed targets", () => {
+    // ~0.02 kg/day: real but slow — 100kg away is decades out.
+    const slow = [pt("2026-05-01", 100), pt("2026-06-01", 100.6), pt("2026-07-01", 101.2)];
+    expect(projectCrossing(slow, 200, now)).toBeNull();
+    // Trend already above the target → nothing to promise.
+    const above = [pt("2026-07-01", 150), pt("2026-07-10", 160), pt("2026-07-20", 170)];
+    expect(projectCrossing(above, 130, now)).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prescribe, est1RM } from "@/lib/progression";
+import { prescribe, est1RM, nextSet } from "@/lib/progression";
 
 describe("est1RM", () => {
   it("Epley: 100 kg × 10 ≈ 133.3", () => {
@@ -197,5 +197,68 @@ describe("prescribe — readiness trim", () => {
     expect(p.weight).toBe(90);
     expect(p.tone).toBe("deload");
     expect(p.reason).not.toContain("Trimmed");
+  });
+});
+
+describe("nextSet — live set coach", () => {
+  const base = { repTarget: "8-12", isCardio: false, rpe: null };
+
+  it("drops ~7.5% after a below-range set, snapped and strictly lower", () => {
+    const a = nextSet({ ...base, weight: 100, reps: 6 })!;
+    expect(a.tone).toBe("down");
+    expect(a.weight).toBe(92.5); // 92.5 snapped
+    expect(a.delta).toBe(-7.5);
+    expect(a.extraRest).toBe(0);
+  });
+
+  it("drops 10% after a severe miss", () => {
+    const a = nextSet({ ...base, weight: 100, reps: 3 })!; // <= floor(8/2)
+    expect(a.weight).toBe(90);
+    expect(a.note).toContain("strip it back");
+  });
+
+  it("a grinding miss also earns extra rest", () => {
+    const a = nextSet({ ...base, weight: 100, reps: 6, rpe: 9.5 })!;
+    expect(a.extraRest).toBe(30);
+  });
+
+  it("small weights: the drop is still strictly below the last set", () => {
+    const a = nextSet({ ...base, weight: 20, reps: 6 })!;
+    expect(a.weight).toBeLessThan(20);
+  });
+
+  it("suggests +step after an easy top-of-range set", () => {
+    const a = nextSet({ ...base, weight: 100, reps: 12, rpe: 7 })!;
+    expect(a.tone).toBe("up");
+    expect(a.weight).toBe(102.5);
+  });
+
+  it("top of range without an easy RPE stays silent", () => {
+    expect(nextSet({ ...base, weight: 100, reps: 12, rpe: 8.5 })).toBeNull();
+    expect(nextSet({ ...base, weight: 100, reps: 12 })).toBeNull();
+  });
+
+  it("an in-range grinder holds the weight and adds rest", () => {
+    const a = nextSet({ ...base, weight: 100, reps: 10, rpe: 9.5 })!;
+    expect(a.tone).toBe("hold");
+    expect(a.weight).toBe(100);
+    expect(a.extraRest).toBe(30);
+  });
+
+  it("stays silent for normal in-range sets", () => {
+    expect(nextSet({ ...base, weight: 100, reps: 10, rpe: 8 })).toBeNull();
+  });
+
+  it("returns null for cardio, missing data, unparseable targets", () => {
+    expect(nextSet({ ...base, weight: 100, reps: 10, isCardio: true })).toBeNull();
+    expect(nextSet({ ...base, weight: null, reps: 10 })).toBeNull();
+    expect(nextSet({ ...base, weight: 100, reps: null })).toBeNull();
+    expect(nextSet({ ...base, weight: 100, reps: 5, repTarget: "20 min" })).toBeNull();
+  });
+
+  it("rounds to the pound step when asked", () => {
+    const a = nextSet({ ...base, weight: 225, reps: 6, step: 5 })!;
+    expect(a.weight % 5).toBe(0);
+    expect(a.weight).toBe(210); // 225*0.925=208.1 → snap 210, < 220 ✓
   });
 });

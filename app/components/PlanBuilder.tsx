@@ -529,6 +529,13 @@ export default function PlanBuilder({
     start(async () => {
       const res = await savePlanAction(draft);
       if (res.ok) {
+        if (res.enrolled) {
+          // First program ever — they're enrolled; land on the dashboard's
+          // "Ready to begin?" card instead of back in the plan picker.
+          toast("Program saved — you're enrolled. Press start when you're ready.");
+          router.push("/dashboard");
+          return;
+        }
         // A locked edit succeeds but only saves name/description — the server
         // explains that in `error`; surface it as info rather than success.
         toast(res.error ?? (draft.id ? "Program updated." : "Program created."), res.error ? "info" : "success");

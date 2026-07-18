@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "../prisma";
 import { getCurrentUser } from "../auth";
+import { getActiveEnrollment } from "../metrics/enrollment";
 
 // Custom program authoring. Built-in plans (ownerId null) are untouchable;
 // a user can create, edit and delete only their own.
@@ -118,7 +119,7 @@ const weekCreateData = (w: DraftWeek) => ({
 
 export async function savePlanAction(
   draft: PlanDraft
-): Promise<{ ok: boolean; error?: string; planId?: string }> {
+): Promise<{ ok: boolean; error?: string; planId?: string; enrolled?: boolean }> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Not signed in." };
 
@@ -139,8 +140,21 @@ export async function savePlanAction(
         weeks: { create: draft.weeks.map(weekCreateData) },
       },
     });
+    // First program ever? Enroll them straight away (startedAt stays null —
+    // the dashboard's "Ready to begin?" surface owns the actual start), so a
+    // fresh user's save lands one tap from training instead of back in the
+    // plan picker. Users with an active enrollment are never switched.
+    let enrolled = false;
+    const active = await getActiveEnrollment(user.id);
+    if (!active) {
+      await prisma.enrollment.create({
+        data: { userId: user.id, planId: plan.id, cycle: 1 },
+      });
+      enrolled = true;
+      revalidatePath("/dashboard");
+    }
     revalidatePath("/plans");
-    return { ok: true, planId: plan.id };
+    return { ok: true, planId: plan.id, enrolled };
   }
 
   // Edit: must own it, and structure is locked once anything has been logged

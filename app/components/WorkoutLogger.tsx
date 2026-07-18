@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useRef, useTransition, useEffect, useCallback, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useTransition,
+  useEffect,
+  useCallback,
+  useMemo,
+  Fragment,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   restChime,
@@ -17,6 +25,8 @@ import {
   Pin,
   Flame,
   BatteryLow,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import { getRestPref, setRestPref } from "@/lib/restPrefs";
 import { saveWorkoutAction, swapExerciseAction, resetDayAction } from "@/lib/actions";
@@ -32,7 +42,8 @@ import SwapControl from "./SwapControl";
 import SwipeToSwap from "./SwipeToSwap";
 import WorkoutSummary from "./WorkoutSummary";
 import { weightNum, unitToKg, termInfo, type Unit } from "@/lib/ui";
-import { prescribe, est1RM } from "@/lib/progression";
+import { prescribe, est1RM, nextSet } from "@/lib/progression";
+import { getCue, setCue } from "@/lib/formCues";
 import {
   warmupFill,
   KG_PLATES,
@@ -537,8 +548,21 @@ export default function WorkoutLogger({
           } else {
             // Work sets honor the exercise's saved rest (keyed by effective
             // name, so it follows swaps); the pin on the rest bar saves it.
+            // The live set coach adds recovery time after a grinder.
+            const extra =
+              nextSet({
+                weight: row.weight,
+                reps: row.reps,
+                rpe: row.rpe,
+                repTarget: ex.repTarget,
+                isCardio: false,
+                step: unit === "lb" ? 5 : 2.5,
+              })?.extraRest ?? 0;
             setNextUp(null);
-            startRest(getRestPref(ex.name) ?? REST_DEFAULTS.work, ex.name);
+            startRest(
+              (getRestPref(ex.name) ?? REST_DEFAULTS.work) + extra,
+              ex.name
+            );
           }
         }
       }
@@ -917,6 +941,24 @@ export default function WorkoutLogger({
         const sgWeight = sg ? weightNum(sg.weight, unit) : 0;
         const isCollapsed = collapsed[ex.id] ?? false;
         const exDone = ex.rows.filter((r) => r.done).length;
+        // Live set coach: advice for the NEXT set, from the last completed
+        // work set (row weights are already in the display unit).
+        const doneWork = ex.rows.filter((r) => r.setType === "work" && r.done);
+        const lastDoneWork = doneWork.length
+          ? doneWork[doneWork.length - 1]
+          : null;
+        const nextWork = ex.rows.find((r) => r.setType === "work" && !r.done);
+        const advice =
+          !ex.isCardio && lastDoneWork && nextWork
+            ? nextSet({
+                weight: lastDoneWork.weight,
+                reps: lastDoneWork.reps,
+                rpe: lastDoneWork.rpe,
+                repTarget: ex.repTarget,
+                isCardio: false,
+                step: unit === "lb" ? 5 : 2.5,
+              })
+            : null;
         // Best guess for the plate calculator: heaviest entered weight, else
         // the overload suggestion, else last time's top set.
         const heaviestEntered = Math.max(0, ...ex.rows.map((r) => r.weight ?? 0));
@@ -1014,6 +1056,7 @@ export default function WorkoutLogger({
                       {ex.originalName}
                     </span>
                   )}
+                  {!ex.isCardio && <CueLine name={ex.name} />}
                 </div>
               </div>
 
@@ -1125,8 +1168,8 @@ export default function WorkoutLogger({
             {!isCollapsed && (
             <div className="mt-5 space-y-2.5">
               {ex.rows.map((r) => (
+                <Fragment key={r.setNumber}>
                 <div
-                  key={r.setNumber}
                   className={`grid items-center gap-2 rounded-lg px-2 py-2 transition-colors ${
                     ex.isCardio
                       ? "grid-cols-[3rem_1fr_auto]"
@@ -1245,6 +1288,44 @@ export default function WorkoutLogger({
                     </svg>
                   </button>
                 </div>
+                {/* Live set coach: one line after the set that earned it */}
+                {advice &&
+                  lastDoneWork &&
+                  nextWork &&
+                  r.setNumber === lastDoneWork.setNumber && (
+                    <div
+                      className={`flex items-center gap-2 px-2 text-xs ${
+                        advice.tone === "down"
+                          ? "text-warn"
+                          : advice.tone === "up"
+                            ? "text-accent"
+                            : "text-muted"
+                      }`}
+                    >
+                      {advice.tone === "down" ? (
+                        <TrendingDown size={13} className="shrink-0" aria-hidden />
+                      ) : advice.tone === "up" ? (
+                        <TrendingUp size={13} className="shrink-0" aria-hidden />
+                      ) : (
+                        <Timer size={13} className="shrink-0" aria-hidden />
+                      )}
+                      <span className="flex-1">{advice.note}</span>
+                      {advice.tone !== "hold" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            update(ex.id, nextWork.setNumber, {
+                              weight: advice.weight,
+                            })
+                          }
+                          className="btn-quiet !py-1 text-xs shrink-0"
+                        >
+                          Use {advice.weight} {unit}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </Fragment>
               ))}
               {!ex.isCardio && (
                 <div className="flex gap-4 pt-3">
@@ -1425,3 +1506,69 @@ export default function WorkoutLogger({
   );
 }
 
+
+// Device-local form cue for an exercise (keyed by effective name — follows
+// swaps, like rest prefs). Full-width when set (wraps in the flex row), a
+// quiet "+ cue" chip when not. Reads localStorage post-mount to stay
+// hydration-safe.
+function CueLine({ name }: { name: string }) {
+  const [cue, setCueState] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    setCueState(getCue(name));
+  }, [name]);
+
+  const save = () => {
+    setCue(name, text);
+    setCueState(getCue(name));
+    setEditing(false);
+  };
+
+  if (editing)
+    return (
+      <input
+        autoFocus
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        maxLength={120}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        placeholder="Form cue — e.g. elbows tucked, slow negative"
+        aria-label={`Form cue for ${name}`}
+        className="input !py-1.5 !px-2.5 text-xs w-full"
+      />
+    );
+
+  if (cue)
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setText(cue);
+          setEditing(true);
+        }}
+        title="Tap to edit this cue"
+        className="w-full text-left text-xs italic text-accent"
+      >
+        📌 {cue}
+      </button>
+    );
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        setText("");
+        setEditing(true);
+      }}
+      className="btn-quiet !py-1 text-xs"
+    >
+      + cue
+    </button>
+  );
+}

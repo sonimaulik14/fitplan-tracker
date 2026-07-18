@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getStrengthProfile, getProgress } from "@/lib/metrics";
-import { buildSignals } from "@/lib/generator";
+import { buildSignals, generatorDefaultsFromUser } from "@/lib/generator";
 import NavBar from "@/app/components/NavBar";
 import GeneratorWizard from "@/app/components/GeneratorWizard";
 
@@ -25,6 +25,8 @@ export default async function GeneratePage() {
         }
       : null
   );
+  const defaults = generatorDefaultsFromUser(user);
+  const fresh = !progress?.enrolled;
 
   return (
     <>
@@ -34,20 +36,22 @@ export default async function GeneratePage() {
           href="/plans"
           className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
         >
-          ← Back to programs
+          ← {fresh ? "Browse ready-made programs" : "Back to programs"}
         </Link>
         <div className="mt-6 mb-6">
-          <p className="eyebrow">Program generator</p>
+          <p className="eyebrow">
+            {fresh ? "Welcome to Vajra" : "Program generator"}
+          </p>
           <h1 className="display-hero text-4xl sm:text-5xl mt-2">
-            Your next training block
+            {fresh ? "Your first program" : "Your next training block"}
           </h1>
           <p className="text-sm text-muted mt-3 leading-relaxed max-w-xl">
-            Four questions, one personalized program — built from your training
-            history, opened in the builder so you can tweak anything before
-            saving. Your current plan is never touched.
+            {fresh
+              ? "We've filled in the answers from your onboarding — adjust anything, generate, and your program opens for review. Save it and you're ready to start."
+              : "Four questions, one personalized program — built from your training history, opened in the builder so you can tweak anything before saving. Your current plan is never touched."}
           </p>
         </div>
-        <GeneratorWizard signals={signals} />
+        <GeneratorWizard signals={signals} defaults={defaults} />
       </main>
     </>
   );
