@@ -16,7 +16,15 @@ export type GeneratorAnswers = {
   weeks: number; // 4..12
   goal: "muscle" | "strength";
   priorityMuscles: string[]; // subset of the 7 trainable muscles
+  cardio?: boolean; // append a 15-min finisher to every training day
 };
+
+// Deterministic finisher rotation so consecutive training days vary.
+const CARDIO_FINISHERS = [
+  "Incline Treadmill Walk",
+  "Stationary Bike",
+  "Rowing Machine",
+];
 
 export type GeneratorSignals = {
   underTrained: string[]; // averaged below MEV in recent history
@@ -314,11 +322,21 @@ export function generateProgram(
         isCardio: false,
       });
     }
+    if (a.cardio)
+      exercises.push({
+        name: CARDIO_FINISHERS[(dayNumber - 1) % CARDIO_FINISHERS.length],
+        muscle: "Cardio",
+        groupLabel: null,
+        warmupSets: 0,
+        workingSets: 1,
+        repTarget: "15 min",
+        isCardio: true,
+      });
     trainingDays.set(dayNumber, {
       dayNumber,
       label: tpl.label,
       focus: tpl.focus,
-      // templates are ≤7 exercises; slice is a pure safety net for the ≤15 cap
+      // templates are ≤8 exercises; slice is a pure safety net for the ≤15 cap
       exercises: exercises.slice(0, 15),
     });
   }
@@ -363,6 +381,7 @@ export function generateProgram(
     bits.push(`${LIFT_ANCHORS[s.weakestLift.key].name} leads its day — your weakest lift.`);
   if (a.priorityMuscles.length)
     bits.push(`Priority: ${a.priorityMuscles.join(", ")}.`);
+  if (a.cardio) bits.push("15-min cardio finisher after every session.");
   if (weeks >= 6) bits.push("Final week is a deload.");
 
   return {

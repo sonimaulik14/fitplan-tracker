@@ -265,7 +265,9 @@ const STANDARDS: LiftStandard[] = [
     key: "ohp",
     label: "Overhead Press",
     muscle: "Shoulders",
-    match: /(overhead|military|shoulder|strict) press|\bohp\b/,
+    // "overhead barbell press" carries the implement mid-phrase — the catalog's
+    // canonical OHP name — so match it explicitly alongside the plain phrases.
+    match: /(overhead|military|shoulder|strict) press|overhead barbell press|\bohp\b/,
     exclude:
       /dumbbell|smith|machine|cable|leverage|arnold|kettlebell|single|one[- ]arm|pike|handstand|leg/,
     t: [0.35, 0.55, 0.8, 1.05],

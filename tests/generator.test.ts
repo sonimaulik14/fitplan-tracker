@@ -69,10 +69,12 @@ describe("generateProgram — structural invariants (validate() mirror)", () => 
             expect(e.workingSets).toBeGreaterThanOrEqual(1);
             expect(e.workingSets).toBeLessThanOrEqual(10);
             expect((e.groupLabel ?? "").length).toBeLessThanOrEqual(30);
-            // progression engine must understand every rep target
-            expect(repTargetMin(e.repTarget), e.repTarget).not.toBeNull();
-            // every exercise comes from the app's catalog
-            expect(CATALOG.has(e.name), e.name).toBe(true);
+            if (!e.isCardio) {
+              // progression engine must understand every rep target
+              expect(repTargetMin(e.repTarget), e.repTarget).not.toBeNull();
+              // every lifting exercise comes from the app's catalog
+              expect(CATALOG.has(e.name), e.name).toBe(true);
+            }
           }
         });
       });
@@ -240,5 +242,39 @@ describe("buildSignals", () => {
     );
     expect(s.weakestLift?.key).toBe("row");
     expect(s.weakestLift?.muscle).toBe("Back");
+  });
+});
+
+describe("generateProgram — cardio finishers", () => {
+  it("appends one cardio finisher to every training day when asked", () => {
+    const p = generateProgram(answers({ cardio: true }), NO_SIGNALS);
+    for (const d of p.weeks[0].days) {
+      if (d.exercises.length === 0) continue; // rest day
+      const last = d.exercises[d.exercises.length - 1];
+      expect(last.isCardio).toBe(true);
+      expect(last.muscle).toBe("Cardio");
+      expect(last.repTarget).toBe("15 min");
+      expect(last.workingSets).toBe(1);
+      // exactly one cardio entry per day
+      expect(d.exercises.filter((e) => e.isCardio)).toHaveLength(1);
+    }
+    expect(p.description).toContain("cardio finisher");
+  });
+
+  it("emits no cardio by default", () => {
+    const p = generateProgram(answers(), NO_SIGNALS);
+    for (const d of p.weeks[0].days)
+      expect(d.exercises.some((e) => e.isCardio)).toBe(false);
+  });
+
+  it("rotates finisher names across training days", () => {
+    const p = generateProgram(
+      answers({ daysPerWeek: 5, cardio: true }),
+      NO_SIGNALS
+    );
+    const names = p.weeks[0].days
+      .filter((d) => d.exercises.length > 0)
+      .map((d) => d.exercises[d.exercises.length - 1].name);
+    expect(new Set(names).size).toBeGreaterThan(1);
   });
 });

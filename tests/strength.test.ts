@@ -18,6 +18,7 @@ describe("classifyLift", () => {
       ["Barbell Deadlift", "deadlift"],
       ["Barbell Bench Press — Medium Grip", "bench"],
       ["Seated Barbell Military Press", "ohp"],
+      ["Overhead Barbell Press", "ohp"],
       ["Standing Military Press", "ohp"],
       ["Bent-Over Barbell Row", "row"],
       ["Pendlay Row", "row"],
@@ -46,6 +47,7 @@ describe("classifyLift", () => {
       "Dumbbell Shoulder Press",
       "Seated Cable Shoulder Press",
       "Smith Machine Overhead Shoulder Press",
+      "Overhead Dumbbell Extension", // triceps work, not a press
       "Dumbbell Bench Press",
       "Close-Grip Barbell Bench Press",
       "Smith Machine Bench Press",
