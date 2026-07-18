@@ -180,6 +180,18 @@ export default async function StrengthPage() {
                       </span>{" "}
                       on your est. 1RM to reach {s.next.level} (
                       {fmtWeight(s.next.targetKg, unit)})
+                      {l.projection && (
+                        <>
+                          {" · "}
+                          <span className="text-accent font-semibold">
+                            on pace by{" "}
+                            {new Date(l.projection.date).toLocaleDateString(
+                              "en-US",
+                              { month: "short", day: "numeric" }
+                            )}
+                          </span>
+                        </>
+                      )}
                     </p>
                   ) : s ? (
                     <p
