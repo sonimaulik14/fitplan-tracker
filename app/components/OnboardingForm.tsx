@@ -68,7 +68,9 @@ export default function OnboardingForm({
         remindersOn,
         bodyweight: bodyweight ? Number(bodyweight) : null,
       });
-      if (res.ok) router.push("/dashboard");
+      // First-time setup flows straight into the program generator (pre-seeded
+      // from these answers); editing preferences returns to the dashboard.
+      if (res.ok) router.push(edit ? "/dashboard" : "/plans/generate");
     });
   };
 

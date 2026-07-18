@@ -57,8 +57,11 @@ function Segmented<T extends string | number>({
 
 export default function GeneratorWizard({
   signals,
+  defaults,
 }: {
   signals: GeneratorSignals;
+  /** Pre-seeded answers from the user's onboarding (generatorDefaultsFromUser). */
+  defaults?: { daysPerWeek: 3 | 4 | 5 | 6; goal: "muscle" | "strength"; cardio: boolean };
 }) {
   const suggested = useMemo(() => {
     const set = new Set(signals.underTrained);
@@ -66,10 +69,14 @@ export default function GeneratorWizard({
     return [...set].slice(0, 2);
   }, [signals]);
 
-  const [days, setDays] = useState<GeneratorAnswers["daysPerWeek"]>(4);
+  const [days, setDays] = useState<GeneratorAnswers["daysPerWeek"]>(
+    defaults?.daysPerWeek ?? 4
+  );
   const [weeks, setWeeks] = useState<number>(8);
-  const [goal, setGoal] = useState<GeneratorAnswers["goal"]>("muscle");
-  const [cardio, setCardio] = useState(false);
+  const [goal, setGoal] = useState<GeneratorAnswers["goal"]>(
+    defaults?.goal ?? "muscle"
+  );
+  const [cardio, setCardio] = useState(defaults?.cardio ?? false);
   const [priority, setPriority] = useState<string[]>(suggested);
   const [draft, setDraft] = useState<ReturnType<typeof generateProgram> | null>(null);
 

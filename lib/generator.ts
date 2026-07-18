@@ -43,6 +43,24 @@ export const TRAINABLE_MUSCLES = [
   "Abs",
 ] as const;
 
+/**
+ * Wizard defaults derived from the onboarding answers, so a fresh user's
+ * generator opens pre-configured: their training-day count, their goal
+ * (fat-loss maps to hypertrophy + cardio finishers), sensible fallbacks.
+ */
+export function generatorDefaultsFromUser(u: {
+  goal: string | null;
+  trainingDays: string | null;
+}): { daysPerWeek: 3 | 4 | 5 | 6; goal: "muscle" | "strength"; cardio: boolean } {
+  const count = u.trainingDays
+    ? u.trainingDays.split(",").filter(Boolean).length
+    : 4;
+  const daysPerWeek = Math.min(6, Math.max(3, count)) as 3 | 4 | 5 | 6;
+  const goal = u.goal === "strength" ? "strength" : "muscle";
+  const cardio = u.goal === "fatloss";
+  return { daysPerWeek, goal, cardio };
+}
+
 // ---------- signals ----------
 
 export function buildSignals(

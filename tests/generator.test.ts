@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   generateProgram,
   buildSignals,
+  generatorDefaultsFromUser,
   LIFT_ANCHORS,
   TRAINABLE_MUSCLES,
   type GeneratorAnswers,
@@ -276,5 +277,27 @@ describe("generateProgram — cardio finishers", () => {
       .filter((d) => d.exercises.length > 0)
       .map((d) => d.exercises[d.exercises.length - 1].name);
     expect(new Set(names).size).toBeGreaterThan(1);
+  });
+});
+
+describe("generatorDefaultsFromUser", () => {
+  it("counts training days and clamps into 3-6", () => {
+    expect(generatorDefaultsFromUser({ goal: null, trainingDays: "1,3,5" }).daysPerWeek).toBe(3);
+    expect(generatorDefaultsFromUser({ goal: null, trainingDays: "1,2" }).daysPerWeek).toBe(3);
+    expect(generatorDefaultsFromUser({ goal: null, trainingDays: "0,1,2,3,4,5,6" }).daysPerWeek).toBe(6);
+    expect(generatorDefaultsFromUser({ goal: null, trainingDays: null }).daysPerWeek).toBe(4);
+  });
+  it("maps onboarding goals onto generator goals", () => {
+    expect(generatorDefaultsFromUser({ goal: "strength", trainingDays: null }).goal).toBe("strength");
+    expect(generatorDefaultsFromUser({ goal: "muscle", trainingDays: null }).goal).toBe("muscle");
+    expect(generatorDefaultsFromUser({ goal: "consistency", trainingDays: null }).goal).toBe("muscle");
+  });
+  it("fat-loss goal turns cardio finishers on", () => {
+    expect(generatorDefaultsFromUser({ goal: "fatloss", trainingDays: null })).toEqual({
+      daysPerWeek: 4,
+      goal: "muscle",
+      cardio: true,
+    });
+    expect(generatorDefaultsFromUser({ goal: "muscle", trainingDays: null }).cardio).toBe(false);
   });
 });

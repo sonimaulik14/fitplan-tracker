@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Flame, Target, Trophy, Dumbbell, Hammer } from "lucide-react";
+import { Flame, Target, Trophy, Dumbbell, Hammer, Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -142,7 +142,9 @@ export default async function DashboardPage({
   return (
     <>
       <NavBar user={user} />
-      <WelcomeTour />
+      {/* Tour waits until there's a program — its "log every set" content
+          lands right before the first workout, not on top of the picker. */}
+      {p?.enrolled && <WelcomeTour />}
       <main className="flex-1 max-w-5xl w-full mx-auto px-5 py-8 pb-28 sm:pb-12">
         <div className="animate-fade-up">
           <p className="eyebrow">Welcome back</p>
@@ -195,8 +197,21 @@ export default async function DashboardPage({
           </div>
         )}
 
-        {/* Not enrolled → choose a plan to start */}
-        {!p?.enrolled && plans.length > 0 && <PlanPicker plans={plans} />}
+        {/* Not enrolled → generate a program, or browse below */}
+        {!p?.enrolled && plans.length > 0 && (
+          <>
+            <Link
+              href="/plans/generate"
+              className="group mt-6 flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-accent/50 px-5 py-6 text-sm font-semibold text-accent hover:border-accent transition-colors animate-fade-up"
+            >
+              <span className="grid place-items-center w-8 h-8 rounded-full brand-bg group-hover:scale-110 transition-transform">
+                <Sparkles size={16} aria-hidden />
+              </span>
+              Let Vajra write your program — four quick questions
+            </Link>
+            <PlanPicker plans={plans} />
+          </>
+        )}
 
         {timeline &&
           (timeline.started ? (
