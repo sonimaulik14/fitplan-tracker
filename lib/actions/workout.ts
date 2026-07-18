@@ -41,9 +41,12 @@ export async function resetProgramAction() {
     await prisma.workoutSession.deleteMany({
       where: { enrollmentId: enrollment.id },
     });
+    // startedAt anchors the whole timeline — clearing it returns the user to
+    // the "Ready to begin?" surface so day 1 starts when they press start,
+    // instead of the schedule still counting from the old start date.
     await prisma.enrollment.update({
       where: { id: enrollment.id },
-      data: { startDate: new Date() },
+      data: { startDate: new Date(), startedAt: null },
     });
   }
   revalidatePath("/dashboard");
